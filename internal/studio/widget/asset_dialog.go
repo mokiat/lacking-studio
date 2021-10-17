@@ -40,27 +40,18 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 					Right: optional.NewInt(0),
 				})
 
-				co.WithChild("tex_2d", co.New(ToolbarButton, func() {
+				co.WithChild("model", co.New(ToolbarButton, func() {
 					co.WithData(ToolbarButtonData{
-						Text:     "Tex2D",
+						Icon:     co.OpenImage("resources/icons/model.png"),
+						Text:     "3D Model",
 						Selected: true,
 					})
 				}))
-				co.WithChild("tex_3d", co.New(ToolbarButton, func() {
-					co.WithData(ToolbarButtonData{
-						Text:     "Tex3D",
-						Selected: false,
-					})
-				}))
-				co.WithChild("model", co.New(ToolbarButton, func() {
-					co.WithData(ToolbarButtonData{
-						Text:     "Model",
-						Selected: false,
-					})
-				}))
+
 				co.WithChild("scene", co.New(ToolbarButton, func() {
 					co.WithData(ToolbarButtonData{
-						Text:     "Scene",
+						Text:     "3D Scene",
+						Icon:     co.OpenImage("resources/icons/scene.png"),
 						Selected: false,
 					})
 				}))

@@ -14,7 +14,7 @@ var Tabbar = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.NewColor(LightGray),
+			BackgroundColor: optional.NewColor(Gray),
 			Padding: ui.Spacing{
 				Left:   5,
 				Right:  5,

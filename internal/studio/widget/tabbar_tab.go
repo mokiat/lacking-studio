@@ -153,7 +153,7 @@ func (e *tabbarTabEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
 	} else {
 		switch e.state {
 		case buttonStateOver:
-			backgroundColor = Gray
+			backgroundColor = LightGray
 		case buttonStateDown:
 			backgroundColor = DarkGray
 		default:

@@ -18,16 +18,17 @@ func main() {
 	cfg.SetMaximized(true)
 	cfg.SetIcon("resources/icons/favicon.png")
 
+	// baseDir, err := evalBaseDir()
+	// if err != nil {
+	// 	log.Fatalf("failed to evaluate executable dir: %v", err)
+	// }
+	// log.Printf("EXEC DIR: %s", baseDir)
+
 	graphicsEngine := glgraphics.NewEngine()
 
-	dir, err := os.Executable()
-	if err != nil {
-		log.Fatalf("failed to get executable dir: %v", err)
-	}
-	log.Printf("executable dir: %s", dir)
-
+	resourceLocator := ui.NewFileResourceLocator(os.DirFS("."))
 	uiGLGraphics := glui.NewGraphics()
-	uiController := ui.NewController(ui.FileResourceLocator{}, uiGLGraphics, func(w *ui.Window) {
+	uiController := ui.NewController(resourceLocator, uiGLGraphics, func(w *ui.Window) {
 		studio.BootstrapApplication(w, graphicsEngine)
 	})
 
@@ -39,3 +40,17 @@ func main() {
 	}
 	log.Println("application closed")
 }
+
+// func evalBaseDir() (fs.FS, error) {
+// 	execPath, err := os.Executable()
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to get executable path: %w", err)
+// 	}
+
+// 	directExecPath, err := filepath.EvalSymlinks(execPath)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to evaluate symlinks to executable: %w", err)
+// 	}
+
+// 	return os.DirFS(filepath.Dir(directExecPath)), nil
+// }
