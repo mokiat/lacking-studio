@@ -9,6 +9,8 @@ import (
 	glfwapp "github.com/mokiat/lacking/framework/glfw/app"
 	glgraphics "github.com/mokiat/lacking/framework/opengl/game/graphics"
 	glui "github.com/mokiat/lacking/framework/opengl/ui"
+	"github.com/mokiat/lacking/game/ecs"
+	"github.com/mokiat/lacking/game/physics"
 	"github.com/mokiat/lacking/ui"
 )
 
@@ -25,14 +27,19 @@ func main() {
 	// log.Printf("EXEC DIR: %s", baseDir)
 
 	graphicsEngine := glgraphics.NewEngine()
+	physicsEngine := physics.NewEngine()
+	ecsEngine := ecs.NewEngine()
 
 	resourceLocator := ui.NewFileResourceLocator(os.DirFS("."))
 	uiGLGraphics := glui.NewGraphics()
 	uiController := ui.NewController(resourceLocator, uiGLGraphics, func(w *ui.Window) {
-		studio.BootstrapApplication(w, graphicsEngine)
+		studio.BootstrapApplication(w, graphicsEngine, physicsEngine, ecsEngine)
 	})
 
-	controller := app.NewLayeredController(uiController)
+	controller := app.NewLayeredController(
+		studio.NewController(graphicsEngine),
+		uiController,
+	)
 
 	log.Println("running application")
 	if err := glfwapp.Run(cfg, controller); err != nil {

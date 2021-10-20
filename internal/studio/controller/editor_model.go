@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"github.com/mokiat/lacking-studio/internal/studio/widget"
+	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -36,6 +38,18 @@ func (e *ModelEditor) Update() {
 
 }
 
+func (e *ModelEditor) OnViewportMouseEvent(event widget.ViewportMouseEvent) {
+
+}
+
+func (e *ModelEditor) Scene() graphics.Scene {
+	return nil
+}
+
+func (e *ModelEditor) Camera() graphics.Camera {
+	return nil
+}
+
 func (e *ModelEditor) IsPropsAssetExpanded() bool {
 	return e.propsAssetExpanded
 }
@@ -49,6 +63,10 @@ func (e *ModelEditor) RenderProperties() co.Instance {
 	return co.New(ModelPropertiesView, func() {
 		co.WithData(e)
 	})
+}
+
+func (e *ModelEditor) Destroy() {
+
 }
 
 var ModelPropertiesView = co.Controlled(co.Define(func(props co.Properties) co.Instance {

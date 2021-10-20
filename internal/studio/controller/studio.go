@@ -5,14 +5,21 @@ import (
 
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
+	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/graphics"
+	"github.com/mokiat/lacking/game/physics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/optional"
 )
 
-func NewStudio(window *ui.Window, gfxEngine graphics.Engine) *Studio {
+func NewStudio(
+	window *ui.Window,
+	gfxEngine graphics.Engine,
+	physicsEngine *physics.Engine,
+	ecsEngine *ecs.Engine,
+) *Studio {
 	return &Studio{
 		Controller: co.NewBaseController(),
 
@@ -23,7 +30,7 @@ func NewStudio(window *ui.Window, gfxEngine graphics.Engine) *Studio {
 		propertiesVisible: true,
 
 		editors: []Editor{
-			NewCubeTextureEditor(),
+			NewCubeTextureEditor(gfxEngine),
 			NewModelEditor(),
 		},
 	}
@@ -109,6 +116,9 @@ func (s *Studio) OnEditorClosed(editor Editor) {
 			s.activeEditor = s.editors[editorIndex-1]
 		}
 	}
+
+	editor.Destroy()
+
 	s.NotifyChanged()
 }
 
@@ -248,21 +258,30 @@ var StudioView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 			}))
 		}
 
-		co.WithChild("center", co.New(mat.Container, func() {
-			co.WithData(mat.ContainerData{
-				BackgroundColor: optional.NewColor(ui.Black()),
-			})
-			co.WithLayoutData(mat.LayoutData{
-				Alignment: mat.AlignmentCenter,
-			})
-		}))
-
-		// co.WithChild("center", co.New(Viewport, func() {
-		// 	co.WithData(controller.viewportController)
+		// co.WithChild("center", co.New(mat.Container, func() {
+		// 	co.WithData(mat.ContainerData{
+		// 		BackgroundColor: optional.NewColor(ui.Black()),
+		// 	})
 		// 	co.WithLayoutData(mat.LayoutData{
 		// 		Alignment: mat.AlignmentCenter,
 		// 	})
 		// }))
+
+		co.WithChild("center", co.New(widget.Viewport, func() {
+			if editor := controller.ActiveEditor(); editor != nil {
+				co.WithData(widget.ViewportData{
+					Scene:  editor.Scene(),
+					Camera: editor.Camera(),
+				})
+				co.WithCallbackData(widget.ViewportCallbackData{
+					OnUpdate:     editor.Update,
+					OnMouseEvent: editor.OnViewportMouseEvent,
+				})
+			}
+			co.WithLayoutData(mat.LayoutData{
+				Alignment: mat.AlignmentCenter,
+			})
+		}))
 	})
 }))
 
