@@ -20,7 +20,7 @@ func NewStudio(
 	physicsEngine *physics.Engine,
 	ecsEngine *ecs.Engine,
 ) *Studio {
-	return &Studio{
+	result := &Studio{
 		Controller: co.NewBaseController(),
 
 		window:    window,
@@ -28,12 +28,12 @@ func NewStudio(
 
 		actionsVisible:    true,
 		propertiesVisible: true,
-
-		editors: []Editor{
-			NewCubeTextureEditor(gfxEngine),
-			NewModelEditor(),
-		},
 	}
+	result.editors = []Editor{
+		NewCubeTextureEditor(result, gfxEngine),
+		NewModelEditor(),
+	}
+	return result
 }
 
 type Studio struct {
@@ -67,19 +67,27 @@ func (s *Studio) SetPropertiesVisible(visible bool) {
 }
 
 func (s *Studio) UndoEnabled() bool {
-	panic("TODO")
+	if s.activeEditor == nil {
+		return false
+	}
+	return s.activeEditor.CanUndo()
 }
 
 func (s *Studio) Undo() {
-	panic("TODO")
+	s.activeEditor.Undo()
+	s.NotifyChanged()
 }
 
 func (s *Studio) RedoEnabled() bool {
-	panic("TODO")
+	if s.activeEditor == nil {
+		return false
+	}
+	return s.activeEditor.CanRedo()
 }
 
 func (s *Studio) Redo() {
-	panic("TODO")
+	s.activeEditor.Redo()
+	s.NotifyChanged()
 }
 
 func (s *Studio) OpenEditor(editor Editor) {
@@ -361,14 +369,24 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 		co.WithChild("undo", co.New(widget.ToolbarButton, func() {
 			co.WithData(widget.ToolbarButtonData{
 				Icon:     co.OpenImage("resources/icons/undo.png"),
-				Disabled: true,
+				Disabled: !controller.UndoEnabled(),
+			})
+			co.WithCallbackData(widget.ToolbarButtonCallbackData{
+				ClickListener: func() {
+					controller.Undo()
+				},
 			})
 		}))
 
 		co.WithChild("redo", co.New(widget.ToolbarButton, func() {
 			co.WithData(widget.ToolbarButtonData{
 				Icon:     co.OpenImage("resources/icons/redo.png"),
-				Disabled: true,
+				Disabled: !controller.RedoEnabled(),
+			})
+			co.WithCallbackData(widget.ToolbarButtonCallbackData{
+				ClickListener: func() {
+					controller.Redo()
+				},
 			})
 		}))
 

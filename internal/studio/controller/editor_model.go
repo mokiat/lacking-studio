@@ -10,7 +10,7 @@ import (
 
 func NewModelEditor() *ModelEditor {
 	return &ModelEditor{
-		Controller:         co.NewBaseController(),
+		BaseEditor:         NewBaseEditor(),
 		propsAssetExpanded: true,
 	}
 }
@@ -18,7 +18,7 @@ func NewModelEditor() *ModelEditor {
 var _ Editor = (*ModelEditor)(nil)
 
 type ModelEditor struct {
-	co.Controller
+	BaseEditor
 	propsAssetExpanded bool
 }
 

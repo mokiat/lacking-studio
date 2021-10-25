@@ -3,13 +3,11 @@ package controller
 import (
 	"fmt"
 	"image"
-	"os"
 	"path/filepath"
 
-	"github.com/mdouchement/hdr"
 	"github.com/mokiat/gomath/sprec"
+	"github.com/mokiat/lacking-studio/internal/studio/change"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
-	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -17,7 +15,7 @@ import (
 	"github.com/mokiat/lacking/ui/optional"
 )
 
-func NewCubeTextureEditor(gfxEngine graphics.Engine) *CubeTextureEditor {
+func NewCubeTextureEditor(studio *Studio, gfxEngine graphics.Engine) *CubeTextureEditor {
 	gfxScene := gfxEngine.CreateScene()
 	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.0, 0.3, 1.0))
 
@@ -30,7 +28,9 @@ func NewCubeTextureEditor(gfxEngine graphics.Engine) *CubeTextureEditor {
 	gfxCamera.SetAutoFocus(false)
 
 	return &CubeTextureEditor{
-		Controller: co.NewBaseController(),
+		BaseEditor: NewBaseEditor(),
+
+		studio: studio,
 
 		propsAssetExpanded:  true,
 		propsSourceExpanded: true,
@@ -47,7 +47,9 @@ func NewCubeTextureEditor(gfxEngine graphics.Engine) *CubeTextureEditor {
 var _ Editor = (*CubeTextureEditor)(nil)
 
 type CubeTextureEditor struct {
-	co.Controller
+	BaseEditor
+
+	studio *Studio
 
 	propsAssetExpanded  bool
 	propsSourceExpanded bool
@@ -158,48 +160,34 @@ func (e *CubeTextureEditor) SourceImage() ui.Image {
 	return e.sourceImage
 }
 
-func (e *CubeTextureEditor) ChangeSource(path string) {
-	img, packImg, err := e.openImage(path)
-	if err != nil {
+func (e *CubeTextureEditor) OnChangeSource(path string) {
+	ch := &change.CubeTextureChangeSource{
+		Controller: e,
+		FromURI:    e.sourceFilename,
+		ToURI:      path,
+	}
+	if err := e.changes.Push(ch); err != nil {
 		panic(err)
 	}
+	e.studio.NotifyChanged()
+}
 
-	frontPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideFront)
-	rearPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideRear)
-	leftPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideLeft)
-	rightPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideRight)
-	topPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideTop)
-	bottomPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideBottom)
+func (e *CubeTextureEditor) ChangePreviewImage(img image.Image) {
+	// TODO: Erase old image
+	e.sourceImage = co.CreateImage(img)
+	e.NotifyChanged()
+}
 
-	cubeImg, err := pack.BuildCube(frontPackImg, rearPackImg, leftPackImg, rightPackImg, topPackImg, bottomPackImg, 0)
-	if err != nil {
-		panic(err)
-	}
-
-	newImage := e.gfxEngine.CreateCubeTexture(graphics.CubeTextureDefinition{
-		Dimension:      cubeImg.Dimension,
-		WrapS:          graphics.WrapClampToEdge,
-		WrapT:          graphics.WrapClampToEdge,
-		MinFilter:      graphics.FilterNearest,
-		MagFilter:      graphics.FilterNearest,
-		InternalFormat: graphics.InternalFormatRGBA8,
-		DataFormat:     graphics.DataFormatRGBA8,
-		FrontSideData:  cubeImg.RGBA8Data(pack.CubeSideFront),
-		BackSideData:   cubeImg.RGBA8Data(pack.CubeSideRear),
-		LeftSideData:   cubeImg.RGBA8Data(pack.CubeSideLeft),
-		RightSideData:  cubeImg.RGBA8Data(pack.CubeSideRight),
-		TopSideData:    cubeImg.RGBA8Data(pack.CubeSideTop),
-		BottomSideData: cubeImg.RGBA8Data(pack.CubeSideBottom),
-	})
-	e.gfxScene.Sky().SetSkybox(newImage)
-
+func (e *CubeTextureEditor) ChangeGraphicsImage(definition graphics.CubeTextureDefinition) {
 	if e.gfxImage != nil {
 		e.gfxImage.Delete()
 	}
-	e.gfxImage = newImage
+	e.gfxImage = e.gfxEngine.CreateCubeTexture(definition)
+	e.gfxScene.Sky().SetSkybox(e.gfxImage)
+}
 
-	e.sourceFilename = path
-	e.sourceImage = co.CreateImage(img)
+func (e *CubeTextureEditor) ChangeSourceFilename(uri string) {
+	e.sourceFilename = uri
 	e.NotifyChanged()
 }
 
@@ -210,54 +198,9 @@ func (e *CubeTextureEditor) RenderProperties() co.Instance {
 }
 
 func (e *CubeTextureEditor) Destroy() {
-
-}
-
-func (e *CubeTextureEditor) openImage(path string) (image.Image, *pack.Image, error) {
-	in, err := os.Open(path)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to open image resource: %w", err)
+	if e.gfxImage != nil {
+		e.gfxImage.Delete()
 	}
-	defer in.Close()
-
-	img, _, err := image.Decode(in)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to decode image: %w", err)
-	}
-
-	imgStartX := img.Bounds().Min.X
-	imgStartY := img.Bounds().Min.Y
-	width := img.Bounds().Dx()
-	height := img.Bounds().Dy()
-	texels := make([][]pack.Color, height)
-	for y := 0; y < height; y++ {
-		texels[y] = make([]pack.Color, width)
-		for x := 0; x < width; x++ {
-			switch img := img.(type) {
-			case hdr.Image:
-				r, g, b, a := img.HDRAt(imgStartX+x, imgStartY+y).HDRPixel()
-				texels[y][x] = pack.Color{
-					R: r,
-					G: g,
-					B: b,
-					A: a,
-				}
-			default:
-				r, g, b, a := img.At(imgStartX+x, imgStartY+y).RGBA()
-				texels[y][x] = pack.Color{
-					R: float64(float64((r>>8)&0xFF) / 255.0),
-					G: float64(float64((g>>8)&0xFF) / 255.0),
-					B: float64(float64((b>>8)&0xFF) / 255.0),
-					A: float64(float64((a>>8)&0xFF) / 255.0),
-				}
-			}
-		}
-	}
-	return img, &pack.Image{
-		Width:  width,
-		Height: height,
-		Texels: texels,
-	}, nil
 }
 
 var CubeTexturePropertiesView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
@@ -299,7 +242,7 @@ var CubeTexturePropertiesView = co.Controlled(co.Define(func(props co.Properties
 					editor.SetPropsSourceExpanded(!editor.IsPropsSourceExpanded())
 				},
 				OnDrop: func(paths []string) {
-					editor.ChangeSource(paths[0])
+					editor.OnChangeSource(paths[0])
 				},
 				OnReload: func() {
 					// TODO
