@@ -41,13 +41,12 @@ func main() {
 
 	resourceLocator := ui.NewFileResourceLocator(os.DirFS("."))
 	uiGLGraphics := glui.NewGraphics()
-	uiController := ui.NewController(resourceLocator, uiGLGraphics, func(w *ui.Window) {
-		studio.BootstrapApplication(w, registry, graphicsEngine, physicsEngine, ecsEngine)
-	})
 
 	controller := app.NewLayeredController(
 		studio.NewController(graphicsEngine),
-		uiController,
+		ui.NewController(resourceLocator, uiGLGraphics, func(w *ui.Window) {
+			studio.BootstrapApplication(w, registry, graphicsEngine, physicsEngine, ecsEngine)
+		}),
 	)
 
 	log.Println("running application")

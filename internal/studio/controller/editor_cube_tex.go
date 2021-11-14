@@ -1,13 +1,13 @@
 package controller
 
 import (
-	"fmt"
 	"image"
 	"path/filepath"
 
 	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking-studio/internal/studio/change"
 	"github.com/mokiat/lacking-studio/internal/studio/history"
+	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/data/asset"
@@ -15,8 +15,6 @@ import (
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
 )
 
 func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) *CubeTextureEditor {
@@ -50,6 +48,7 @@ func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) *CubeTex
 }
 
 var _ Editor = (*CubeTextureEditor)(nil)
+var _ model.CubeTextureEditor = (*CubeTextureEditor)(nil)
 
 type CubeTextureEditor struct {
 	BaseEditor
@@ -81,11 +80,11 @@ type CubeTextureEditor struct {
 }
 
 func (e *CubeTextureEditor) ID() string {
-	return "bab99e80-ded1-459a-b00b-6a17afa44046"
+	return e.resource.GUID
 }
 
 func (e *CubeTextureEditor) Name() string {
-	return "Night-Sky"
+	return e.resource.Name
 }
 
 func (e *CubeTextureEditor) Icon() ui.Image {
@@ -149,29 +148,29 @@ func (e *CubeTextureEditor) Camera() graphics.Camera {
 	return e.gfxCamera
 }
 
-func (e *CubeTextureEditor) IsPropsAssetExpanded() bool {
+func (e *CubeTextureEditor) IsAssetAccordionExpanded() bool {
 	return e.propsAssetExpanded
 }
 
-func (e *CubeTextureEditor) SetPropsAssetExpanded(expanded bool) {
+func (e *CubeTextureEditor) SetAssetAccordionExpanded(expanded bool) {
 	e.propsAssetExpanded = expanded
 	e.NotifyChanged()
 }
 
-func (e *CubeTextureEditor) IsPropsSourceExpanded() bool {
+func (e *CubeTextureEditor) IsSourceAccordionExpanded() bool {
 	return e.propsSourceExpanded
 }
 
-func (e *CubeTextureEditor) SetPropsSourceExpanded(expanded bool) {
+func (e *CubeTextureEditor) SetSourceAccordionExpanded(expanded bool) {
 	e.propsSourceExpanded = expanded
 	e.NotifyChanged()
 }
 
-func (e *CubeTextureEditor) IsPropsConfigExpanded() bool {
+func (e *CubeTextureEditor) IsConfigAccordionExpanded() bool {
 	return e.propsConfigExpanded
 }
 
-func (e *CubeTextureEditor) SetPropsConfigExpanded(expanded bool) {
+func (e *CubeTextureEditor) SetConfigAccordionExpanded(expanded bool) {
 	e.propsConfigExpanded = expanded
 	e.NotifyChanged()
 }
@@ -180,11 +179,11 @@ func (e *CubeTextureEditor) SourceFilename() string {
 	return filepath.Base(e.sourceFilename)
 }
 
-func (e *CubeTextureEditor) SourceImage() ui.Image {
+func (e *CubeTextureEditor) SourcePreview() ui.Image {
 	return e.sourceImage
 }
 
-func (e *CubeTextureEditor) OnChangeSource(path string) {
+func (e *CubeTextureEditor) ChangeSource(path string) {
 	ch := &change.CubeTextureChangeSource{
 		Controller: e,
 		FromURI:    e.sourceFilename,
@@ -193,6 +192,10 @@ func (e *CubeTextureEditor) OnChangeSource(path string) {
 	if err := e.changes.Push(ch); err != nil {
 		panic(err)
 	}
+	e.studio.NotifyChanged()
+}
+
+func (e *CubeTextureEditor) ReloadSource() {
 	e.studio.NotifyChanged()
 }
 
@@ -218,7 +221,7 @@ func (e *CubeTextureEditor) ChangeSourceFilename(uri string) {
 }
 
 func (e *CubeTextureEditor) RenderProperties() co.Instance {
-	return co.New(CubeTexturePropertiesView, func() {
+	return co.New(view.CubeTextureProperties, func() {
 		co.WithData(e)
 	})
 }
@@ -228,181 +231,3 @@ func (e *CubeTextureEditor) Destroy() {
 		e.gfxImage.Delete()
 	}
 }
-
-var CubeTexturePropertiesView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
-	editor := props.Data().(*CubeTextureEditor)
-
-	return co.New(mat.Container, func() {
-		co.WithData(mat.ContainerData{
-			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-				ContentAlignment: mat.AlignmentLeft,
-				ContentSpacing:   5,
-			}),
-		})
-
-		co.WithChild("asset", co.New(view.AssetAccordion, func() {
-			co.WithData(view.AssetAccordionData{
-				AssetID:   editor.ID(),
-				AssetName: editor.Name(),
-				AssetType: "Cube Texture",
-				Expanded:  editor.IsPropsAssetExpanded(),
-			})
-			co.WithCallbackData(view.AssetAccordionCallbackData{
-				OnToggleExpanded: func() {
-					editor.SetPropsAssetExpanded(!editor.IsPropsAssetExpanded())
-				},
-			})
-		}))
-
-		co.WithChild("source", co.New(CubeTextureSourceAccordion, func() {
-			co.WithLayoutData(mat.LayoutData{
-				GrowHorizontally: true,
-			})
-			co.WithData(CubeTextureSourceAccordionData{
-				Expanded: editor.IsPropsSourceExpanded(),
-				Filename: editor.SourceFilename(),
-				Image:    editor.SourceImage(),
-			})
-			co.WithCallbackData(CubeTextureSourceAccordionCallbackData{
-				OnToggle: func() {
-					editor.SetPropsSourceExpanded(!editor.IsPropsSourceExpanded())
-				},
-				OnDrop: func(paths []string) {
-					editor.OnChangeSource(paths[0])
-				},
-				OnReload: func() {
-					// TODO
-					fmt.Println("RELOAD CUBE SOURCE")
-				},
-			})
-		}))
-
-		// co.WithChild("source", co.New(widget.Accordion, func() {
-		// 	co.WithLayoutData(mat.LayoutData{
-		// 		GrowHorizontally: true,
-		// 	})
-		// 	co.WithData(widget.AccordionData{
-		// 		Title:    "Source",
-		// 		Expanded: editor.IsPropsSourceExpanded(),
-		// 	})
-		// 	co.WithCallbackData(widget.AccordionCallbackData{
-		// 		OnToggle: func() {
-		// 			editor.SetPropsSourceExpanded(!editor.IsPropsSourceExpanded())
-		// 		},
-		// 	})
-
-		// 	co.WithChild("content", co.New(mat.Label, func() {
-		// 		co.WithData(mat.LabelData{
-		// 			Font:      co.GetFont("roboto", "regular"),
-		// 			FontSize:  optional.NewInt(20),
-		// 			FontColor: optional.NewColor(ui.Black()),
-		// 			Text:      "TODO: Source image here...",
-		// 		})
-		// 	}))
-		// }))
-
-		co.WithChild("config", co.New(widget.Accordion, func() {
-			co.WithLayoutData(mat.LayoutData{
-				GrowHorizontally: true,
-			})
-			co.WithData(widget.AccordionData{
-				Title:    "Config",
-				Expanded: editor.IsPropsConfigExpanded(),
-			})
-			co.WithCallbackData(widget.AccordionCallbackData{
-				OnToggle: func() {
-					editor.SetPropsConfigExpanded(!editor.IsPropsConfigExpanded())
-				},
-			})
-
-			co.WithChild("content", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.GetFont("roboto", "regular"),
-					FontSize:  optional.NewInt(20),
-					FontColor: optional.NewColor(ui.Black()),
-					Text:      "TODO: Asset config here...",
-				})
-			}))
-		}))
-	})
-}))
-
-type CubeTextureSourceAccordionData struct {
-	Expanded bool
-	Filename string
-	Image    ui.Image
-}
-
-type CubeTextureSourceAccordionCallbackData struct {
-	OnToggle func()
-	OnDrop   func(paths []string)
-	OnReload func()
-}
-
-var CubeTextureSourceAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
-	var data CubeTextureSourceAccordionData
-	props.InjectData(&data)
-
-	var callbackData CubeTextureSourceAccordionCallbackData
-	props.InjectCallbackData(&callbackData)
-
-	return co.New(widget.Accordion, func() {
-		co.WithLayoutData(mat.LayoutData{
-			GrowHorizontally: true,
-		})
-		co.WithData(widget.AccordionData{
-			Title:    "Source",
-			Expanded: data.Expanded,
-		})
-		co.WithCallbackData(widget.AccordionCallbackData{
-			OnToggle: callbackData.OnToggle,
-		})
-
-		co.WithChild("content", co.New(mat.Container, func() {
-			co.WithLayoutData(mat.LayoutData{
-				GrowHorizontally: true,
-			})
-			co.WithData(mat.ContainerData{
-				Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-					ContentAlignment: mat.AlignmentCenter,
-					ContentSpacing:   5,
-				}),
-				Padding: ui.Spacing{
-					Left:   5,
-					Right:  5,
-					Top:    5,
-					Bottom: 5,
-				},
-			})
-
-			co.WithChild("label", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.GetFont("roboto", "regular"),
-					FontSize:  optional.NewInt(18),
-					FontColor: optional.NewColor(ui.Black()),
-					Text:      data.Filename,
-				})
-			}))
-
-			co.WithChild("dropzone", co.New(widget.DropZone, func() {
-				co.WithCallbackData(widget.DropZoneCallbackData{
-					OnDrop: callbackData.OnDrop,
-				})
-				co.WithChild("image", co.New(mat.Picture, func() {
-					co.WithData(mat.PictureData{
-						BackgroundColor: optional.NewColor(ui.Gray()),
-						Image:           data.Image,
-						ImageColor:      optional.NewColor(ui.White()),
-						Mode:            mat.ImageModeFit,
-					})
-					co.WithLayoutData(mat.LayoutData{
-						Width:  optional.NewInt(200),
-						Height: optional.NewInt(200),
-					})
-				}))
-			}))
-
-			// TODO: Add reload button
-		}))
-	})
-}))
