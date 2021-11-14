@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	gameasset "github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
@@ -97,14 +98,14 @@ var ModelPropertiesView = co.Controlled(co.Define(func(props co.Properties) co.I
 			}),
 		})
 
-		co.WithChild("asset", co.New(AssetAccordion, func() {
-			co.WithData(AssetAccordionData{
+		co.WithChild("asset", co.New(view.AssetAccordion, func() {
+			co.WithData(view.AssetAccordionData{
 				AssetID:   editor.ID(),
 				AssetName: editor.Name(),
 				AssetType: "3D Model",
 				Expanded:  editor.IsPropsAssetExpanded(),
 			})
-			co.WithCallbackData(AssetAccordionCallbackData{
+			co.WithCallbackData(view.AssetAccordionCallbackData{
 				OnToggleExpanded: func() {
 					editor.SetPropsAssetExpanded(!editor.IsPropsAssetExpanded())
 				},
