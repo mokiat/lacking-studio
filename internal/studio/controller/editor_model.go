@@ -2,15 +2,20 @@ package controller
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
+	gameasset "github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
 
-func NewModelEditor() *ModelEditor {
+func NewModelEditor(studio *Studio, resource *gameasset.Resource) *ModelEditor {
 	return &ModelEditor{
-		BaseEditor:         NewBaseEditor(),
+		BaseEditor: NewBaseEditor(),
+
+		studio:   studio,
+		resource: resource,
+
 		propsAssetExpanded: true,
 	}
 }
@@ -19,19 +24,31 @@ var _ Editor = (*ModelEditor)(nil)
 
 type ModelEditor struct {
 	BaseEditor
+
+	studio   *Studio
+	resource *gameasset.Resource
+
 	propsAssetExpanded bool
 }
 
 func (e *ModelEditor) ID() string {
-	return "2a4ddd33-b284-4d60-91eb-805f8b21a1d1"
+	return e.resource.GUID
 }
 
 func (e *ModelEditor) Name() string {
-	return "Vehicle"
+	return e.resource.Name
 }
 
 func (e *ModelEditor) Icon() ui.Image {
 	return co.OpenImage("resources/icons/model.png")
+}
+
+func (e *ModelEditor) CanSave() bool {
+	return false
+}
+
+func (e *ModelEditor) Save() {
+
 }
 
 func (e *ModelEditor) Update() {

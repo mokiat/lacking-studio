@@ -7,7 +7,10 @@ import (
 
 	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking-studio/internal/studio/change"
+	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
+	"github.com/mokiat/lacking/data/asset"
+	gameasset "github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -15,8 +18,8 @@ import (
 	"github.com/mokiat/lacking/ui/optional"
 )
 
-func NewCubeTextureEditor(studio *Studio, gfxEngine graphics.Engine) *CubeTextureEditor {
-	gfxScene := gfxEngine.CreateScene()
+func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) *CubeTextureEditor {
+	gfxScene := studio.GraphicsEngine().CreateScene()
 	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.0, 0.3, 1.0))
 
 	gfxCamera := gfxScene.CreateCamera()
@@ -30,13 +33,14 @@ func NewCubeTextureEditor(studio *Studio, gfxEngine graphics.Engine) *CubeTextur
 	return &CubeTextureEditor{
 		BaseEditor: NewBaseEditor(),
 
-		studio: studio,
+		studio:   studio,
+		resource: resource,
 
 		propsAssetExpanded:  true,
 		propsSourceExpanded: true,
 		propsConfigExpanded: true,
 
-		gfxEngine: gfxEngine,
+		gfxEngine: studio.GraphicsEngine(),
 		gfxScene:  gfxScene,
 		gfxCamera: gfxCamera,
 
@@ -49,7 +53,8 @@ var _ Editor = (*CubeTextureEditor)(nil)
 type CubeTextureEditor struct {
 	BaseEditor
 
-	studio *Studio
+	studio   *Studio
+	resource *gameasset.Resource
 
 	propsAssetExpanded  bool
 	propsSourceExpanded bool
@@ -62,12 +67,16 @@ type CubeTextureEditor struct {
 	gfxCameraYaw   sprec.Angle
 	gfxImage       graphics.CubeTexture
 
+	definition     graphics.CubeTextureDefinition
 	sourceFilename string
+	sourceImg      image.Image
 	sourceImage    ui.Image
 
 	rotatingCamera bool
 	oldMouseX      int
 	oldMouseY      int
+
+	savedChange history.Change
 }
 
 func (e *CubeTextureEditor) ID() string {
@@ -82,14 +91,28 @@ func (e *CubeTextureEditor) Icon() ui.Image {
 	return co.OpenImage("resources/icons/texture.png")
 }
 
-func (e *CubeTextureEditor) Update() {
-	// e.gfxCamera.SetRotation(
-	// 	sprec.QuatProd(
-	// 		sprec.RotationQuat(sprec.Degrees(1), sprec.UnitVec3(sprec.NewVec3(1.0, 2.0, 0.5))),
-	// 		e.gfxCamera.Rotation(),
-	// 	),
-	// )
+func (e *CubeTextureEditor) CanSave() bool {
+	return e.savedChange != e.changes.LastChange()
 }
+
+func (e *CubeTextureEditor) Save() {
+	texOut := &asset.CubeTexture{
+		Dimension: uint16(e.definition.Dimension),
+		Format:    asset.DataFormatRGBA32F,
+		Sides:     [6]asset.CubeTextureSide{
+			// TODO
+		},
+	}
+	if err := e.studio.Registry().WritePreview(e.ID(), e.sourceImg); err != nil {
+		panic(err)
+	}
+	if err := e.studio.Registry().WriteContent(e.ID(), texOut); err != nil {
+		panic(err)
+	}
+	e.savedChange = e.changes.LastChange()
+}
+
+func (e *CubeTextureEditor) Update() {}
 
 func (e *CubeTextureEditor) OnViewportMouseEvent(event widget.ViewportMouseEvent) {
 	switch event.Type {
@@ -174,7 +197,8 @@ func (e *CubeTextureEditor) OnChangeSource(path string) {
 
 func (e *CubeTextureEditor) ChangePreviewImage(img image.Image) {
 	// TODO: Erase old image
-	e.sourceImage = co.CreateImage(img)
+	e.sourceImg = e.studio.Registry().PreparePreview(img)
+	e.sourceImage = co.CreateImage(e.sourceImg)
 	e.NotifyChanged()
 }
 
@@ -182,6 +206,7 @@ func (e *CubeTextureEditor) ChangeGraphicsImage(definition graphics.CubeTextureD
 	if e.gfxImage != nil {
 		e.gfxImage.Delete()
 	}
+	e.definition = definition
 	e.gfxImage = e.gfxEngine.CreateCubeTexture(definition)
 	e.gfxScene.Sky().SetSkybox(e.gfxImage)
 }

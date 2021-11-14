@@ -19,9 +19,8 @@ type Editor interface {
 	Undo()
 	CanRedo() bool
 	Redo()
-
-	// CanSave() bool
-	// Save()
+	CanSave() bool
+	Save()
 
 	Update()
 	OnViewportMouseEvent(event widget.ViewportMouseEvent)

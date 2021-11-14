@@ -9,12 +9,21 @@ import (
 	glfwapp "github.com/mokiat/lacking/framework/glfw/app"
 	glgraphics "github.com/mokiat/lacking/framework/opengl/game/graphics"
 	glui "github.com/mokiat/lacking/framework/opengl/ui"
+	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/physics"
 	"github.com/mokiat/lacking/ui"
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		log.Fatalf("usage: studio <project_folder>")
+	}
+	registry, err := asset.NewDirRegistry(os.Args[1])
+	if err != nil {
+		log.Fatalf("failed to open registry: %v", err)
+	}
+
 	cfg := glfwapp.NewConfig("Lacking Studio", 1024, 576)
 	cfg.SetVSync(true)
 	cfg.SetMaximized(true)
@@ -33,7 +42,7 @@ func main() {
 	resourceLocator := ui.NewFileResourceLocator(os.DirFS("."))
 	uiGLGraphics := glui.NewGraphics()
 	uiController := ui.NewController(resourceLocator, uiGLGraphics, func(w *ui.Window) {
-		studio.BootstrapApplication(w, graphicsEngine, physicsEngine, ecsEngine)
+		studio.BootstrapApplication(w, registry, graphicsEngine, physicsEngine, ecsEngine)
 	})
 
 	controller := app.NewLayeredController(

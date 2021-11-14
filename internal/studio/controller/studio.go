@@ -3,8 +3,9 @@ package controller
 import (
 	"fmt"
 
-	"github.com/mokiat/lacking-studio/internal/studio/global"
+	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
+	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/game/physics"
@@ -16,6 +17,7 @@ import (
 
 func NewStudio(
 	window *ui.Window,
+	registry asset.Registry,
 	gfxEngine graphics.Engine,
 	physicsEngine *physics.Engine,
 	ecsEngine *ecs.Engine,
@@ -24,14 +26,23 @@ func NewStudio(
 		Controller: co.NewBaseController(),
 
 		window:    window,
+		registry:  data.NewRegistry(registry),
 		gfxEngine: gfxEngine,
 
 		actionsVisible:    true,
 		propertiesVisible: true,
 	}
 	result.editors = []Editor{
-		NewCubeTextureEditor(result, gfxEngine),
-		NewModelEditor(),
+		NewCubeTextureEditor(result, &asset.Resource{
+			GUID: "bab99e80-ded1-459a-b00b-6a17afa44046",
+			Kind: "cube_texture",
+			Name: "Night Sky",
+		}),
+		NewModelEditor(result, &asset.Resource{
+			GUID: "2a4ddd33-b284-4d60-91eb-805f8b21a1d1",
+			Kind: "model",
+			Name: "Buggy",
+		}),
 	}
 	return result
 }
@@ -40,12 +51,25 @@ type Studio struct {
 	co.Controller
 
 	window    *ui.Window
+	registry  *data.Registry
 	gfxEngine graphics.Engine
 
 	actionsVisible    bool
 	propertiesVisible bool
 	activeEditor      Editor
 	editors           []Editor
+}
+
+func (s *Studio) Window() *ui.Window {
+	return s.window
+}
+
+func (s *Studio) Registry() *data.Registry {
+	return s.registry
+}
+
+func (s *Studio) GraphicsEngine() graphics.Engine {
+	return s.gfxEngine
 }
 
 func (s *Studio) IsActionsVisible() bool {
@@ -90,11 +114,19 @@ func (s *Studio) Redo() {
 	s.NotifyChanged()
 }
 
-func (s *Studio) OpenEditor(editor Editor) {
-	panic("TODO")
+func (s *Studio) SaveEnabled() bool {
+	if s.activeEditor == nil {
+		return false
+	}
+	return s.activeEditor.CanSave()
 }
 
-func (s *Studio) CloseEditor(editor Editor) {
+func (s *Studio) Save() {
+	s.activeEditor.Save()
+	s.NotifyChanged()
+}
+
+func (s *Studio) OpenEditor(editor Editor) {
 	panic("TODO")
 }
 
@@ -102,12 +134,12 @@ func (s *Studio) ActiveEditor() Editor {
 	return s.activeEditor
 }
 
-func (s *Studio) OnEditorClicked(editor Editor) {
+func (s *Studio) SelectEditor(editor Editor) {
 	s.activeEditor = editor
 	s.NotifyChanged()
 }
 
-func (s *Studio) OnEditorClosed(editor Editor) {
+func (s *Studio) CloseEditor(editor Editor) {
 	editorIndex := s.editorIndex(editor)
 	if editorIndex < 0 {
 		return
@@ -142,9 +174,6 @@ func (s *Studio) EachEditor(cb func(editor Editor)) {
 
 func (s *Studio) Render() co.Instance {
 	return co.New(StudioView, func() {
-		co.WithContext(global.Context{
-			GFXEngine: s.gfxEngine,
-		})
 		co.WithData(s)
 	})
 }
@@ -360,7 +389,12 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 		co.WithChild("save", co.New(widget.ToolbarButton, func() {
 			co.WithData(widget.ToolbarButtonData{
 				Icon:     co.OpenImage("resources/icons/save.png"),
-				Disabled: true,
+				Disabled: !controller.SaveEnabled(),
+			})
+			co.WithCallbackData(widget.ToolbarButtonCallbackData{
+				ClickListener: func() {
+					controller.Save()
+				},
 			})
 		}))
 
@@ -418,10 +452,10 @@ var Tabbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 				})
 				co.WithCallbackData(widget.TabbarTabCallbackData{
 					OnClick: func() {
-						controller.OnEditorClicked(editor)
+						controller.SelectEditor(editor)
 					},
 					OnClose: func() {
-						controller.OnEditorClosed(editor)
+						controller.CloseEditor(editor)
 					},
 				})
 			}))

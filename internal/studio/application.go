@@ -2,7 +2,7 @@ package studio
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/controller"
-	"github.com/mokiat/lacking-studio/internal/studio/global"
+	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/game/physics"
@@ -12,19 +12,17 @@ import (
 
 func BootstrapApplication(
 	window *ui.Window,
+	registry asset.Registry,
 	gfxEngine graphics.Engine,
 	physicsEngine *physics.Engine,
 	ecsEngine *ecs.Engine,
 ) {
-	studio := controller.NewStudio(window, gfxEngine, physicsEngine, ecsEngine)
-
-	co.Initialize(window, co.New(co.StoreProvider, func() {
-		co.WithData(co.StoreProviderData{
-			Entries: []co.StoreProviderEntry{
-				co.NewStoreProviderEntry(global.Reducer()),
-			},
-		})
-
-		co.WithChild("app", studio.Render())
-	}))
+	studio := controller.NewStudio(
+		window,
+		registry,
+		gfxEngine,
+		physicsEngine,
+		ecsEngine,
+	)
+	co.Initialize(window, studio.Render())
 }
