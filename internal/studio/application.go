@@ -11,6 +11,7 @@ import (
 )
 
 func BootstrapApplication(
+	projectDir string,
 	window *ui.Window,
 	registry asset.Registry,
 	gfxEngine graphics.Engine,
@@ -18,6 +19,7 @@ func BootstrapApplication(
 	ecsEngine *ecs.Engine,
 ) {
 	studio := controller.NewStudio(
+		projectDir,
 		window,
 		registry,
 		gfxEngine,

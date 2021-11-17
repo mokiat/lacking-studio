@@ -48,7 +48,7 @@ var CubeTextureProperties = co.Controlled(co.Define(func(props co.Properties) co
 					editor.SetSourceAccordionExpanded(!editor.IsSourceAccordionExpanded())
 				},
 				OnDrop: func(paths []string) {
-					editor.ChangeSource(paths[0])
+					editor.ChangeSourcePath(paths[0])
 				},
 				OnReload: func() {
 					editor.ReloadSource()

@@ -16,6 +16,7 @@ import (
 )
 
 func NewStudio(
+	projectDir string,
 	window *ui.Window,
 	registry asset.Registry,
 	gfxEngine graphics.Engine,
@@ -25,9 +26,10 @@ func NewStudio(
 	result := &Studio{
 		Controller: co.NewBaseController(),
 
-		window:    window,
-		registry:  data.NewRegistry(registry),
-		gfxEngine: gfxEngine,
+		projectDir: projectDir,
+		window:     window,
+		registry:   data.NewRegistry(registry),
+		gfxEngine:  gfxEngine,
 
 		actionsVisible:    true,
 		propertiesVisible: true,
@@ -50,14 +52,19 @@ func NewStudio(
 type Studio struct {
 	co.Controller
 
-	window    *ui.Window
-	registry  *data.Registry
-	gfxEngine graphics.Engine
+	projectDir string
+	window     *ui.Window
+	registry   *data.Registry
+	gfxEngine  graphics.Engine
 
 	actionsVisible    bool
 	propertiesVisible bool
 	activeEditor      Editor
 	editors           []Editor
+}
+
+func (s *Studio) ProjectDir() string {
+	return s.projectDir
 }
 
 func (s *Studio) Window() *ui.Window {

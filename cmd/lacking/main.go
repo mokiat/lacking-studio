@@ -1,8 +1,11 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/mokiat/lacking-studio/internal/studio"
 	"github.com/mokiat/lacking/app"
@@ -15,57 +18,85 @@ import (
 	"github.com/mokiat/lacking/ui"
 )
 
+var (
+	projectDirFlag string
+	studioDirFlag  string
+)
+
+func init() {
+	flag.StringVar(&projectDirFlag, "project", ".", "project directory")
+	flag.StringVar(&studioDirFlag, "studio", "", "studio directory")
+}
+
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatalf("usage: studio <project_folder>")
-	}
-	registry, err := asset.NewDirRegistry(os.Args[1])
-	if err != nil {
-		log.Fatalf("failed to open registry: %v", err)
-	}
-
-	cfg := glfwapp.NewConfig("Lacking Studio", 1024, 576)
-	cfg.SetVSync(true)
-	cfg.SetMaximized(true)
-	cfg.SetIcon("resources/icons/favicon.png")
-
-	// baseDir, err := evalBaseDir()
-	// if err != nil {
-	// 	log.Fatalf("failed to evaluate executable dir: %v", err)
-	// }
-	// log.Printf("EXEC DIR: %s", baseDir)
-
-	graphicsEngine := glgraphics.NewEngine()
-	physicsEngine := physics.NewEngine()
-	ecsEngine := ecs.NewEngine()
-
-	resourceLocator := ui.NewFileResourceLocator(os.DirFS("."))
-	uiGLGraphics := glui.NewGraphics()
-
-	controller := app.NewLayeredController(
-		studio.NewController(graphicsEngine),
-		ui.NewController(resourceLocator, uiGLGraphics, func(w *ui.Window) {
-			studio.BootstrapApplication(w, registry, graphicsEngine, physicsEngine, ecsEngine)
-		}),
-	)
+	flag.Parse()
 
 	log.Println("running application")
-	if err := glfwapp.Run(cfg, controller); err != nil {
+	if err := runApplication(); err != nil {
 		log.Fatalf("application error: %v", err)
 	}
 	log.Println("application closed")
 }
 
-// func evalBaseDir() (fs.FS, error) {
-// 	execPath, err := os.Executable()
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get executable path: %w", err)
-// 	}
+func runApplication() error {
+	studioDir, err := evalStudioDir()
+	if err != nil {
+		return fmt.Errorf("failed to evaluate studio dir: %w", err)
+	}
+	log.Printf("studio directory: %s", studioDir)
 
-// 	directExecPath, err := filepath.EvalSymlinks(execPath)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to evaluate symlinks to executable: %w", err)
-// 	}
+	projectDir, err := evalProjectDir()
+	if err != nil {
+		return fmt.Errorf("failed to evaluate project dir: %w", err)
+	}
+	log.Printf("project directory: %s", projectDir)
 
-// 	return os.DirFS(filepath.Dir(directExecPath)), nil
-// }
+	registry, err := asset.NewDirRegistry(projectDir)
+	if err != nil {
+		return fmt.Errorf("failed to initialize registry: %w", err)
+	}
+
+	cfg := glfwapp.NewConfig("Lacking Studio", 1024, 576)
+	cfg.SetVSync(true)
+	cfg.SetMaximized(true)
+	cfg.SetIcon(filepath.Join(studioDir, "resources/icons/favicon.png"))
+
+	graphicsEngine := glgraphics.NewEngine()
+	physicsEngine := physics.NewEngine()
+	ecsEngine := ecs.NewEngine()
+	resourceLocator := ui.NewFileResourceLocator(studioDir)
+	uiGLGraphics := glui.NewGraphics()
+
+	controller := app.NewLayeredController(
+		studio.NewController(graphicsEngine),
+		ui.NewController(resourceLocator, uiGLGraphics, func(w *ui.Window) {
+			studio.BootstrapApplication(projectDir, w, registry, graphicsEngine, physicsEngine, ecsEngine)
+		}),
+	)
+
+	return glfwapp.Run(cfg, controller)
+}
+
+func evalStudioDir() (string, error) {
+	studioDir := studioDirFlag
+	if studioDir == "" {
+		execPath, err := os.Executable()
+		if err != nil {
+			return "", fmt.Errorf("failed to get executable path: %w", err)
+		}
+		studioDir = filepath.Dir(execPath)
+	}
+	absStudioDir, err := filepath.Abs(studioDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to get absolute path: %w", err)
+	}
+	return absStudioDir, nil
+}
+
+func evalProjectDir() (string, error) {
+	absWorkDir, err := filepath.Abs(projectDirFlag)
+	if err != nil {
+		return "", fmt.Errorf("failed to get absolute working directory: %w", err)
+	}
+	return absWorkDir, nil
+}

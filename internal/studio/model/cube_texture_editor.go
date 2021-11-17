@@ -15,6 +15,8 @@ type CubeTextureEditor interface {
 	SourceFilename() string
 	SourcePreview() ui.Image
 
-	ChangeSource(uri string)
-	ReloadSource()
+	SetSourcePath(path string)
+	ReloadSource() error
+
+	ChangeSourcePath(path string)
 }
