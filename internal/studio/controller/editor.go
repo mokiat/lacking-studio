@@ -20,7 +20,7 @@ type Editor interface {
 	CanRedo() bool
 	Redo()
 	CanSave() bool
-	Save()
+	Save() error
 
 	Update()
 	OnViewportMouseEvent(event widget.ViewportMouseEvent)

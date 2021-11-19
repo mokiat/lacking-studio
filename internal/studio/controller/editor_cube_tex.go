@@ -47,7 +47,7 @@ func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) *CubeTex
 		gfxScene:  gfxScene,
 		gfxCamera: gfxCamera,
 
-		sourcePath: "---",
+		sourcePath: "<none>",
 	}
 }
 
@@ -57,8 +57,9 @@ var _ model.CubeTextureEditor = (*CubeTextureEditor)(nil)
 type CubeTextureEditor struct {
 	BaseEditor
 
-	studio   *Studio
-	resource *gameasset.Resource
+	studio      *Studio
+	resource    *gameasset.Resource
+	savedChange history.Change
 
 	propsAssetExpanded  bool
 	propsSourceExpanded bool
@@ -69,18 +70,17 @@ type CubeTextureEditor struct {
 	gfxCamera      graphics.Camera
 	gfxCameraPitch sprec.Angle
 	gfxCameraYaw   sprec.Angle
-	gfxImage       graphics.CubeTexture
 
-	definition  graphics.CubeTextureDefinition
-	sourcePath  string
-	sourceImg   image.Image
-	sourceImage ui.Image
+	sourceImage    image.Image
+	sourcePath     string
+	previewImage   image.Image
+	previewUIImage ui.Image
+	convertedImage *pack.CubeImage
+	graphicsImage  graphics.CubeTexture
 
 	rotatingCamera bool
 	oldMouseX      int
 	oldMouseY      int
-
-	savedChange history.Change
 }
 
 func (e *CubeTextureEditor) ID() string {
@@ -99,21 +99,16 @@ func (e *CubeTextureEditor) CanSave() bool {
 	return e.savedChange != e.changes.LastChange()
 }
 
-func (e *CubeTextureEditor) Save() {
-	texOut := &asset.CubeTexture{
-		Dimension: uint16(e.definition.Dimension),
-		Format:    asset.DataFormatRGBA32F,
-		Sides:     [6]asset.CubeTextureSide{
-			// TODO
-		},
+func (e *CubeTextureEditor) Save() error {
+	assetTexture := e.buildAssetCubeTexture()
+	if err := e.studio.Registry().WritePreview(e.ID(), e.previewImage); err != nil {
+		return fmt.Errorf("failed to write preview image: %w", err)
 	}
-	if err := e.studio.Registry().WritePreview(e.ID(), e.sourceImg); err != nil {
-		panic(err)
-	}
-	if err := e.studio.Registry().WriteContent(e.ID(), texOut); err != nil {
-		panic(err)
+	if err := e.studio.Registry().WriteContent(e.ID(), assetTexture); err != nil {
+		return fmt.Errorf("failed to write content image: %w", err)
 	}
 	e.savedChange = e.changes.LastChange()
+	return nil
 }
 
 func (e *CubeTextureEditor) Update() {}
@@ -184,7 +179,7 @@ func (e *CubeTextureEditor) SourceFilename() string {
 }
 
 func (e *CubeTextureEditor) SourcePreview() ui.Image {
-	return e.sourceImage
+	return e.previewUIImage
 }
 
 func (e *CubeTextureEditor) ChangeSourcePath(path string) {
@@ -215,47 +210,23 @@ func (e *CubeTextureEditor) SetSourcePath(path string) {
 }
 
 func (e *CubeTextureEditor) ReloadSource() error {
-	path := e.sourcePath
-	if !filepath.IsAbs(path) {
-		path = filepath.Join(e.studio.ProjectDir(), path)
-	}
+	return e.Alter(func() error {
+		path := e.sourcePath
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(e.studio.ProjectDir(), path)
+		}
 
-	img, err := e.openImage(path)
-	if err != nil {
-		return fmt.Errorf("failed to open source image: %w", err)
-	}
+		img, err := e.openImage(path)
+		if err != nil {
+			return fmt.Errorf("failed to open source image: %w", err)
+		}
+		e.setSourceImage(img)
 
-	packImg := pack.BuildImageResource(img)
-	frontPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideFront)
-	rearPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideRear)
-	leftPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideLeft)
-	rightPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideRight)
-	topPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideTop)
-	bottomPackImg := pack.BuildCubeSideFromEquirectangular(packImg, pack.CubeSideBottom)
-	cubeImg, err := pack.BuildCube(frontPackImg, rearPackImg, leftPackImg, rightPackImg, topPackImg, bottomPackImg, 0)
-	if err != nil {
-		return fmt.Errorf("failed to build cube image: %w", err)
-	}
-
-	e.Alter(func() {
-		e.changePreviewImage(e.studio.Registry().PreparePreview(img))
-		e.changeGraphicsImage(graphics.CubeTextureDefinition{
-			Dimension:      cubeImg.Dimension,
-			WrapS:          graphics.WrapClampToEdge,
-			WrapT:          graphics.WrapClampToEdge,
-			MinFilter:      graphics.FilterNearest,
-			MagFilter:      graphics.FilterNearest,
-			InternalFormat: graphics.InternalFormatRGBA32F,
-			DataFormat:     graphics.DataFormatRGBA32F,
-			FrontSideData:  cubeImg.RGBA32FData(pack.CubeSideFront),
-			BackSideData:   cubeImg.RGBA32FData(pack.CubeSideRear),
-			LeftSideData:   cubeImg.RGBA32FData(pack.CubeSideLeft),
-			RightSideData:  cubeImg.RGBA32FData(pack.CubeSideRight),
-			TopSideData:    cubeImg.RGBA32FData(pack.CubeSideTop),
-			BottomSideData: cubeImg.RGBA32FData(pack.CubeSideBottom),
-		})
+		e.rebuildPreviewImage()
+		e.rebuildConvertedImage()
+		e.rebuildGraphicsImage()
+		return nil
 	})
-	return nil
 }
 
 func (e *CubeTextureEditor) RenderProperties() co.Instance {
@@ -265,25 +236,10 @@ func (e *CubeTextureEditor) RenderProperties() co.Instance {
 }
 
 func (e *CubeTextureEditor) Destroy() {
-	if e.gfxImage != nil {
-		e.gfxImage.Delete()
+	// TODO: Delete other images
+	if e.graphicsImage != nil {
+		e.graphicsImage.Delete()
 	}
-}
-
-func (e *CubeTextureEditor) changePreviewImage(img image.Image) {
-	// TODO: Erase old image
-	e.sourceImg = img
-	e.sourceImage = co.CreateImage(img)
-	e.NotifyChanged()
-}
-
-func (e *CubeTextureEditor) changeGraphicsImage(definition graphics.CubeTextureDefinition) {
-	if e.gfxImage != nil {
-		e.gfxImage.Delete()
-	}
-	e.definition = definition
-	e.gfxImage = e.gfxEngine.CreateCubeTexture(definition)
-	e.gfxScene.Sky().SetSkybox(e.gfxImage)
 }
 
 func (e *CubeTextureEditor) openImage(path string) (image.Image, error) {
@@ -298,4 +254,110 @@ func (e *CubeTextureEditor) openImage(path string) (image.Image, error) {
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 	return img, nil
+}
+
+func (e *CubeTextureEditor) setSourceImage(img image.Image) {
+	e.sourceImage = img
+}
+
+func (e *CubeTextureEditor) rebuildPreviewImage() {
+	previewImg := e.studio.Registry().PreparePreview(e.sourceImage)
+	e.setPreviewImage(previewImg)
+	previewUIImage := co.CreateImage(e.previewImage)
+	e.setPreviewUIImage(previewUIImage)
+}
+
+func (e *CubeTextureEditor) setPreviewImage(img image.Image) {
+	e.previewImage = img
+}
+
+func (e *CubeTextureEditor) setPreviewUIImage(img ui.Image) {
+	// TODO: Erase old image
+	e.previewUIImage = img
+	e.NotifyChanged()
+}
+
+func (e *CubeTextureEditor) rebuildConvertedImage() {
+	// TODO: Do all of this on the GPU
+	twodImg := pack.BuildImageResource(e.sourceImage)
+	dimension := twodImg.Height / 2 // TODO: Allow user to configure
+	frontPackImg := pack.BuildCubeSideFromEquirectangularScaled(twodImg, pack.CubeSideFront, dimension)
+	rearPackImg := pack.BuildCubeSideFromEquirectangularScaled(twodImg, pack.CubeSideRear, dimension)
+	leftPackImg := pack.BuildCubeSideFromEquirectangularScaled(twodImg, pack.CubeSideLeft, dimension)
+	rightPackImg := pack.BuildCubeSideFromEquirectangularScaled(twodImg, pack.CubeSideRight, dimension)
+	topPackImg := pack.BuildCubeSideFromEquirectangularScaled(twodImg, pack.CubeSideTop, dimension)
+	bottomPackImg := pack.BuildCubeSideFromEquirectangularScaled(twodImg, pack.CubeSideBottom, dimension)
+	cubeImg, err := pack.BuildCube(frontPackImg, rearPackImg, leftPackImg, rightPackImg, topPackImg, bottomPackImg, 0)
+	if err != nil {
+		panic(fmt.Errorf("failed to build cube image: %w", err))
+	}
+	e.setConvertedImage(cubeImg)
+}
+
+func (e *CubeTextureEditor) setConvertedImage(img *pack.CubeImage) {
+	e.convertedImage = img
+}
+
+func (e *CubeTextureEditor) rebuildGraphicsImage() {
+	definition := e.buildGraphicsDefinition()
+	graphicsImg := e.gfxEngine.CreateCubeTexture(definition)
+	e.setGraphicsImage(graphicsImg)
+}
+
+func (e *CubeTextureEditor) setGraphicsImage(img graphics.CubeTexture) {
+	if e.graphicsImage != nil {
+		e.graphicsImage.Delete()
+	}
+	e.graphicsImage = img
+	e.gfxScene.Sky().SetSkybox(img)
+}
+
+func (e *CubeTextureEditor) buildGraphicsDefinition() graphics.CubeTextureDefinition {
+	// TODO: Take filtering and internal format settings from configuration
+	// accordion
+	return graphics.CubeTextureDefinition{
+		Dimension:      e.convertedImage.Dimension,
+		WrapS:          graphics.WrapClampToEdge,
+		WrapT:          graphics.WrapClampToEdge,
+		MinFilter:      graphics.FilterNearest,
+		MagFilter:      graphics.FilterNearest,
+		InternalFormat: graphics.InternalFormatRGBA32F,
+		DataFormat:     graphics.DataFormatRGBA32F,
+		FrontSideData:  e.convertedImage.RGBA32FData(pack.CubeSideFront),
+		BackSideData:   e.convertedImage.RGBA32FData(pack.CubeSideRear),
+		LeftSideData:   e.convertedImage.RGBA32FData(pack.CubeSideLeft),
+		RightSideData:  e.convertedImage.RGBA32FData(pack.CubeSideRight),
+		TopSideData:    e.convertedImage.RGBA32FData(pack.CubeSideTop),
+		BottomSideData: e.convertedImage.RGBA32FData(pack.CubeSideBottom),
+	}
+}
+
+func (e *CubeTextureEditor) buildAssetCubeTexture() *asset.CubeTexture {
+	definition := e.buildGraphicsDefinition()
+
+	texOut := &asset.CubeTexture{
+		Dimension: uint16(definition.Dimension),
+		Format: e.calculateAssetFormatFromGraphics(
+			definition.DataFormat,
+			definition.InternalFormat,
+		),
+	}
+	texOut.Sides[asset.TextureSideFront].Data = definition.FrontSideData
+	texOut.Sides[asset.TextureSideBack].Data = definition.BackSideData
+	texOut.Sides[asset.TextureSideLeft].Data = definition.LeftSideData
+	texOut.Sides[asset.TextureSideRight].Data = definition.RightSideData
+	texOut.Sides[asset.TextureSideTop].Data = definition.TopSideData
+	texOut.Sides[asset.TextureSideBottom].Data = definition.BottomSideData
+	return texOut
+}
+
+func (e *CubeTextureEditor) calculateAssetFormatFromGraphics(dataFormat graphics.DataFormat, internalFormat graphics.InternalFormat) asset.DataFormat {
+	switch dataFormat {
+	case graphics.DataFormatRGBA8:
+		return asset.DataFormatRGBA8
+	case graphics.DataFormatRGBA32F:
+		return asset.DataFormatRGBA32F
+	default:
+		panic(fmt.Errorf("unknown data format: %#v", dataFormat))
+	}
 }

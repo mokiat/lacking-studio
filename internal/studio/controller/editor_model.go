@@ -48,8 +48,8 @@ func (e *ModelEditor) CanSave() bool {
 	return false
 }
 
-func (e *ModelEditor) Save() {
-
+func (e *ModelEditor) Save() error {
+	return nil
 }
 
 func (e *ModelEditor) Update() {

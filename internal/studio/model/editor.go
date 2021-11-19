@@ -15,7 +15,7 @@ type Editor interface {
 	CanRedo() bool
 	Redo()
 	CanSave() bool
-	Save()
+	Save() error
 
 	RenderProperties() co.Instance
 }
