@@ -317,8 +317,6 @@ func (e *CubeTextureEditor) buildGraphicsDefinition() graphics.CubeTextureDefini
 	// accordion
 	return graphics.CubeTextureDefinition{
 		Dimension:      e.convertedImage.Dimension,
-		WrapS:          graphics.WrapClampToEdge,
-		WrapT:          graphics.WrapClampToEdge,
 		MinFilter:      graphics.FilterNearest,
 		MagFilter:      graphics.FilterNearest,
 		InternalFormat: graphics.InternalFormatRGBA32F,
@@ -337,26 +335,28 @@ func (e *CubeTextureEditor) buildAssetCubeTexture() *asset.CubeTexture {
 
 	texOut := &asset.CubeTexture{
 		Dimension: uint16(definition.Dimension),
+		MagFilter: asset.FilterModeNearest,
+		MinFilter: asset.FilterModeNearest,
 		Format: e.calculateAssetFormatFromGraphics(
 			definition.DataFormat,
 			definition.InternalFormat,
 		),
 	}
-	texOut.Sides[asset.TextureSideFront].Data = definition.FrontSideData
-	texOut.Sides[asset.TextureSideBack].Data = definition.BackSideData
-	texOut.Sides[asset.TextureSideLeft].Data = definition.LeftSideData
-	texOut.Sides[asset.TextureSideRight].Data = definition.RightSideData
-	texOut.Sides[asset.TextureSideTop].Data = definition.TopSideData
-	texOut.Sides[asset.TextureSideBottom].Data = definition.BottomSideData
+	texOut.FrontSide.Data = definition.FrontSideData
+	texOut.BackSide.Data = definition.BackSideData
+	texOut.LeftSide.Data = definition.LeftSideData
+	texOut.RightSide.Data = definition.RightSideData
+	texOut.TopSide.Data = definition.TopSideData
+	texOut.BottomSide.Data = definition.BottomSideData
 	return texOut
 }
 
-func (e *CubeTextureEditor) calculateAssetFormatFromGraphics(dataFormat graphics.DataFormat, internalFormat graphics.InternalFormat) asset.DataFormat {
+func (e *CubeTextureEditor) calculateAssetFormatFromGraphics(dataFormat graphics.DataFormat, internalFormat graphics.InternalFormat) asset.TexelFormat {
 	switch dataFormat {
 	case graphics.DataFormatRGBA8:
-		return asset.DataFormatRGBA8
+		return asset.TexelFormatRGBA8
 	case graphics.DataFormatRGBA32F:
-		return asset.DataFormatRGBA32F
+		return asset.TexelFormatRGBA32F
 	default:
 		panic(fmt.Errorf("unknown data format: %#v", dataFormat))
 	}
