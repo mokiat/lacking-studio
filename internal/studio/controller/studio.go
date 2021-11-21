@@ -2,8 +2,10 @@ package controller
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/mokiat/lacking-studio/internal/studio/data"
+	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
@@ -38,12 +40,12 @@ func NewStudio(
 		NewCubeTextureEditor(result, &asset.Resource{
 			GUID: "bab99e80-ded1-459a-b00b-6a17afa44046",
 			Kind: "cube_texture",
-			Name: "Night Sky",
+			Name: "Skybox",
 		}),
 		NewModelEditor(result, &asset.Resource{
 			GUID: "2a4ddd33-b284-4d60-91eb-805f8b21a1d1",
 			Kind: "model",
-			Name: "Buggy",
+			Name: "SUV",
 		}),
 	}
 	return result
@@ -362,9 +364,13 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 	})
 
 	onAssetsClicked := func() {
-		assetsOverlay.Set(co.OpenOverlay(co.New(widget.AssetDialog, func() {
-			co.WithCallbackData(widget.AssetDialogCallbackData{
-				OnAssetSelected: func() {
+		assetsOverlay.Set(co.OpenOverlay(co.New(view.AssetDialog, func() {
+			co.WithData(view.AssetDialogData{
+				Registry: controller.Registry(),
+			})
+			co.WithCallbackData(view.AssetDialogCallbackData{
+				OnAssetSelected: func(id string) {
+					log.Println("Asset selected: ", id)
 				},
 				OnClose: func() {
 					overlay := assetsOverlay.Get().(co.Overlay)

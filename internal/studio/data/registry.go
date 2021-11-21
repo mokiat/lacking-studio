@@ -1,7 +1,9 @@
 package data
 
 import (
+	"errors"
 	"image"
+	"strings"
 
 	"golang.org/x/image/draw"
 
@@ -12,6 +14,11 @@ const (
 	previewSize = 128
 )
 
+type Resource struct {
+	asset.Resource
+	PreviewImage image.Image
+}
+
 func NewRegistry(delegate asset.Registry) *Registry {
 	return &Registry{
 		delegate: delegate,
@@ -20,6 +27,35 @@ func NewRegistry(delegate asset.Registry) *Registry {
 
 type Registry struct {
 	delegate asset.Registry
+}
+
+func (r *Registry) ListResourcesOfKind(kind string) []Resource {
+	delegateResources, err := r.delegate.ReadResources()
+	if err != nil {
+		panic(err)
+	}
+
+	result := make([]Resource, 0, len(delegateResources))
+	for _, delegateResource := range delegateResources {
+		if !strings.EqualFold(delegateResource.Kind, kind) {
+			continue
+		}
+
+		previewImg, err := r.delegate.ReadPreview(delegateResource.GUID)
+		if err != nil {
+			if !errors.Is(err, asset.ErrNotFound) {
+				panic(err)
+			}
+			previewImg = image.NewRGBA(image.Rect(0, 0, 64, 64))
+		}
+
+		result = append(result, Resource{
+			Resource:     delegateResource,
+			PreviewImage: previewImg,
+		})
+	}
+
+	return result
 }
 
 func (r *Registry) PreparePreview(img image.Image) image.Image {

@@ -25,9 +25,6 @@ var ToolbarButton = co.ShallowCached(co.Define(func(props co.Properties) co.Inst
 
 	var layoutData mat.LayoutData
 	props.InjectOptionalLayoutData(&layoutData, mat.LayoutData{})
-	// if data.Vertical {
-	// 	layoutData.Width = optional.NewInt(ToolbarItemHeight)
-	// }
 	layoutData.Height = optional.NewInt(ToolbarItemHeight)
 
 	var callbackData ToolbarButtonCallbackData
