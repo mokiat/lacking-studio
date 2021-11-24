@@ -36,18 +36,7 @@ func NewStudio(
 		actionsVisible:    true,
 		propertiesVisible: true,
 	}
-	result.editors = []Editor{
-		NewCubeTextureEditor(result, &asset.Resource{
-			GUID: "bab99e80-ded1-459a-b00b-6a17afa44046",
-			Kind: "cube_texture",
-			Name: "Skybox",
-		}),
-		NewModelEditor(result, &asset.Resource{
-			GUID: "2a4ddd33-b284-4d60-91eb-805f8b21a1d1",
-			Kind: "model",
-			Name: "SUV",
-		}),
-	}
+	result.editors = []Editor{}
 	return result
 }
 
@@ -131,12 +120,38 @@ func (s *Studio) SaveEnabled() bool {
 }
 
 func (s *Studio) Save() {
-	s.activeEditor.Save()
+	if err := s.activeEditor.Save(); err != nil {
+		panic(err)
+	}
 	s.NotifyChanged()
 }
 
+func (s *Studio) OpenAsset(id string) {
+	resource := s.registry.GetResourceByID(id)
+	for _, editor := range s.editors {
+		if editor.ID() == resource.GUID {
+			s.SelectEditor(editor)
+			return
+		}
+	}
+
+	switch resource.Kind {
+	case "twod_texture":
+		log.Println("TODO")
+	case "cube_texture":
+		editor := NewCubeTextureEditor(s, &resource.Resource)
+		s.OpenEditor(editor)
+	case "model":
+		log.Println("TODO")
+	case "scene":
+		log.Println("TODO")
+	}
+}
+
 func (s *Studio) OpenEditor(editor Editor) {
-	panic("TODO")
+	s.editors = append(s.editors, editor)
+	s.activeEditor = editor
+	s.NotifyChanged()
 }
 
 func (s *Studio) ActiveEditor() Editor {
@@ -246,61 +261,68 @@ var StudioView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 			})
 		}))
 
-		if controller.IsActionsVisible() {
-			co.WithChild("left", co.New(widget.Paper, func() {
-				co.WithData(widget.PaperData{
-					Padding: ui.Spacing{
-						Top:    20,
-						Bottom: 20,
-						Left:   1,
-						Right:  1,
-					},
-					Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-						ContentSpacing: 10,
-					}),
-				})
-				co.WithLayoutData(mat.LayoutData{
-					Alignment: mat.AlignmentLeft,
-				})
+		// if controller.IsActionsVisible() {
+		// 	co.WithChild("left", co.New(widget.Paper, func() {
+		// 		co.WithData(widget.PaperData{
+		// 			Padding: ui.Spacing{
+		// 				Top:    20,
+		// 				Bottom: 20,
+		// 				Left:   1,
+		// 				Right:  1,
+		// 			},
+		// 			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
+		// 				ContentSpacing: 10,
+		// 			}),
+		// 		})
+		// 		co.WithLayoutData(mat.LayoutData{
+		// 			Alignment: mat.AlignmentLeft,
+		// 		})
 
-				co.WithChild("model", co.New(widget.ToolbarButton, func() {
-					co.WithData(widget.ToolbarButtonData{
-						Icon:     co.OpenImage("resources/icons/model.png"),
-						Vertical: true,
-					})
-				}))
+		// 		co.WithChild("model", co.New(widget.ToolbarButton, func() {
+		// 			co.WithData(widget.ToolbarButtonData{
+		// 				Icon:     co.OpenImage("resources/icons/model.png"),
+		// 				Vertical: true,
+		// 			})
+		// 		}))
 
-				co.WithChild("light", co.New(widget.ToolbarButton, func() {
-					co.WithData(widget.ToolbarButtonData{
-						Icon:     co.OpenImage("resources/icons/light.png"),
-						Vertical: true,
-					})
-				}))
+		// 		co.WithChild("light", co.New(widget.ToolbarButton, func() {
+		// 			co.WithData(widget.ToolbarButtonData{
+		// 				Icon:     co.OpenImage("resources/icons/light.png"),
+		// 				Vertical: true,
+		// 			})
+		// 		}))
 
-				co.WithChild("camera", co.New(widget.ToolbarButton, func() {
-					co.WithData(widget.ToolbarButtonData{
-						Icon:     co.OpenImage("resources/icons/camera.png"),
-						Vertical: true,
-					})
-				}))
-			}))
-		}
+		// 		co.WithChild("camera", co.New(widget.ToolbarButton, func() {
+		// 			co.WithData(widget.ToolbarButtonData{
+		// 				Icon:     co.OpenImage("resources/icons/camera.png"),
+		// 				Vertical: true,
+		// 			})
+		// 		}))
+		// 	}))
+		// }
 
-		if controller.IsPropertiesVisible() {
-			co.WithChild("right", co.New(mat.Container, func() {
-				co.WithData(mat.ContainerData{
-					BackgroundColor: optional.NewColor(ui.White()),
-					Layout:          mat.NewFillLayout(),
-				})
-				co.WithLayoutData(mat.LayoutData{
-					Alignment: mat.AlignmentRight,
-					Width:     optional.NewInt(500),
-				})
+		// if controller.IsPropertiesVisible() {
+		// 	co.WithChild("right", co.New(mat.Container, func() {
+		// 		co.WithData(mat.ContainerData{
+		// 			BackgroundColor: optional.NewColor(ui.White()),
+		// 			Layout:          mat.NewFillLayout(),
+		// 		})
+		// 		co.WithLayoutData(mat.LayoutData{
+		// 			Alignment: mat.AlignmentRight,
+		// 			Width:     optional.NewInt(500),
+		// 		})
 
-				if editor := controller.ActiveEditor(); editor != nil {
-					key := fmt.Sprintf("content-%s", editor.ID())
-					co.WithChild(key, editor.RenderProperties())
-				}
+		// 		if editor := controller.ActiveEditor(); editor != nil {
+		// 			key := fmt.Sprintf("content-%s", editor.ID())
+		// 			co.WithChild(key, editor.RenderProperties())
+		// 		}
+		// 	}))
+		// }
+
+		if editor := controller.ActiveEditor(); editor != nil {
+			key := fmt.Sprintf("center-%s", editor.ID())
+			co.WithChild(key, editor.Render(mat.LayoutData{
+				Alignment: mat.AlignmentCenter,
 			}))
 		}
 
@@ -313,21 +335,21 @@ var StudioView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 		// 	})
 		// }))
 
-		co.WithChild("center", co.New(widget.Viewport, func() {
-			if editor := controller.ActiveEditor(); editor != nil {
-				co.WithData(widget.ViewportData{
-					Scene:  editor.Scene(),
-					Camera: editor.Camera(),
-				})
-				co.WithCallbackData(widget.ViewportCallbackData{
-					OnUpdate:     editor.Update,
-					OnMouseEvent: editor.OnViewportMouseEvent,
-				})
-			}
-			co.WithLayoutData(mat.LayoutData{
-				Alignment: mat.AlignmentCenter,
-			})
-		}))
+		// co.WithChild("center", co.New(widget.Viewport, func() {
+		// 	if editor := controller.ActiveEditor(); editor != nil {
+		// 		co.WithData(widget.ViewportData{
+		// 			Scene:  editor.Scene(),
+		// 			Camera: editor.Camera(),
+		// 		})
+		// 		co.WithCallbackData(widget.ViewportCallbackData{
+		// 			OnUpdate:     editor.Update,
+		// 			OnMouseEvent: editor.OnViewportMouseEvent,
+		// 		})
+		// 	}
+		// 	co.WithLayoutData(mat.LayoutData{
+		// 		Alignment: mat.AlignmentCenter,
+		// 	})
+		// }))
 	})
 }))
 
@@ -370,7 +392,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 			})
 			co.WithCallbackData(view.AssetDialogCallbackData{
 				OnAssetSelected: func(id string) {
-					log.Println("Asset selected: ", id)
+					controller.OpenAsset(id)
 				},
 				OnClose: func() {
 					overlay := assetsOverlay.Get().(co.Overlay)

@@ -6,6 +6,7 @@ import (
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
+	"github.com/mokiat/lacking/ui/mat"
 )
 
 const undoCount = 10
@@ -28,6 +29,7 @@ type Editor interface {
 	Scene() graphics.Scene
 	Camera() graphics.Camera
 
+	Render(layoutData mat.LayoutData) co.Instance
 	RenderProperties() co.Instance
 
 	Destroy()
@@ -63,4 +65,10 @@ func (e BaseEditor) Redo() {
 	if err := e.changes.Unpop(); err != nil {
 		panic(err)
 	}
+}
+
+func (e BaseEditor) Render(layoutData mat.LayoutData) co.Instance {
+	return co.New(mat.Element, func() {
+		co.WithLayoutData(layoutData)
+	})
 }

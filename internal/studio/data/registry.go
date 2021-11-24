@@ -29,6 +29,31 @@ type Registry struct {
 	delegate asset.Registry
 }
 
+func (r *Registry) GetResourceByID(id string) Resource {
+	delegateResources, err := r.delegate.ReadResources()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, delegateResource := range delegateResources {
+		if delegateResource.GUID == id {
+			previewImg, err := r.delegate.ReadPreview(delegateResource.GUID)
+			if err != nil {
+				if !errors.Is(err, asset.ErrNotFound) {
+					panic(err)
+				}
+				previewImg = image.NewRGBA(image.Rect(0, 0, 64, 64))
+			}
+
+			return Resource{
+				Resource:     delegateResource,
+				PreviewImage: previewImg,
+			}
+		}
+	}
+	return Resource{}
+}
+
 func (r *Registry) ListResourcesOfKind(kind string) []Resource {
 	delegateResources, err := r.delegate.ReadResources()
 	if err != nil {
@@ -98,6 +123,18 @@ func (r *Registry) WritePreview(guid string, img image.Image) error {
 	return r.delegate.WritePreview(guid, r.PreparePreview(img))
 }
 
+func (r *Registry) ReadContent(guid string, target interface{}) error {
+	return r.delegate.ReadContent(guid, target)
+}
+
 func (r *Registry) WriteContent(guid string, target interface{}) error {
 	return r.delegate.WriteContent(guid, target)
+}
+
+func (r *Registry) ReadEditorContent(guid string, target interface{}) error {
+	return r.delegate.ReadEditorContent(guid, target)
+}
+
+func (r *Registry) WriteEditorContent(guid string, target interface{}) error {
+	return r.delegate.WriteEditorContent(guid, target)
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"log"
@@ -19,6 +20,8 @@ import (
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
+	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/optional"
 )
 
 func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) *CubeTextureEditor {
@@ -33,7 +36,7 @@ func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) *CubeTex
 	gfxCamera.SetExposure(1.0)
 	gfxCamera.SetAutoFocus(false)
 
-	return &CubeTextureEditor{
+	result := &CubeTextureEditor{
 		BaseEditor: NewBaseEditor(),
 
 		studio:   studio,
@@ -49,10 +52,29 @@ func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) *CubeTex
 
 		sourcePath: "<none>",
 	}
+
+	var content asset.CubeTexture
+	if err := studio.Registry().ReadContent(resource.GUID, &content); err != nil {
+		panic(err)
+	}
+	var editorContent CubeTextureEditorResource
+	if err := studio.Registry().ReadEditorContent(resource.GUID, &editorContent); err != nil {
+		if !errors.Is(err, gameasset.ErrNotFound) {
+			panic(err)
+		}
+	} else {
+		result.SetSourcePath(editorContent.SourcePath)
+		result.ReloadSource()
+	}
+	return result
 }
 
 var _ Editor = (*CubeTextureEditor)(nil)
 var _ model.CubeTextureEditor = (*CubeTextureEditor)(nil)
+
+type CubeTextureEditorResource struct {
+	SourcePath string
+}
 
 type CubeTextureEditor struct {
 	BaseEditor
@@ -100,12 +122,16 @@ func (e *CubeTextureEditor) CanSave() bool {
 }
 
 func (e *CubeTextureEditor) Save() error {
-	assetTexture := e.buildAssetCubeTexture()
 	if err := e.studio.Registry().WritePreview(e.ID(), e.previewImage); err != nil {
 		return fmt.Errorf("failed to write preview image: %w", err)
 	}
+	assetTexture := e.buildAssetCubeTexture()
 	if err := e.studio.Registry().WriteContent(e.ID(), assetTexture); err != nil {
 		return fmt.Errorf("failed to write content image: %w", err)
+	}
+	editorResource := e.buildEditorResource()
+	if err := e.studio.Registry().WriteEditorContent(e.ID(), editorResource); err != nil {
+		return fmt.Errorf("failed to write editor image: %w", err)
 	}
 	e.savedChange = e.changes.LastChange()
 	return nil
@@ -235,8 +261,44 @@ func (e *CubeTextureEditor) RenderProperties() co.Instance {
 	})
 }
 
+func (e *CubeTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
+	return co.New(mat.Container, func() {
+		co.WithData(mat.ContainerData{
+			BackgroundColor: optional.NewColor(widget.BackgroundColor),
+			Layout:          mat.NewFrameLayout(),
+		})
+		co.WithLayoutData(layoutData)
+
+		co.WithChild("center", co.New(widget.Viewport, func() {
+			co.WithData(widget.ViewportData{
+				Scene:  e.Scene(),
+				Camera: e.Camera(),
+			})
+			co.WithLayoutData(mat.LayoutData{
+				Alignment: mat.AlignmentCenter,
+			})
+			co.WithCallbackData(widget.ViewportCallbackData{
+				OnUpdate:     e.Update,
+				OnMouseEvent: e.OnViewportMouseEvent,
+			})
+		}))
+
+		if e.studio.IsPropertiesVisible() {
+			co.WithChild("right", co.New(view.CubeTextureProperties, func() {
+				co.WithData(e)
+				co.WithLayoutData(mat.LayoutData{
+					Alignment: mat.AlignmentRight,
+					Width:     optional.NewInt(500),
+				})
+			}))
+		}
+	})
+}
+
 func (e *CubeTextureEditor) Destroy() {
-	// TODO: Delete other images
+	if e.previewUIImage != nil {
+		e.previewUIImage.Destroy()
+	}
 	if e.graphicsImage != nil {
 		e.graphicsImage.Delete()
 	}
@@ -349,6 +411,12 @@ func (e *CubeTextureEditor) buildAssetCubeTexture() *asset.CubeTexture {
 	texOut.TopSide.Data = definition.TopSideData
 	texOut.BottomSide.Data = definition.BottomSideData
 	return texOut
+}
+
+func (e *CubeTextureEditor) buildEditorResource() CubeTextureEditorResource {
+	return CubeTextureEditorResource{
+		SourcePath: e.sourcePath,
+	}
 }
 
 func (e *CubeTextureEditor) calculateAssetFormatFromGraphics(dataFormat graphics.DataFormat, internalFormat graphics.InternalFormat) asset.TexelFormat {

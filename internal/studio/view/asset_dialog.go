@@ -3,7 +3,6 @@ package view
 import (
 	"fmt"
 	"image"
-	"log"
 
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
@@ -20,6 +19,11 @@ type AssetDialogData struct {
 type AssetDialogCallbackData struct {
 	OnAssetSelected func(id string)
 	OnClose         func()
+}
+
+var defaultAssetDialogCallbackData = AssetDialogCallbackData{
+	OnAssetSelected: func(id string) {},
+	OnClose:         func() {},
 }
 
 var AssetDialog = co.Define(func(props co.Properties) co.Instance {
@@ -130,9 +134,15 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 								ID:           resource.GUID,
 								Kind:         resource.Kind,
 								Name:         resource.Name,
+								Selected:     resource.GUID == lifecycle.SelectedResourceID(),
 							})
 							co.WithLayoutData(mat.LayoutData{
 								GrowHorizontally: true,
+							})
+							co.WithCallbackData(AssetItemCallbackData{
+								OnSelected: func(id string) {
+									lifecycle.SetSelectedResourceID(id)
+								},
 							})
 						}))
 					}(resource)
@@ -152,7 +162,12 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				co.WithChild("open", co.New(widget.ToolbarButton, func() {
 					co.WithData(widget.ToolbarButtonData{
 						Text:     "Open",
-						Disabled: true,
+						Disabled: lifecycle.SelectedResourceID() == "",
+					})
+					co.WithCallbackData(widget.ToolbarButtonCallbackData{
+						ClickListener: func() {
+							lifecycle.OnOpen(lifecycle.SelectedResourceID())
+						},
 					})
 				}))
 
@@ -173,15 +188,18 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 type assetDialogLifecycle struct {
 	co.Lifecycle
-	handle       co.LifecycleHandle
-	registry     *data.Registry
-	onClose      func()
-	selectedKind string
+	handle          co.LifecycleHandle
+	registry        *data.Registry
+	onClose         func()
+	onAssetSelected func(id string)
+	selectedKind    string
+	selectedAssetID string
 }
 
 func (l *assetDialogLifecycle) OnCreate(props co.Properties) {
 	l.OnUpdate(props)
 	l.selectedKind = "twod_texture"
+	l.selectedAssetID = ""
 }
 
 func (l *assetDialogLifecycle) OnUpdate(props co.Properties) {
@@ -192,9 +210,15 @@ func (l *assetDialogLifecycle) OnUpdate(props co.Properties) {
 	var callbackData AssetDialogCallbackData
 	props.InjectOptionalCallbackData(&callbackData, AssetDialogCallbackData{})
 	l.onClose = callbackData.OnClose
+	l.onAssetSelected = callbackData.OnAssetSelected
 }
 
 func (l *assetDialogLifecycle) OnCancel() {
+	l.onClose()
+}
+
+func (l *assetDialogLifecycle) OnOpen(id string) {
+	l.onAssetSelected(id)
 	l.onClose()
 }
 
@@ -207,6 +231,15 @@ func (l *assetDialogLifecycle) SetSelectedKind(kind string) {
 	l.handle.NotifyChanged()
 }
 
+func (l *assetDialogLifecycle) SetSelectedResourceID(id string) {
+	l.selectedAssetID = id
+	l.handle.NotifyChanged()
+}
+
+func (l *assetDialogLifecycle) SelectedResourceID() string {
+	return l.selectedAssetID
+}
+
 func (l *assetDialogLifecycle) Resources() []data.Resource {
 	return l.registry.ListResourcesOfKind(l.selectedKind)
 }
@@ -217,6 +250,14 @@ type AssetItemData struct {
 	ID           string
 	Kind         string
 	Name         string
+}
+
+type AssetItemCallbackData struct {
+	OnSelected func(id string)
+}
+
+var defaultAssetItemCallbackData = AssetItemCallbackData{
+	OnSelected: func(id string) {},
 }
 
 var AssetItem = co.Define(func(props co.Properties) co.Instance {
@@ -301,7 +342,6 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 			}))
 		}))
 	})
-
 })
 
 type assetItemLifecycle struct {
@@ -313,21 +353,34 @@ type assetItemLifecycle struct {
 	assetKind    string
 	assetName    string
 	selected     bool
+	onSelected   func(id string)
 }
 
 func (l *assetItemLifecycle) OnCreate(props co.Properties) {
+	l.OnUpdate(props)
+}
+
+func (l *assetItemLifecycle) OnUpdate(props co.Properties) {
 	var data AssetItemData
 	props.InjectData(&data)
+	var callbackData AssetItemCallbackData
+	props.InjectOptionalCallbackData(&callbackData, defaultAssetItemCallbackData)
 
+	if l.previewImage != nil {
+		l.previewImage.Destroy()
+	}
 	l.previewImage = co.CreateImage(data.PreviewImage)
 	l.assetID = data.ID
 	l.assetKind = data.Kind
 	l.assetName = data.Name
 	l.selected = data.Selected
+	l.onSelected = callbackData.OnSelected
 }
 
 func (l *assetItemLifecycle) OnDestroy() {
-	l.previewImage.Destroy()
+	if l.previewImage != nil {
+		l.previewImage.Destroy()
+	}
 	l.previewImage = nil
 }
 
@@ -352,5 +405,5 @@ func (l *assetItemLifecycle) IsSelected() bool {
 }
 
 func (l *assetItemLifecycle) OnSelected() {
-	log.Println("selected:", l.assetID)
+	l.onSelected(l.assetID)
 }

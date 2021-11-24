@@ -19,6 +19,7 @@ var CubeTextureProperties = co.Controlled(co.Define(func(props co.Properties) co
 				ContentSpacing:   5,
 			}),
 		})
+		co.WithLayoutData(props.LayoutData())
 
 		co.WithChild("asset", co.New(AssetAccordion, func() {
 			co.WithData(AssetAccordionData{
