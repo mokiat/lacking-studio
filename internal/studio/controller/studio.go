@@ -139,7 +139,10 @@ func (s *Studio) OpenAsset(id string) {
 	case "twod_texture":
 		log.Println("TODO")
 	case "cube_texture":
-		editor := NewCubeTextureEditor(s, &resource.Resource)
+		editor, err := NewCubeTextureEditor(s, &resource.Resource)
+		if err != nil {
+			panic(err) // TODO
+		}
 		s.OpenEditor(editor)
 	case "model":
 		log.Println("TODO")

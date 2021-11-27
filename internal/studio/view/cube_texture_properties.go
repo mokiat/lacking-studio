@@ -35,28 +35,6 @@ var CubeTextureProperties = co.Controlled(co.Define(func(props co.Properties) co
 			})
 		}))
 
-		co.WithChild("source", co.New(CubeTextureSourceAccordion, func() {
-			co.WithLayoutData(mat.LayoutData{
-				GrowHorizontally: true,
-			})
-			co.WithData(CubeTextureSourceAccordionData{
-				Expanded: editor.IsSourceAccordionExpanded(),
-				Filename: editor.SourceFilename(),
-				Image:    editor.SourcePreview(),
-			})
-			co.WithCallbackData(CubeTextureSourceAccordionCallbackData{
-				OnToggle: func() {
-					editor.SetSourceAccordionExpanded(!editor.IsSourceAccordionExpanded())
-				},
-				OnDrop: func(paths []string) {
-					editor.ChangeSourcePath(paths[0])
-				},
-				OnReload: func() {
-					editor.ReloadSource()
-				},
-			})
-		}))
-
 		co.WithChild("config", co.New(widget.Accordion, func() {
 			co.WithLayoutData(mat.LayoutData{
 				GrowHorizontally: true,

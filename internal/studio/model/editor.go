@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
+	"github.com/mokiat/lacking/ui/mat"
 )
 
 type Editor interface {
@@ -17,5 +18,5 @@ type Editor interface {
 	CanSave() bool
 	Save() error
 
-	RenderProperties() co.Instance
+	Render(layoutData mat.LayoutData) co.Instance
 }

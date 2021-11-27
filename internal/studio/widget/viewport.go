@@ -14,12 +14,14 @@ type ViewportData struct {
 
 type ViewportCallbackData struct {
 	OnUpdate     func()
-	OnMouseEvent func(event ViewportMouseEvent)
+	OnMouseEvent func(event ViewportMouseEvent) bool
 }
 
 var defaultViewportCallbackData = ViewportCallbackData{
-	OnUpdate:     func() {},
-	OnMouseEvent: func(event ViewportMouseEvent) {},
+	OnUpdate: func() {},
+	OnMouseEvent: func(event ViewportMouseEvent) bool {
+		return false
+	},
 }
 
 type ViewportMouseEvent struct {
@@ -57,7 +59,7 @@ var _ ui.ElementRenderHandler = (*viewportEssence)(nil)
 
 type viewportEssence struct {
 	onUpdate     func()
-	onMouseEvent func(event ViewportMouseEvent)
+	onMouseEvent func(event ViewportMouseEvent) bool
 	scene        graphics.Scene
 	camera       graphics.Camera
 }
@@ -65,12 +67,11 @@ type viewportEssence struct {
 func (e *viewportEssence) OnMouseEvent(element *ui.Element, event ui.MouseEvent) bool {
 	x := -1.0 + 2.0*float32(event.Position.X)/float32(element.Bounds().Width)
 	y := 1.0 - 2.0*float32(event.Position.Y)/float32(element.Bounds().Height)
-	e.onMouseEvent(ViewportMouseEvent{
+	return e.onMouseEvent(ViewportMouseEvent{
 		MouseEvent: event,
 		X:          x,
 		Y:          y,
 	})
-	return true
 }
 
 func (e *viewportEssence) OnRender(element *ui.Element, canvas ui.Canvas) {

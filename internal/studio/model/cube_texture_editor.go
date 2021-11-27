@@ -1,22 +1,20 @@
 package model
 
-import "github.com/mokiat/lacking/ui"
+import (
+	"github.com/mokiat/lacking/data/asset"
+)
 
 type CubeTextureEditor interface {
 	Editor
 
 	IsAssetAccordionExpanded() bool
 	SetAssetAccordionExpanded(expanded bool)
-	IsSourceAccordionExpanded() bool
-	SetSourceAccordionExpanded(expanded bool)
 	IsConfigAccordionExpanded() bool
 	SetConfigAccordionExpanded(expanded bool)
 
-	SourceFilename() string
-	SourcePreview() ui.Image
-
-	SetSourcePath(path string)
-	ReloadSource() error
+	SetAssetData(data asset.CubeTexture)
+	SetAssetMinFilter(filter asset.FilterMode)
+	SetAssetMagFilter(filter asset.FilterMode)
 
 	ChangeSourcePath(path string)
 }

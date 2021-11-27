@@ -2,8 +2,6 @@ package controller
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/history"
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
-	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -23,14 +21,7 @@ type Editor interface {
 	CanSave() bool
 	Save() error
 
-	Update()
-	OnViewportMouseEvent(event widget.ViewportMouseEvent)
-
-	Scene() graphics.Scene
-	Camera() graphics.Camera
-
 	Render(layoutData mat.LayoutData) co.Instance
-	RenderProperties() co.Instance
 
 	Destroy()
 }
