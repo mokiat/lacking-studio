@@ -16,10 +16,16 @@ type CubeTextureEditor interface {
 	SetConfigAccordionExpanded(expanded bool)
 
 	SetAssetData(data asset.CubeTexture)
-	SetAssetMinFilter(filter asset.FilterMode)
-	SetAssetMagFilter(filter asset.FilterMode)
+	MinFilter() asset.FilterMode
+	SetMinFilter(filter asset.FilterMode)
+	MagFilter() asset.FilterMode
+	SetMagFilter(filter asset.FilterMode)
+	DataFormat() asset.TexelFormat
 
 	ChangeSourcePath(path string)
+	ChangeMinFilter(filter asset.FilterMode)
+	ChangeMagFilter(filter asset.FilterMode)
+	ChangeDataFormat(format asset.TexelFormat)
 
 	OnViewportMouseEvent(event widget.ViewportMouseEvent) bool
 	Update()

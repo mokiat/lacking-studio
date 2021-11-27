@@ -35,12 +35,12 @@ type CubeTextureMinFilter struct {
 }
 
 func (ch *CubeTextureMinFilter) Apply() error {
-	ch.Controller.SetAssetMinFilter(ch.ToFilter)
+	ch.Controller.SetMinFilter(ch.ToFilter)
 	return nil
 }
 
 func (ch *CubeTextureMinFilter) Revert() error {
-	ch.Controller.SetAssetMinFilter(ch.FromFilter)
+	ch.Controller.SetMinFilter(ch.FromFilter)
 	return nil
 }
 
@@ -54,11 +54,11 @@ type CubeTextureMagFilter struct {
 }
 
 func (ch *CubeTextureMagFilter) Apply() error {
-	ch.Controller.SetAssetMagFilter(ch.ToFilter)
+	ch.Controller.SetMagFilter(ch.ToFilter)
 	return nil
 }
 
 func (ch *CubeTextureMagFilter) Revert() error {
-	ch.Controller.SetAssetMagFilter(ch.FromFilter)
+	ch.Controller.SetMagFilter(ch.FromFilter)
 	return nil
 }

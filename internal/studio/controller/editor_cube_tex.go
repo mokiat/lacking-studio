@@ -170,7 +170,7 @@ func (e *CubeTextureEditor) OnViewportMouseEvent(event widget.ViewportMouseEvent
 	case ui.MouseEventTypeScroll:
 		fov := e.gfxCameraFoV.Degrees()
 		fov -= 2 * float32(event.ScrollY)
-		fov = sprec.Clamp(fov, 0.1, 89.0)
+		fov = sprec.Clamp(fov, 0.1, 179.0)
 		e.gfxCameraFoV = sprec.Degrees(fov)
 		return true
 	default:
@@ -279,16 +279,48 @@ func (e *CubeTextureEditor) SetAssetData(data asset.CubeTexture) {
 	e.NotifyChanged()
 }
 
-func (e *CubeTextureEditor) SetAssetMinFilter(filter asset.FilterMode) {
+func (e *CubeTextureEditor) MinFilter() asset.FilterMode {
+	return e.assetImage.MinFilter
+}
+
+func (e *CubeTextureEditor) SetMinFilter(filter asset.FilterMode) {
 	e.assetImage.MinFilter = filter
 	e.rebuildGraphicsImage()
 	e.NotifyChanged()
 }
 
-func (e *CubeTextureEditor) SetAssetMagFilter(filter asset.FilterMode) {
+func (e *CubeTextureEditor) ChangeMinFilter(filter asset.FilterMode) {
+	e.changes.Push(&change.CubeTextureMinFilter{
+		Controller: e,
+		FromFilter: e.assetImage.MinFilter,
+		ToFilter:   filter,
+	})
+}
+
+func (e *CubeTextureEditor) MagFilter() asset.FilterMode {
+	return e.assetImage.MagFilter
+}
+
+func (e *CubeTextureEditor) SetMagFilter(filter asset.FilterMode) {
 	e.assetImage.MagFilter = filter
 	e.rebuildGraphicsImage()
 	e.NotifyChanged()
+}
+
+func (e *CubeTextureEditor) ChangeMagFilter(filter asset.FilterMode) {
+	e.changes.Push(&change.CubeTextureMagFilter{
+		Controller: e,
+		FromFilter: e.assetImage.MagFilter,
+		ToFilter:   filter,
+	})
+}
+
+func (e *CubeTextureEditor) DataFormat() asset.TexelFormat {
+	return e.assetImage.Format
+}
+
+func (e *CubeTextureEditor) ChangeDataFormat(format asset.TexelFormat) {
+	// TODO
 }
 
 func (e *CubeTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
