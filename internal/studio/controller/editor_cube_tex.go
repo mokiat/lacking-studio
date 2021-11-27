@@ -19,7 +19,6 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
 )
 
 func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) (*CubeTextureEditor, error) {
@@ -104,6 +103,10 @@ type CubeTextureEditor struct {
 	rotatingCamera bool
 	oldMouseX      int
 	oldMouseY      int
+}
+
+func (e *CubeTextureEditor) IsPropertiesVisible() bool {
+	return e.studio.IsPropertiesVisible()
 }
 
 func (e *CubeTextureEditor) ID() string {
@@ -289,44 +292,9 @@ func (e *CubeTextureEditor) SetAssetMagFilter(filter asset.FilterMode) {
 }
 
 func (e *CubeTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
-	return co.New(mat.Container, func() {
-		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.NewColor(widget.BackgroundColor),
-			Layout:          mat.NewFrameLayout(),
-		})
+	return co.New(view.CubeTexture, func() {
+		co.WithData(e)
 		co.WithLayoutData(layoutData)
-
-		co.WithChild("center", co.New(widget.DropZone, func() {
-			co.WithCallbackData(widget.DropZoneCallbackData{
-				OnDrop: func(paths []string) {
-					e.ChangeSourcePath(paths[0])
-				},
-			})
-			co.WithLayoutData(mat.LayoutData{
-				Alignment: mat.AlignmentCenter,
-			})
-
-			co.WithChild("viewport", co.New(widget.Viewport, func() {
-				co.WithData(widget.ViewportData{
-					Scene:  e.Scene(),
-					Camera: e.Camera(),
-				})
-				co.WithCallbackData(widget.ViewportCallbackData{
-					OnUpdate:     e.Update,
-					OnMouseEvent: e.OnViewportMouseEvent,
-				})
-			}))
-		}))
-
-		if e.studio.IsPropertiesVisible() {
-			co.WithChild("right", co.New(view.CubeTextureProperties, func() {
-				co.WithData(e)
-				co.WithLayoutData(mat.LayoutData{
-					Alignment: mat.AlignmentRight,
-					Width:     optional.NewInt(500),
-				})
-			}))
-		}
 	})
 }
 
@@ -378,22 +346,44 @@ func (e *CubeTextureEditor) buildGraphicsDefinition(src asset.CubeTexture) graph
 }
 
 func (e *CubeTextureEditor) assetToGraphicsFilter(filter asset.FilterMode) graphics.Filter {
-	switch {
+	switch filter {
+	case asset.FilterModeDefault:
+		fallthrough
+	case asset.FilterModeNearest:
+		return graphics.FilterNearest
+	case asset.FilterModeLinear:
+		return graphics.FilterLinear
+	case asset.FilterModeNearestMipmapNearest:
+		return graphics.FilterNearestMipmapNearest
+	case asset.FilterModeNearestMipmapLinear:
+		return graphics.FilterNearestMipmapLinear
+	case asset.FilterModeLinearMipmapNearest:
+		return graphics.FilterLinearMipmapNearest
+	case asset.FilterModeLinearMipmapLinear:
+		return graphics.FilterLinearMipmapLinear
 	default:
-		return graphics.FilterLinear // TODO
+		panic(fmt.Errorf("unsupported filter: %v", filter))
 	}
 }
 
 func (e *CubeTextureEditor) assetFormatToInternalFormat(format asset.TexelFormat) graphics.InternalFormat {
-	switch {
+	switch format {
+	case asset.TexelFormatRGBA8:
+		return graphics.InternalFormatRGBA8
+	case asset.TexelFormatRGBA32F:
+		return graphics.InternalFormatRGBA32F
 	default:
-		return graphics.InternalFormatRGBA32F // TODO
+		panic(fmt.Errorf("unsupported format: %v", format))
 	}
 }
 
 func (e *CubeTextureEditor) assetFormatToDataFormat(format asset.TexelFormat) graphics.DataFormat {
-	switch {
+	switch format {
+	case asset.TexelFormatRGBA8:
+		return graphics.DataFormatRGBA8
+	case asset.TexelFormatRGBA32F:
+		return graphics.DataFormatRGBA32F
 	default:
-		return graphics.DataFormatRGBA32F // TODO
+		panic(fmt.Errorf("unsupported format: %v", format))
 	}
 }

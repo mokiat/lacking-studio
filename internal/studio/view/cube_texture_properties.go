@@ -2,11 +2,8 @@ package view
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
-	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
 )
 
 var CubeTextureProperties = co.Controlled(co.Define(func(props co.Properties) co.Instance {
@@ -28,6 +25,9 @@ var CubeTextureProperties = co.Controlled(co.Define(func(props co.Properties) co
 				AssetType: "Cube Texture",
 				Expanded:  editor.IsAssetAccordionExpanded(),
 			})
+			co.WithLayoutData(mat.LayoutData{
+				GrowHorizontally: true,
+			})
 			co.WithCallbackData(AssetAccordionCallbackData{
 				OnToggleExpanded: func() {
 					editor.SetAssetAccordionExpanded(!editor.IsAssetAccordionExpanded())
@@ -35,28 +35,11 @@ var CubeTextureProperties = co.Controlled(co.Define(func(props co.Properties) co
 			})
 		}))
 
-		co.WithChild("config", co.New(widget.Accordion, func() {
+		co.WithChild("config", co.New(CubeTextureConfig, func() {
+			co.WithData(editor)
 			co.WithLayoutData(mat.LayoutData{
 				GrowHorizontally: true,
 			})
-			co.WithData(widget.AccordionData{
-				Title:    "Config",
-				Expanded: editor.IsConfigAccordionExpanded(),
-			})
-			co.WithCallbackData(widget.AccordionCallbackData{
-				OnToggle: func() {
-					editor.SetConfigAccordionExpanded(!editor.IsConfigAccordionExpanded())
-				},
-			})
-
-			co.WithChild("content", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.GetFont("roboto", "regular"),
-					FontSize:  optional.NewInt(20),
-					FontColor: optional.NewColor(ui.Black()),
-					Text:      "TODO: Asset config here...",
-				})
-			}))
 		}))
 	})
 }))

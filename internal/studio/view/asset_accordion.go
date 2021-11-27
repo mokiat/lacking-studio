@@ -27,13 +27,11 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 	props.InjectCallbackData(&callbackData)
 
 	return co.New(widget.Accordion, func() {
-		co.WithLayoutData(mat.LayoutData{
-			GrowHorizontally: true,
-		})
 		co.WithData(widget.AccordionData{
 			Title:    "Asset",
 			Expanded: data.Expanded,
 		})
+		co.WithLayoutData(props.LayoutData())
 		co.WithCallbackData(widget.AccordionCallbackData{
 			OnToggle: callbackData.OnToggleExpanded,
 		})
