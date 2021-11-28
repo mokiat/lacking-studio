@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	gameasset "github.com/mokiat/lacking/game/asset"
@@ -21,7 +22,7 @@ func NewModelEditor(studio *Studio, resource *gameasset.Resource) *ModelEditor {
 	}
 }
 
-var _ Editor = (*ModelEditor)(nil)
+var _ model.Editor = (*ModelEditor)(nil)
 
 type ModelEditor struct {
 	BaseEditor

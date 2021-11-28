@@ -19,4 +19,6 @@ type Editor interface {
 	Save() error
 
 	Render(layoutData mat.LayoutData) co.Instance
+
+	Destroy()
 }

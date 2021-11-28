@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/mokiat/lacking-studio/internal/studio/data"
+	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/game/asset"
@@ -36,7 +37,7 @@ func NewStudio(
 		actionsVisible:    true,
 		propertiesVisible: true,
 	}
-	result.editors = []Editor{}
+	result.editors = []model.Editor{}
 	return result
 }
 
@@ -50,8 +51,8 @@ type Studio struct {
 
 	actionsVisible    bool
 	propertiesVisible bool
-	activeEditor      Editor
-	editors           []Editor
+	activeEditor      model.Editor
+	editors           []model.Editor
 }
 
 func (s *Studio) ProjectDir() string {
@@ -137,7 +138,11 @@ func (s *Studio) OpenAsset(id string) {
 
 	switch resource.Kind {
 	case "twod_texture":
-		log.Println("TODO")
+		editor, err := NewTwoDTextureEditor(s, &resource.Resource)
+		if err != nil {
+			panic(err) // TODO
+		}
+		s.OpenEditor(editor)
 	case "cube_texture":
 		editor, err := NewCubeTextureEditor(s, &resource.Resource)
 		if err != nil {
@@ -151,22 +156,22 @@ func (s *Studio) OpenAsset(id string) {
 	}
 }
 
-func (s *Studio) OpenEditor(editor Editor) {
+func (s *Studio) OpenEditor(editor model.Editor) {
 	s.editors = append(s.editors, editor)
 	s.activeEditor = editor
 	s.NotifyChanged()
 }
 
-func (s *Studio) ActiveEditor() Editor {
+func (s *Studio) ActiveEditor() model.Editor {
 	return s.activeEditor
 }
 
-func (s *Studio) SelectEditor(editor Editor) {
+func (s *Studio) SelectEditor(editor model.Editor) {
 	s.activeEditor = editor
 	s.NotifyChanged()
 }
 
-func (s *Studio) CloseEditor(editor Editor) {
+func (s *Studio) CloseEditor(editor model.Editor) {
 	editorIndex := s.editorIndex(editor)
 	if editorIndex < 0 {
 		return
@@ -189,11 +194,11 @@ func (s *Studio) CloseEditor(editor Editor) {
 	s.NotifyChanged()
 }
 
-func (s *Studio) Editors() []Editor {
+func (s *Studio) Editors() []model.Editor {
 	return s.editors
 }
 
-func (s *Studio) EachEditor(cb func(editor Editor)) {
+func (s *Studio) EachEditor(cb func(editor model.Editor)) {
 	for _, editor := range s.editors {
 		cb(editor)
 	}
@@ -205,7 +210,7 @@ func (s *Studio) Render() co.Instance {
 	})
 }
 
-func (s *Studio) editorIndex(editor Editor) int {
+func (s *Studio) editorIndex(editor model.Editor) int {
 	for i, candidate := range s.editors {
 		if candidate == editor {
 			return i
@@ -481,7 +486,7 @@ var Tabbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 	return co.New(widget.Tabbar, func() {
 		co.WithLayoutData(props.LayoutData())
 
-		controller.EachEditor(func(editor Editor) {
+		controller.EachEditor(func(editor model.Editor) {
 			co.WithChild(editor.ID(), co.New(widget.TabbarTab, func() {
 				co.WithData(widget.TabbarTabData{
 					Icon:     editor.Icon(),

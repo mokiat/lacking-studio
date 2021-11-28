@@ -77,7 +77,7 @@ func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) (*CubeTe
 	return result, nil
 }
 
-var _ Editor = (*CubeTextureEditor)(nil)
+var _ model.Editor = (*CubeTextureEditor)(nil)
 var _ model.CubeTextureEditor = (*CubeTextureEditor)(nil)
 
 type CubeTextureEditor struct {
