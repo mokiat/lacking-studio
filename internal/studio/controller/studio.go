@@ -150,7 +150,11 @@ func (s *Studio) OpenAsset(id string) {
 		}
 		s.OpenEditor(editor)
 	case "model":
-		log.Println("TODO")
+		editor, err := NewModelEditor(s, &resource.Resource)
+		if err != nil {
+			panic(err) // TODO
+		}
+		s.OpenEditor(editor)
 	case "scene":
 		log.Println("TODO")
 	}

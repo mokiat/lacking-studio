@@ -165,13 +165,7 @@ func (e *TwoDTextureEditor) Update() {
 	)
 	e.gfxCamera.SetPosition(transform.Translation())
 	e.gfxCamera.SetRotation(matrixToQuat(transform))
-	// e.gfxCamera.SetRotation(sprec.IdentityQuat())
 	e.gfxCamera.SetFoV(e.gfxCameraFoV)
-
-	// e.gfxCamera.SetRotation(sprec.QuatProd(
-	// 	sprec.RotationQuat(e.gfxCameraYaw, sprec.BasisYVec3()),
-	// 	sprec.RotationQuat(e.gfxCameraPitch, sprec.BasisXVec3()),
-	// ))
 }
 
 // TODO: Move to gomath library.

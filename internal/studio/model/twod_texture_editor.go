@@ -33,8 +33,8 @@ type TwoDTextureEditor interface {
 	ChangeMagFilter(filter asset.FilterMode)
 	ChangeDataFormat(format asset.TexelFormat)
 
-	OnViewportMouseEvent(event widget.ViewportMouseEvent) bool
 	Update()
 	Scene() graphics.Scene
 	Camera() graphics.Camera
+	OnViewportMouseEvent(event widget.ViewportMouseEvent) bool
 }
