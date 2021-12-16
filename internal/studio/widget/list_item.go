@@ -78,9 +78,11 @@ func (e *listItemLifecycle) OnMouseEvent(element *ui.Element, event ui.MouseEven
 	case ui.MouseEventTypeEnter:
 		e.state = buttonStateOver
 		context.Window().Invalidate()
+		return true
 	case ui.MouseEventTypeLeave:
 		e.state = buttonStateUp
 		context.Window().Invalidate()
+		return true
 	case ui.MouseEventTypeUp:
 		if event.Button == ui.MouseButtonLeft {
 			if e.state == buttonStateDown {
@@ -89,13 +91,16 @@ func (e *listItemLifecycle) OnMouseEvent(element *ui.Element, event ui.MouseEven
 			e.state = buttonStateOver
 			context.Window().Invalidate()
 		}
+		return true
 	case ui.MouseEventTypeDown:
 		if event.Button == ui.MouseButtonLeft {
 			e.state = buttonStateDown
 			context.Window().Invalidate()
 		}
+		return true
+	default:
+		return false
 	}
-	return true
 }
 
 func (e *listItemLifecycle) OnRender(element *ui.Element, canvas ui.Canvas) {

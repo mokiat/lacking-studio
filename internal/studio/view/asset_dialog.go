@@ -112,13 +112,11 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				}))
 			}))
 
-			co.WithChild("content", co.New(mat.Container, func() {
-				co.WithData(mat.ContainerData{
-					BackgroundColor: optional.NewColor(ui.RGB(240, 240, 240)),
-					Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-						ContentAlignment: mat.AlignmentLeft,
-					}),
+			co.WithChild(fmt.Sprintf("content-%s", lifecycle.SelectedKind()), co.New(mat.ScrollPane, func() {
+				co.WithData(mat.ScrollPaneData{
+					DisableHorizontal: true,
 				})
+
 				co.WithLayoutData(mat.LayoutData{
 					Left:   optional.NewInt(0),
 					Right:  optional.NewInt(0),
@@ -126,27 +124,39 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 					Bottom: optional.NewInt(widget.ToolbarHeight),
 				})
 
-				for _, resource := range lifecycle.Resources() {
-					func(resource data.Resource) {
-						co.WithChild(resource.GUID, co.New(AssetItem, func() {
-							co.WithData(AssetItemData{
-								PreviewImage: resource.PreviewImage,
-								ID:           resource.GUID,
-								Kind:         resource.Kind,
-								Name:         resource.Name,
-								Selected:     resource.GUID == lifecycle.SelectedResourceID(),
-							})
-							co.WithLayoutData(mat.LayoutData{
-								GrowHorizontally: true,
-							})
-							co.WithCallbackData(AssetItemCallbackData{
-								OnSelected: func(id string) {
-									lifecycle.SetSelectedResourceID(id)
-								},
-							})
-						}))
-					}(resource)
-				}
+				co.WithChild("content", co.New(mat.Container, func() {
+					co.WithData(mat.ContainerData{
+						BackgroundColor: optional.NewColor(ui.RGB(240, 240, 240)),
+						Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
+							ContentAlignment: mat.AlignmentLeft,
+						}),
+					})
+					co.WithLayoutData(mat.LayoutData{
+						GrowHorizontally: true,
+					})
+
+					for _, resource := range lifecycle.Resources() {
+						func(resource data.Resource) {
+							co.WithChild(resource.GUID, co.New(AssetItem, func() {
+								co.WithData(AssetItemData{
+									PreviewImage: resource.PreviewImage,
+									ID:           resource.GUID,
+									Kind:         resource.Kind,
+									Name:         resource.Name,
+									Selected:     resource.GUID == lifecycle.SelectedResourceID(),
+								})
+								co.WithLayoutData(mat.LayoutData{
+									GrowHorizontally: true,
+								})
+								co.WithCallbackData(AssetItemCallbackData{
+									OnSelected: func(id string) {
+										lifecycle.SetSelectedResourceID(id)
+									},
+								})
+							}))
+						}(resource)
+					}
+				}))
 			}))
 
 			co.WithChild("footer", co.New(widget.Toolbar, func() {
