@@ -9,6 +9,8 @@ import (
 type TwoDTextureEditor interface {
 	Editor
 
+	SetName(name string)
+
 	IsPropertiesVisible() bool
 	IsAssetAccordionExpanded() bool
 	SetAssetAccordionExpanded(expanded bool)
@@ -26,6 +28,7 @@ type TwoDTextureEditor interface {
 	SetMagFilter(filter asset.FilterMode)
 	DataFormat() asset.TexelFormat
 
+	ChangeName(name string)
 	ChangeSourcePath(path string)
 	ChangeWrapS(wrap asset.WrapMode)
 	ChangeWrapT(wrap asset.WrapMode)

@@ -38,4 +38,6 @@ var (
 	TabbarItemSpacing = 2
 	TabbarItemHeight  = TabbarHeight
 	TabbarItemRadius  = 15
+
+	EditboxHeight = 20
 )

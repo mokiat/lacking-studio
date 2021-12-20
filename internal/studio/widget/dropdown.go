@@ -194,15 +194,17 @@ func (e *dropdownEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
 		Color: outlineColor,
 	}
 	canvas.Contour().Begin()
-	canvas.Contour().MoveTo(ui.NewPosition(0, size.Height-5), stroke)
-	canvas.Contour().QuadTo(ui.NewPosition(0, size.Height), ui.NewPosition(5, size.Height), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(size.Width-5, size.Height), stroke)
-	canvas.Contour().QuadTo(ui.NewPosition(size.Width, size.Height), ui.NewPosition(size.Width, size.Height-5), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(size.Width, 5), stroke)
-	canvas.Contour().QuadTo(ui.NewPosition(size.Width, 0), ui.NewPosition(size.Width-5, 0), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(5, 0), stroke)
-	canvas.Contour().QuadTo(ui.NewPosition(0, 0), ui.NewPosition(0, 5), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(0, size.Height-5), stroke)
+	canvas.Contour().RoundRectangle(
+		ui.NewPosition(0, 0),
+		size,
+		ui.RectRoundness{
+			TopLeftRadius:     5,
+			TopRightRadius:    5,
+			BottomLeftRadius:  5,
+			BottomRightRadius: 5,
+		},
+		stroke,
+	)
 	canvas.Contour().End()
 }
 

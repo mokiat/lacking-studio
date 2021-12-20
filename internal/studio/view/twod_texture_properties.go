@@ -32,6 +32,9 @@ var TwoDTextureProperties = co.Controlled(co.Define(func(props co.Properties) co
 				OnToggleExpanded: func() {
 					editor.SetAssetAccordionExpanded(!editor.IsAssetAccordionExpanded())
 				},
+				OnNameChanged: func(name string) {
+					editor.ChangeName(name)
+				},
 			})
 		}))
 

@@ -133,6 +133,19 @@ func (e *TwoDTextureEditor) ID() string {
 	return e.resource.GUID
 }
 
+func (e *TwoDTextureEditor) ChangeName(newName string) {
+	e.changes.Push(&change.TwoDTextureName{
+		Controller: e,
+		From:       e.resource.Name,
+		To:         newName,
+	})
+}
+
+func (e *TwoDTextureEditor) SetName(name string) {
+	e.resource.Name = name
+	e.studio.NotifyChanged()
+}
+
 func (e *TwoDTextureEditor) Name() string {
 	return e.resource.Name
 }

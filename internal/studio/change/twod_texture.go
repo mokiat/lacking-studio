@@ -6,6 +6,25 @@ import (
 	"github.com/mokiat/lacking/data/asset"
 )
 
+var _ history.Change = (*TwoDTextureName)(nil)
+
+type TwoDTextureName struct {
+	Controller model.TwoDTextureEditor
+
+	From string
+	To   string
+}
+
+func (ch *TwoDTextureName) Apply() error {
+	ch.Controller.SetName(ch.To)
+	return nil
+}
+
+func (ch *TwoDTextureName) Revert() error {
+	ch.Controller.SetName(ch.From)
+	return nil
+}
+
 var _ history.Change = (*TwoDTextureData)(nil)
 
 type TwoDTextureData struct {

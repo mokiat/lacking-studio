@@ -17,6 +17,7 @@ type AssetAccordionData struct {
 
 type AssetAccordionCallbackData struct {
 	OnToggleExpanded func()
+	OnNameChanged    func(name string)
 }
 
 var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
@@ -124,12 +125,15 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 					})
 				}))
 
-				co.WithChild("value", co.New(mat.Label, func() {
-					co.WithData(mat.LabelData{
-						Font:      co.GetFont("roboto", "regular"),
-						FontSize:  optional.NewInt(18),
-						FontColor: optional.NewColor(ui.Black()),
-						Text:      data.AssetName,
+				co.WithChild("value", co.New(widget.Editbox, func() {
+					co.WithData(widget.EditboxData{
+						Text: data.AssetName,
+					})
+					co.WithLayoutData(mat.LayoutData{
+						Height: optional.NewInt(18),
+					})
+					co.WithCallbackData(widget.EditboxCallbackData{
+						OnChanged: callbackData.OnNameChanged,
 					})
 				}))
 			}))

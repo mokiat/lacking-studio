@@ -1,10 +1,13 @@
 package widget
 
 import (
+	"log"
+
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/optional"
 )
 
 type ViewportData struct {
@@ -48,12 +51,14 @@ var Viewport = co.Define(func(props co.Properties) co.Instance {
 
 	return co.New(mat.Element, func() {
 		co.WithData(mat.ElementData{
-			Essence: essence,
+			Essence:   essence,
+			Focusable: optional.NewBool(true),
 		})
 		co.WithLayoutData(props.LayoutData())
 	})
 })
 
+var _ ui.ElementKeyboardHandler = (*viewportEssence)(nil)
 var _ ui.ElementMouseHandler = (*viewportEssence)(nil)
 var _ ui.ElementRenderHandler = (*viewportEssence)(nil)
 
@@ -62,6 +67,11 @@ type viewportEssence struct {
 	onMouseEvent func(event ViewportMouseEvent) bool
 	scene        graphics.Scene
 	camera       graphics.Camera
+}
+
+func (e *viewportEssence) OnKeyboardEvent(element *ui.Element, event ui.KeyboardEvent) bool {
+	log.Printf("Viewport keyboard event: %#v", event)
+	return true
 }
 
 func (e *viewportEssence) OnMouseEvent(element *ui.Element, event ui.MouseEvent) bool {
