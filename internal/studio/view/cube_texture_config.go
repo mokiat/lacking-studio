@@ -3,7 +3,7 @@ package view
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
-	"github.com/mokiat/lacking/data/asset"
+	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"

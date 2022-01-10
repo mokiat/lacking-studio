@@ -3,7 +3,7 @@ package change
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
-	"github.com/mokiat/lacking/data/asset"
+	"github.com/mokiat/lacking/game/asset"
 )
 
 var _ history.Change = (*CubeTextureData)(nil)

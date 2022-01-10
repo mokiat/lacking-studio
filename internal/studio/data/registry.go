@@ -123,18 +123,10 @@ func (r *Registry) WritePreview(guid string, img image.Image) error {
 	return r.delegate.WritePreview(guid, r.PreparePreview(img))
 }
 
-func (r *Registry) ReadContent(guid string, target interface{}) error {
+func (r *Registry) ReadContent(guid string, target asset.Decodable) error {
 	return r.delegate.ReadContent(guid, target)
 }
 
-func (r *Registry) WriteContent(guid string, target interface{}) error {
+func (r *Registry) WriteContent(guid string, target asset.Encodable) error {
 	return r.delegate.WriteContent(guid, target)
-}
-
-func (r *Registry) ReadEditorContent(guid string, target interface{}) error {
-	return r.delegate.ReadEditorContent(guid, target)
-}
-
-func (r *Registry) WriteEditorContent(guid string, target interface{}) error {
-	return r.delegate.WriteEditorContent(guid, target)
 }

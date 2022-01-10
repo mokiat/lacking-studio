@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
-	"github.com/mokiat/lacking/data/asset"
+	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
 )
 

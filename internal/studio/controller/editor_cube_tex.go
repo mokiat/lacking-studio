@@ -12,16 +12,15 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
-	"github.com/mokiat/lacking/data/asset"
 	"github.com/mokiat/lacking/data/pack"
-	gameasset "github.com/mokiat/lacking/game/asset"
+	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
 
-func NewCubeTextureEditor(studio *Studio, resource *gameasset.Resource) (*CubeTextureEditor, error) {
+func NewCubeTextureEditor(studio *Studio, resource *asset.Resource) (*CubeTextureEditor, error) {
 	gfxScene := studio.GraphicsEngine().CreateScene()
 	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.0, 0.0, 0.0))
 
@@ -84,7 +83,7 @@ type CubeTextureEditor struct {
 	BaseEditor
 
 	studio      *Studio
-	resource    *gameasset.Resource
+	resource    *asset.Resource
 	savedChange history.Change
 
 	propsAssetExpanded  bool
@@ -130,7 +129,7 @@ func (e *CubeTextureEditor) Save() error {
 	if err := e.studio.Registry().WritePreview(e.ID(), previewImage); err != nil {
 		return fmt.Errorf("failed to write preview image: %w", err)
 	}
-	if err := e.studio.Registry().WriteContent(e.ID(), e.assetImage); err != nil {
+	if err := e.studio.Registry().WriteContent(e.ID(), &e.assetImage); err != nil {
 		return fmt.Errorf("failed to write content image: %w", err)
 	}
 	e.savedChange = e.changes.LastChange()
@@ -379,7 +378,7 @@ func (e *CubeTextureEditor) buildGraphicsDefinition(src asset.CubeTexture) graph
 
 func (e *CubeTextureEditor) assetToGraphicsFilter(filter asset.FilterMode) graphics.Filter {
 	switch filter {
-	case asset.FilterModeDefault:
+	case asset.FilterModeUnspecified:
 		fallthrough
 	case asset.FilterModeNearest:
 		return graphics.FilterNearest
