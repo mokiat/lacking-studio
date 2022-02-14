@@ -136,14 +136,18 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 					})
 
 					for _, resource := range lifecycle.Resources() {
-						func(resource data.Resource) {
-							co.WithChild(resource.GUID, co.New(AssetItem, func() {
+						func(resource *data.Resource) {
+							previewImage, err := resource.LoadPreview()
+							if err != nil {
+								previewImage = nil
+							}
+							co.WithChild(resource.ID(), co.New(AssetItem, func() {
 								co.WithData(AssetItemData{
-									PreviewImage: resource.PreviewImage,
-									ID:           resource.GUID,
-									Kind:         resource.Kind,
-									Name:         resource.Name,
-									Selected:     resource.GUID == lifecycle.SelectedResourceID(),
+									PreviewImage: previewImage,
+									ID:           resource.ID(),
+									Kind:         resource.Kind(),
+									Name:         resource.Name(),
+									Selected:     resource.ID() == lifecycle.SelectedResourceID(),
 								})
 								co.WithLayoutData(mat.LayoutData{
 									GrowHorizontally: true,
@@ -250,7 +254,7 @@ func (l *assetDialogLifecycle) SelectedResourceID() string {
 	return l.selectedAssetID
 }
 
-func (l *assetDialogLifecycle) Resources() []data.Resource {
+func (l *assetDialogLifecycle) Resources() []*data.Resource {
 	return l.registry.ListResourcesOfKind(l.selectedKind)
 }
 
@@ -379,7 +383,9 @@ func (l *assetItemLifecycle) OnUpdate(props co.Properties) {
 	if l.previewImage != nil {
 		l.previewImage.Destroy()
 	}
-	l.previewImage = co.CreateImage(data.PreviewImage)
+	if data.PreviewImage != nil {
+		l.previewImage = co.CreateImage(data.PreviewImage)
+	}
 	l.assetID = data.ID
 	l.assetKind = data.Kind
 	l.assetName = data.Name

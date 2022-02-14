@@ -2,19 +2,19 @@ package controller
 
 import (
 	"github.com/mokiat/gomath/sprec"
+	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/data/asset"
-	gameasset "github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
 
-func NewModelEditor(studio *Studio, resource *gameasset.Resource) (*ModelEditor, error) {
+func NewModelEditor(studio *Studio, resource *data.Resource) (*ModelEditor, error) {
 	gfxScene := studio.GraphicsEngine().CreateScene()
 	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.1, 0.3, 0.5))
 
@@ -55,7 +55,7 @@ type ModelEditor struct {
 	BaseEditor
 
 	studio      *Studio
-	resource    *gameasset.Resource
+	resource    *data.Resource
 	savedChange history.Change
 
 	propsAssetExpanded bool
@@ -83,11 +83,11 @@ func (e *ModelEditor) IsPropertiesVisible() bool {
 }
 
 func (e *ModelEditor) ID() string {
-	return e.resource.GUID
+	return e.resource.ID()
 }
 
 func (e *ModelEditor) Name() string {
-	return e.resource.Name
+	return e.resource.Name()
 }
 
 func (e *ModelEditor) Icon() ui.Image {

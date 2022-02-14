@@ -1,7 +1,7 @@
 package data
 
 import (
-	"errors"
+	"fmt"
 	"image"
 	"strings"
 
@@ -11,13 +11,8 @@ import (
 )
 
 const (
-	previewSize = 128
+	PreviewSize = 128
 )
-
-type Resource struct {
-	asset.Resource
-	PreviewImage image.Image
-}
 
 func NewRegistry(delegate asset.Registry) *Registry {
 	return &Registry{
@@ -26,60 +21,69 @@ func NewRegistry(delegate asset.Registry) *Registry {
 }
 
 type Registry struct {
-	delegate asset.Registry
+	delegate        asset.Registry
+	resources       []*Resource
+	resourcesFromID map[string]*Resource
 }
 
-func (r *Registry) GetResourceByID(id string) Resource {
-	delegateResources, err := r.delegate.ReadResources()
+func (r *Registry) Init() error {
+	assetResources := make([]asset.Resource, len(r.resources))
+	assetResources, err := r.delegate.ReadResources()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error reading resources: %w", err)
 	}
 
-	for _, delegateResource := range delegateResources {
-		if delegateResource.GUID == id {
-			previewImg, err := r.delegate.ReadPreview(delegateResource.GUID)
-			if err != nil {
-				if !errors.Is(err, asset.ErrNotFound) {
-					panic(err)
-				}
-				previewImg = image.NewRGBA(image.Rect(0, 0, 64, 64))
-			}
-
-			return Resource{
-				Resource:     delegateResource,
-				PreviewImage: previewImg,
-			}
+	r.resources = make([]*Resource, len(assetResources))
+	r.resourcesFromID = make(map[string]*Resource)
+	for i, assetResource := range assetResources {
+		r.resources[i] = &Resource{
+			registry: r,
+			id:       assetResource.GUID,
+			kind:     assetResource.Kind,
+			name:     assetResource.Name,
 		}
+		r.resourcesFromID[assetResource.GUID] = r.resources[i]
 	}
-	return Resource{}
+
+	assetDependencies, err := r.delegate.ReadDependencies()
+	if err != nil {
+		return fmt.Errorf("error reading dependencies: %w", err)
+	}
+
+	for _, assetDependency := range assetDependencies {
+		sourceResource := r.resourcesFromID[assetDependency.SourceGUID]
+		if sourceResource == nil {
+			return fmt.Errorf("cannot find resource with id %q", assetDependency.SourceGUID)
+		}
+		targetResource := r.resourcesFromID[assetDependency.TargetGUID]
+		if targetResource == nil {
+			return fmt.Errorf("cannot find resource with id %q", assetDependency.TargetGUID)
+		}
+		sourceResource.dependencies = append(sourceResource.dependencies, targetResource)
+	}
+
+	return nil
 }
 
-func (r *Registry) ListResourcesOfKind(kind string) []Resource {
-	delegateResources, err := r.delegate.ReadResources()
-	if err != nil {
-		panic(err)
-	}
+func (r *Registry) GetResourceByID(id string) *Resource {
+	return r.resourcesFromID[id]
+}
 
-	result := make([]Resource, 0, len(delegateResources))
-	for _, delegateResource := range delegateResources {
-		if !strings.EqualFold(delegateResource.Kind, kind) {
+func (r *Registry) ListResourcesOfKind(kind string) []*Resource {
+	result := make([]*Resource, 0, len(r.resources))
+	for _, resource := range r.resources {
+		if !strings.EqualFold(resource.kind, kind) {
 			continue
 		}
-
-		previewImg, err := r.delegate.ReadPreview(delegateResource.GUID)
-		if err != nil {
-			if !errors.Is(err, asset.ErrNotFound) {
-				panic(err)
-			}
-			previewImg = image.NewRGBA(image.Rect(0, 0, 64, 64))
-		}
-
-		result = append(result, Resource{
-			Resource:     delegateResource,
-			PreviewImage: previewImg,
-		})
+		// previewImg, err := r.delegate.ReadPreview(delegateResource.GUID)
+		// if err != nil {
+		// 	if !errors.Is(err, asset.ErrNotFound) {
+		// 		panic(err)
+		// 	}
+		// 	previewImg = image.NewRGBA(image.Rect(0, 0, 64, 64))
+		// }
+		result = append(result, resource)
 	}
-
 	return result
 }
 
@@ -88,22 +92,22 @@ func (r *Registry) PreparePreview(img image.Image) image.Image {
 
 	var scaleFactor float64
 	switch {
-	case bounds.Dx() > previewSize && bounds.Dy() > previewSize:
+	case bounds.Dx() > PreviewSize && bounds.Dy() > PreviewSize:
 		if bounds.Dx() > bounds.Dy() {
-			scaleFactor = float64(previewSize) / float64(bounds.Dx())
+			scaleFactor = float64(PreviewSize) / float64(bounds.Dx())
 		} else {
-			scaleFactor = float64(previewSize) / float64(bounds.Dy())
+			scaleFactor = float64(PreviewSize) / float64(bounds.Dy())
 		}
-	case bounds.Dx() < previewSize && bounds.Dy() < previewSize:
+	case bounds.Dx() < PreviewSize && bounds.Dy() < PreviewSize:
 		if bounds.Dx() > bounds.Dy() {
-			scaleFactor = float64(previewSize) / float64(bounds.Dx())
+			scaleFactor = float64(PreviewSize) / float64(bounds.Dx())
 		} else {
-			scaleFactor = float64(previewSize) / float64(bounds.Dy())
+			scaleFactor = float64(PreviewSize) / float64(bounds.Dy())
 		}
-	case bounds.Dx() > previewSize:
-		scaleFactor = float64(previewSize) / float64(bounds.Dx())
-	case bounds.Dy() > previewSize:
-		scaleFactor = float64(previewSize) / float64(bounds.Dy())
+	case bounds.Dx() > PreviewSize:
+		scaleFactor = float64(PreviewSize) / float64(bounds.Dx())
+	case bounds.Dy() > PreviewSize:
+		scaleFactor = float64(PreviewSize) / float64(bounds.Dy())
 	default:
 		return img
 	}
@@ -119,14 +123,49 @@ func (r *Registry) PreparePreview(img image.Image) image.Image {
 	return dst
 }
 
-func (r *Registry) WritePreview(guid string, img image.Image) error {
-	return r.delegate.WritePreview(guid, r.PreparePreview(img))
+func (r *Registry) saveResources() error {
+	assetResources := make([]asset.Resource, len(r.resources))
+	for i, resource := range r.resources {
+		assetResources[i] = asset.Resource{
+			GUID: resource.id,
+			Kind: resource.kind,
+			Name: resource.name,
+		}
+	}
+	if err := r.delegate.WriteResources(assetResources); err != nil {
+		return fmt.Errorf("error writing resources: %w", err)
+	}
+	return nil
 }
 
-func (r *Registry) ReadContent(guid string, target asset.Decodable) error {
+func (r *Registry) saveDependencies() error {
+	var assetDependencies []asset.Dependency
+	for _, resource := range r.resources {
+		for _, dependency := range resource.dependencies {
+			assetDependencies = append(assetDependencies, asset.Dependency{
+				SourceGUID: resource.id,
+				TargetGUID: dependency.id,
+			})
+		}
+	}
+	if err := r.delegate.WriteDependencies(assetDependencies); err != nil {
+		return fmt.Errorf("error writing dependencies: %w", err)
+	}
+	return nil
+}
+
+func (r *Registry) readPreview(id string) (image.Image, error) {
+	return r.delegate.ReadPreview(id)
+}
+
+func (r *Registry) writePreview(id string, img image.Image) error {
+	return r.delegate.WritePreview(id, r.PreparePreview(img))
+}
+
+func (r *Registry) readContent(guid string, target asset.Decodable) error {
 	return r.delegate.ReadContent(guid, target)
 }
 
-func (r *Registry) WriteContent(guid string, target asset.Encodable) error {
+func (r *Registry) writeContent(guid string, target asset.Encodable) error {
 	return r.delegate.WriteContent(guid, target)
 }

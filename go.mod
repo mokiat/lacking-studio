@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/mokiat/gomath v0.1.0
 	github.com/mokiat/lacking v0.2.0
+	github.com/satori/go.uuid v1.2.0
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 )
 

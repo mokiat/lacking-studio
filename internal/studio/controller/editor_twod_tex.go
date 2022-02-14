@@ -9,6 +9,7 @@ import (
 
 	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking-studio/internal/studio/change"
+	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
@@ -24,7 +25,7 @@ import (
 
 var dirLight graphics.DirectionalLight
 
-func NewTwoDTextureEditor(studio *Studio, resource *asset.Resource) (*TwoDTextureEditor, error) {
+func NewTwoDTextureEditor(studio *Studio, resource *data.Resource) (*TwoDTextureEditor, error) {
 	gfxScene := studio.GraphicsEngine().CreateScene()
 	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.1, 0.3, 0.5))
 
@@ -42,8 +43,8 @@ func NewTwoDTextureEditor(studio *Studio, resource *asset.Resource) (*TwoDTextur
 	gfxCamera.SetAutoFocus(false)
 
 	var assetImage asset.TwoDTexture
-	if err := studio.Registry().ReadContent(resource.GUID, &assetImage); err != nil {
-		return nil, fmt.Errorf("failed to open asset %q: %w", resource.GUID, err)
+	if err := resource.LoadContent(&assetImage); err != nil {
+		return nil, fmt.Errorf("failed load content: %w", err)
 	}
 	result := &TwoDTextureEditor{
 		BaseEditor: NewBaseEditor(),
@@ -100,7 +101,7 @@ type TwoDTextureEditor struct {
 	BaseEditor
 
 	studio      *Studio
-	resource    *asset.Resource
+	resource    *data.Resource
 	savedChange history.Change
 
 	propsAssetExpanded  bool
@@ -129,24 +130,24 @@ func (e *TwoDTextureEditor) IsPropertiesVisible() bool {
 }
 
 func (e *TwoDTextureEditor) ID() string {
-	return e.resource.GUID
+	return e.resource.ID()
 }
 
 func (e *TwoDTextureEditor) ChangeName(newName string) {
 	e.changes.Push(&change.TwoDTextureName{
 		Controller: e,
-		From:       e.resource.Name,
+		From:       e.resource.Name(),
 		To:         newName,
 	})
 }
 
 func (e *TwoDTextureEditor) SetName(name string) {
-	e.resource.Name = name
+	e.resource.SetName(name)
 	e.studio.NotifyChanged()
 }
 
 func (e *TwoDTextureEditor) Name() string {
-	return e.resource.Name
+	return e.resource.Name()
 }
 
 func (e *TwoDTextureEditor) Icon() ui.Image {
@@ -158,12 +159,15 @@ func (e *TwoDTextureEditor) CanSave() bool {
 }
 
 func (e *TwoDTextureEditor) Save() error {
-	previewImage := image.NewRGBA(image.Rect(0, 0, 128, 128)) // TODO: Use snapshot
-	if err := e.studio.Registry().WritePreview(e.ID(), previewImage); err != nil {
-		return fmt.Errorf("failed to write preview image: %w", err)
+	previewImage := image.NewRGBA(image.Rect(0, 0, data.PreviewSize, data.PreviewSize)) // TODO: Use snapshot
+	if err := e.resource.Save(); err != nil {
+		return fmt.Errorf("error saving resource: %w", err)
 	}
-	if err := e.studio.Registry().WriteContent(e.ID(), &e.assetImage); err != nil {
-		return fmt.Errorf("failed to write content image: %w", err)
+	if err := e.resource.SavePreview(previewImage); err != nil {
+		return fmt.Errorf("error saving preview: %w", err)
+	}
+	if err := e.resource.SaveContent(&e.assetImage); err != nil {
+		return fmt.Errorf("error saving content: %w", err)
 	}
 	e.savedChange = e.changes.LastChange()
 	return nil

@@ -26,12 +26,17 @@ func NewStudio(
 	physicsEngine *physics.Engine,
 	ecsEngine *ecs.Engine,
 ) *Studio {
+	dataStudio := data.NewRegistry(registry)
+	if err := dataStudio.Init(); err != nil {
+		panic(err) // TODO
+	}
+
 	result := &Studio{
 		Controller: co.NewBaseController(),
 
 		projectDir: projectDir,
 		window:     window,
-		registry:   data.NewRegistry(registry),
+		registry:   dataStudio,
 		gfxEngine:  gfxEngine,
 
 		actionsVisible:    true,
@@ -130,27 +135,27 @@ func (s *Studio) Save() {
 func (s *Studio) OpenAsset(id string) {
 	resource := s.registry.GetResourceByID(id)
 	for _, editor := range s.editors {
-		if editor.ID() == resource.GUID {
+		if editor.ID() == resource.ID() {
 			s.SelectEditor(editor)
 			return
 		}
 	}
 
-	switch resource.Kind {
+	switch resource.Kind() {
 	case "twod_texture":
-		editor, err := NewTwoDTextureEditor(s, &resource.Resource)
+		editor, err := NewTwoDTextureEditor(s, resource)
 		if err != nil {
 			panic(err) // TODO
 		}
 		s.OpenEditor(editor)
 	case "cube_texture":
-		editor, err := NewCubeTextureEditor(s, &resource.Resource)
+		editor, err := NewCubeTextureEditor(s, resource)
 		if err != nil {
 			panic(err) // TODO
 		}
 		s.OpenEditor(editor)
 	case "model":
-		editor, err := NewModelEditor(s, &resource.Resource)
+		editor, err := NewModelEditor(s, resource)
 		if err != nil {
 			panic(err) // TODO
 		}
