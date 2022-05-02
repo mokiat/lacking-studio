@@ -1,14 +1,15 @@
 package widget
 
 import (
+	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 type TabbarTabData struct {
-	Icon     ui.Image
+	Icon     *ui.Image
 	Text     string
 	Selected bool
 }
@@ -24,22 +25,20 @@ var TabbarTab = co.ShallowCached(co.Define(func(props co.Properties) co.Instance
 
 	var layoutData mat.LayoutData
 	props.InjectOptionalLayoutData(&layoutData, mat.LayoutData{})
-	layoutData.Height = optional.NewInt(TabbarItemHeight)
+	layoutData.Height = optional.Value(TabbarItemHeight)
 
 	var callbackData TabbarTabCallbackData
 	props.InjectOptionalCallbackData(&callbackData, TabbarTabCallbackData{})
 
-	var essence *tabbarTabEssence
-	co.UseState(func() interface{} {
+	essence := co.UseState(func() *tabbarTabEssence {
 		return &tabbarTabEssence{}
-	}).Inject(&essence)
+	}).Get()
 	essence.selected = data.Selected
 	essence.onClick = callbackData.OnClick
 
-	var closeEssence *buttonEssence
-	co.UseState(func() interface{} {
+	closeEssence := co.UseState(func() *buttonEssence {
 		return &buttonEssence{}
-	}).Inject(&closeEssence)
+	}).Get()
 	closeEssence.onClick = callbackData.OnClose
 
 	return co.New(mat.Element, func() {
@@ -61,12 +60,12 @@ var TabbarTab = co.ShallowCached(co.Define(func(props co.Properties) co.Instance
 			co.WithChild("icon", co.New(mat.Picture, func() {
 				co.WithData(mat.PictureData{
 					Image:      data.Icon,
-					ImageColor: optional.NewColor(ui.Black()),
+					ImageColor: optional.Value(ui.Black()),
 					Mode:       mat.ImageModeFit,
 				})
 				co.WithLayoutData(mat.LayoutData{
-					Width:  optional.NewInt(24),
-					Height: optional.NewInt(24),
+					Width:  optional.Value(24),
+					Height: optional.Value(24),
 				})
 			}))
 		}
@@ -75,8 +74,8 @@ var TabbarTab = co.ShallowCached(co.Define(func(props co.Properties) co.Instance
 			co.WithChild("text", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "regular"),
-					FontSize:  optional.NewInt(20),
-					FontColor: optional.NewColor(ui.Black()),
+					FontSize:  optional.Value(float32(20)),
+					FontColor: optional.Value(ui.Black()),
 					Text:      data.Text,
 				})
 				co.WithLayoutData(mat.LayoutData{})
@@ -91,19 +90,19 @@ var TabbarTab = co.ShallowCached(co.Define(func(props co.Properties) co.Instance
 				})
 
 				co.WithLayoutData(mat.LayoutData{
-					Width:  optional.NewInt(24),
-					Height: optional.NewInt(24),
+					Width:  optional.Value(24),
+					Height: optional.Value(24),
 				})
 
 				co.WithChild("icon", co.New(mat.Picture, func() {
 					co.WithData(mat.PictureData{
 						Image:      co.OpenImage("resources/icons/close.png"),
-						ImageColor: optional.NewColor(ui.Black()),
+						ImageColor: optional.Value(ui.Black()),
 						Mode:       mat.ImageModeFit,
 					})
 					co.WithLayoutData(mat.LayoutData{
-						Width:  optional.NewInt(24),
-						Height: optional.NewInt(24),
+						Width:  optional.Value(24),
+						Height: optional.Value(24),
 					})
 				}))
 			}))
@@ -146,7 +145,7 @@ func (e *tabbarTabEssence) OnMouseEvent(element *ui.Element, event ui.MouseEvent
 	return true
 }
 
-func (e *tabbarTabEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
+func (e *tabbarTabEssence) OnRender(element *ui.Element, canvas *ui.Canvas) {
 	var backgroundColor ui.Color
 	if e.selected {
 		backgroundColor = ui.White()
@@ -162,17 +161,20 @@ func (e *tabbarTabEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
 	}
 
 	size := element.Bounds().Size
+	width := float32(size.Width)
+	height := float32(size.Height)
+
 	if !backgroundColor.Transparent() {
-		canvas.Shape().Begin(ui.Fill{
+		canvas.Reset()
+		canvas.MoveTo(sprec.NewVec2(0, height))
+		canvas.LineTo(sprec.NewVec2(width, height))
+		canvas.LineTo(sprec.NewVec2(width, float32(TabbarItemRadius)))
+		canvas.QuadTo(sprec.NewVec2(width, 0), sprec.NewVec2(width-float32(TabbarItemRadius), 0))
+		canvas.LineTo(sprec.NewVec2(float32(TabbarItemRadius), 0))
+		canvas.QuadTo(sprec.NewVec2(0, 0), sprec.NewVec2(0, float32(TabbarItemRadius)))
+		canvas.Fill(ui.Fill{
 			Color: backgroundColor,
 		})
-		canvas.Shape().MoveTo(ui.NewPosition(0, size.Height))
-		canvas.Shape().LineTo(ui.NewPosition(size.Width, size.Height))
-		canvas.Shape().LineTo(ui.NewPosition(size.Width, TabbarItemRadius))
-		canvas.Shape().QuadTo(ui.NewPosition(size.Width, 0), ui.NewPosition(size.Width-TabbarItemRadius, 0))
-		canvas.Shape().LineTo(ui.NewPosition(TabbarItemRadius, 0))
-		canvas.Shape().QuadTo(ui.NewPosition(0, 0), ui.NewPosition(0, TabbarItemRadius))
-		canvas.Shape().End()
 	}
 }
 
@@ -216,7 +218,7 @@ func (e *buttonEssence) OnMouseEvent(element *ui.Element, event ui.MouseEvent) b
 	return true
 }
 
-func (e *buttonEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
+func (e *buttonEssence) OnRender(element *ui.Element, canvas *ui.Canvas) {
 	var backgroundColor ui.Color
 	switch e.state {
 	case buttonStateOver:
@@ -229,11 +231,14 @@ func (e *buttonEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
 
 	size := element.Bounds().Size
 	if !backgroundColor.Transparent() {
-		canvas.Shape().Begin(ui.Fill{
+		canvas.Reset()
+		canvas.Rectangle(
+			sprec.ZeroVec2(),
+			sprec.NewVec2(float32(size.Width), float32(size.Height)),
+		)
+		canvas.Fill(ui.Fill{
 			Color: backgroundColor,
 		})
-		canvas.Shape().Rectangle(ui.NewPosition(0, 0), size)
-		canvas.Shape().End()
 	}
 }
 

@@ -1,14 +1,15 @@
 package widget
 
 import (
+	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 type ToolbarButtonData struct {
-	Icon     ui.Image
+	Icon     *ui.Image
 	Text     string
 	Disabled bool
 	Selected bool
@@ -25,15 +26,14 @@ var ToolbarButton = co.ShallowCached(co.Define(func(props co.Properties) co.Inst
 
 	var layoutData mat.LayoutData
 	props.InjectOptionalLayoutData(&layoutData, mat.LayoutData{})
-	layoutData.Height = optional.NewInt(ToolbarItemHeight)
+	layoutData.Height = optional.Value(ToolbarItemHeight)
 
 	var callbackData ToolbarButtonCallbackData
 	props.InjectOptionalCallbackData(&callbackData, ToolbarButtonCallbackData{})
 
-	var essence *toolbarButtonEssence
-	co.UseState(func() interface{} {
+	essence := co.UseState(func() *toolbarButtonEssence {
 		return &toolbarButtonEssence{}
-	}).Inject(&essence)
+	}).Get()
 	essence.selected = data.Selected
 	essence.clickListener = callbackData.ClickListener
 
@@ -53,7 +53,7 @@ var ToolbarButton = co.ShallowCached(co.Define(func(props co.Properties) co.Inst
 				Left:  4,
 				Right: 4,
 			},
-			Enabled: optional.NewBool(!data.Disabled),
+			Enabled: optional.Value(!data.Disabled),
 		})
 		co.WithLayoutData(layoutData)
 
@@ -61,12 +61,12 @@ var ToolbarButton = co.ShallowCached(co.Define(func(props co.Properties) co.Inst
 			co.WithChild("icon", co.New(mat.Picture, func() {
 				co.WithData(mat.PictureData{
 					Image:      data.Icon,
-					ImageColor: optional.NewColor(multiplierColor),
+					ImageColor: optional.Value(multiplierColor),
 					Mode:       mat.ImageModeFit,
 				})
 				co.WithLayoutData(mat.LayoutData{
-					Width:  optional.NewInt(24),
-					Height: optional.NewInt(24),
+					Width:  optional.Value(24),
+					Height: optional.Value(24),
 				})
 			}))
 		}
@@ -75,8 +75,8 @@ var ToolbarButton = co.ShallowCached(co.Define(func(props co.Properties) co.Inst
 			co.WithChild("text", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "regular"),
-					FontSize:  optional.NewInt(20),
-					FontColor: optional.NewColor(multiplierColor),
+					FontSize:  optional.Value(float32(20)),
+					FontColor: optional.Value(multiplierColor),
 					Text:      data.Text,
 				})
 				co.WithLayoutData(mat.LayoutData{})
@@ -120,7 +120,7 @@ func (e *toolbarButtonEssence) OnMouseEvent(element *ui.Element, event ui.MouseE
 	return true
 }
 
-func (e *toolbarButtonEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
+func (e *toolbarButtonEssence) OnRender(element *ui.Element, canvas *ui.Canvas) {
 	var backgroundColor ui.Color
 	switch e.state {
 	case buttonStateOver:
@@ -133,24 +133,24 @@ func (e *toolbarButtonEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
 
 	size := element.Bounds().Size
 	if !backgroundColor.Transparent() {
-		canvas.Shape().Begin(ui.Fill{
+		canvas.Reset()
+		canvas.Rectangle(
+			sprec.ZeroVec2(),
+			sprec.NewVec2(float32(size.Width), float32(size.Height)),
+		)
+		canvas.Fill(ui.Fill{
 			Color: backgroundColor,
 		})
-		canvas.Shape().Rectangle(
-			ui.NewPosition(0, 0),
-			size,
-		)
-		canvas.Shape().End()
 	}
 	if e.selected {
-		canvas.Shape().Begin(ui.Fill{
+		canvas.Reset()
+		canvas.Rectangle(
+			sprec.NewVec2(0, float32(size.Height)-5),
+			sprec.NewVec2(float32(size.Width), 5),
+		)
+		canvas.Fill(ui.Fill{
 			Color: SecondaryColor,
 		})
-		canvas.Shape().Rectangle(
-			ui.NewPosition(0, size.Height-5),
-			ui.NewSize(size.Width, 5),
-		)
-		canvas.Shape().End()
 	}
 }
 

@@ -16,6 +16,7 @@ import (
 	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
+	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -90,19 +91,23 @@ type CubeTextureEditor struct {
 	propsAssetExpanded  bool
 	propsConfigExpanded bool
 
-	gfxEngine      graphics.Engine
-	gfxScene       graphics.Scene
-	gfxCamera      graphics.Camera
+	gfxEngine      *graphics.Engine
+	gfxScene       *graphics.Scene
+	gfxCamera      *graphics.Camera
 	gfxCameraPitch sprec.Angle
 	gfxCameraYaw   sprec.Angle
 	gfxCameraFoV   sprec.Angle
-	gfxImage       graphics.CubeTexture
+	gfxImage       *graphics.CubeTexture
 
 	assetImage asset.CubeTexture
 
 	rotatingCamera bool
 	oldMouseX      int
 	oldMouseY      int
+}
+
+func (e *CubeTextureEditor) API() render.API {
+	return e.studio.api
 }
 
 func (e *CubeTextureEditor) IsPropertiesVisible() bool {
@@ -117,7 +122,7 @@ func (e *CubeTextureEditor) Name() string {
 	return e.resource.Name()
 }
 
-func (e *CubeTextureEditor) Icon() ui.Image {
+func (e *CubeTextureEditor) Icon() *ui.Image {
 	return co.OpenImage("resources/icons/texture.png")
 }
 
@@ -178,11 +183,11 @@ func (e *CubeTextureEditor) OnViewportMouseEvent(event widget.ViewportMouseEvent
 	}
 }
 
-func (e *CubeTextureEditor) Scene() graphics.Scene {
+func (e *CubeTextureEditor) Scene() *graphics.Scene {
 	return e.gfxScene
 }
 
-func (e *CubeTextureEditor) Camera() graphics.Camera {
+func (e *CubeTextureEditor) Camera() *graphics.Camera {
 	return e.gfxCamera
 }
 

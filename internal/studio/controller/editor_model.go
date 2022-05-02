@@ -9,6 +9,7 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/data/asset"
 	"github.com/mokiat/lacking/game/graphics"
+	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -60,22 +61,26 @@ type ModelEditor struct {
 
 	propsAssetExpanded bool
 
-	gfxEngine       graphics.Engine
-	gfxScene        graphics.Scene
-	gfxCamera       graphics.Camera
+	gfxEngine       *graphics.Engine
+	gfxScene        *graphics.Scene
+	gfxCamera       *graphics.Camera
 	gfxCameraPitch  sprec.Angle
 	gfxCameraYaw    sprec.Angle
 	gfxCameraFoV    sprec.Angle
-	gfxMesh         graphics.Mesh
-	gfxMeshTemplate graphics.MeshTemplate
-	gfxMaterial     graphics.Material
-	gfxImage        graphics.TwoDTexture
+	gfxMesh         *graphics.Mesh
+	gfxMeshTemplate *graphics.MeshTemplate
+	gfxMaterial     *graphics.Material
+	gfxImage        *graphics.TwoDTexture
 
 	assetModel asset.Model
 
 	rotatingCamera bool
 	oldMouseX      int
 	oldMouseY      int
+}
+
+func (e *ModelEditor) API() render.API {
+	return e.studio.api
 }
 
 func (e *ModelEditor) IsPropertiesVisible() bool {
@@ -90,7 +95,7 @@ func (e *ModelEditor) Name() string {
 	return e.resource.Name()
 }
 
-func (e *ModelEditor) Icon() ui.Image {
+func (e *ModelEditor) Icon() *ui.Image {
 	return co.OpenImage("resources/icons/model.png")
 }
 
@@ -146,11 +151,11 @@ func (e *ModelEditor) OnViewportMouseEvent(event widget.ViewportMouseEvent) bool
 	}
 }
 
-func (e *ModelEditor) Scene() graphics.Scene {
+func (e *ModelEditor) Scene() *graphics.Scene {
 	return nil
 }
 
-func (e *ModelEditor) Camera() graphics.Camera {
+func (e *ModelEditor) Camera() *graphics.Camera {
 	return nil
 }
 

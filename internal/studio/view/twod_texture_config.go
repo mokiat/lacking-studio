@@ -7,7 +7,7 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 var TwoDTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Instance {
@@ -45,8 +45,8 @@ var TwoDTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 			co.WithChild("wrap-s-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "bold"),
-					FontSize:  optional.NewInt(18),
-					FontColor: optional.NewColor(ui.Black()),
+					FontSize:  optional.Value(float32(18)),
+					FontColor: optional.Value(ui.Black()),
 					Text:      "Wrap S:",
 				})
 			}))
@@ -74,8 +74,8 @@ var TwoDTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 			co.WithChild("wrap-t-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "bold"),
-					FontSize:  optional.NewInt(18),
-					FontColor: optional.NewColor(ui.Black()),
+					FontSize:  optional.Value(float32(18)),
+					FontColor: optional.Value(ui.Black()),
 					Text:      "Wrap T:",
 				})
 			}))
@@ -103,8 +103,8 @@ var TwoDTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 			co.WithChild("min-filter-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "bold"),
-					FontSize:  optional.NewInt(18),
-					FontColor: optional.NewColor(ui.Black()),
+					FontSize:  optional.Value(float32(18)),
+					FontColor: optional.Value(ui.Black()),
 					Text:      "Minification Filter:",
 				})
 			}))
@@ -134,8 +134,8 @@ var TwoDTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 			co.WithChild("mag-filter-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "bold"),
-					FontSize:  optional.NewInt(18),
-					FontColor: optional.NewColor(ui.Black()),
+					FontSize:  optional.Value(float32(18)),
+					FontColor: optional.Value(ui.Black()),
 					Text:      "Magnification Filter:",
 				})
 			}))
@@ -161,8 +161,8 @@ var TwoDTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 			co.WithChild("data-format-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "bold"),
-					FontSize:  optional.NewInt(18),
-					FontColor: optional.NewColor(ui.Black()),
+					FontSize:  optional.Value(float32(18)),
+					FontColor: optional.Value(ui.Black()),
 					Text:      "Data Format:",
 				})
 			}))

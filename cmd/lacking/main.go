@@ -7,13 +7,15 @@ import (
 	"os"
 	"path/filepath"
 
+	glapp "github.com/mokiat/lacking-gl/app"
+	glgame "github.com/mokiat/lacking-gl/game"
+	glrender "github.com/mokiat/lacking-gl/render"
+	glui "github.com/mokiat/lacking-gl/ui"
 	"github.com/mokiat/lacking-studio/internal/studio"
 	"github.com/mokiat/lacking/app"
-	glfwapp "github.com/mokiat/lacking/framework/glfw/app"
-	glgraphics "github.com/mokiat/lacking/framework/opengl/game/graphics"
-	glui "github.com/mokiat/lacking/framework/opengl/ui"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
+	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/game/physics"
 	"github.com/mokiat/lacking/ui"
 )
@@ -56,25 +58,27 @@ func runApplication() error {
 		return fmt.Errorf("failed to initialize registry: %w", err)
 	}
 
-	cfg := glfwapp.NewConfig("Lacking Studio", 1024, 576)
+	cfg := glapp.NewConfig("Lacking Studio", 1024, 576)
 	cfg.SetVSync(true)
 	cfg.SetMaximized(true)
 	cfg.SetIcon(filepath.Join(studioDir, "resources/icons/favicon.png"))
 
-	graphicsEngine := glgraphics.NewEngine()
 	physicsEngine := physics.NewEngine()
 	ecsEngine := ecs.NewEngine()
-	resourceLocator := ui.NewFileResourceLocator(studioDir)
-	uiGLGraphics := glui.NewGraphics()
 
+	renderAPI := glrender.NewAPI()
+	graphicsEngine := graphics.NewEngine(renderAPI, glgame.NewShaderCollection())
+	resourceLocator := ui.NewFileResourceLocator(studioDir)
+
+	uiCfg := ui.NewConfig(resourceLocator, renderAPI, glui.NewShaderCollection())
 	controller := app.NewLayeredController(
 		studio.NewController(graphicsEngine),
-		ui.NewController(resourceLocator, uiGLGraphics, func(w *ui.Window) {
-			studio.BootstrapApplication(projectDir, w, registry, graphicsEngine, physicsEngine, ecsEngine)
+		ui.NewController(uiCfg, func(w *ui.Window) {
+			studio.BootstrapApplication(projectDir, w, renderAPI, registry, graphicsEngine, physicsEngine, ecsEngine)
 		}),
 	)
 
-	return glfwapp.Run(cfg, controller)
+	return glapp.Run(cfg, controller)
 }
 
 func evalStudioDir() (string, error) {

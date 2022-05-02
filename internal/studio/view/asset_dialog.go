@@ -9,7 +9,7 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 type AssetDialogData struct {
@@ -27,17 +27,16 @@ var defaultAssetDialogCallbackData = AssetDialogCallbackData{
 }
 
 var AssetDialog = co.Define(func(props co.Properties) co.Instance {
-	var lifecycle *assetDialogLifecycle
-	co.UseLifecycle(func(handle co.LifecycleHandle) co.Lifecycle {
+	lifecycle := co.UseLifecycle(func(handle co.LifecycleHandle) *assetDialogLifecycle {
 		return &assetDialogLifecycle{
 			Lifecycle: co.NewBaseLifecycle(),
 			handle:    handle,
 		}
-	}, &lifecycle)
+	})
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.NewColor(ui.RGBA(0x00, 0x00, 0x00, 0xF0)),
+			BackgroundColor: optional.Value(ui.RGBA(0x00, 0x00, 0x00, 0xF0)),
 			Layout:          mat.NewAnchorLayout(mat.AnchorLayoutSettings{}),
 		})
 
@@ -46,17 +45,17 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				Layout: mat.NewAnchorLayout(mat.AnchorLayoutSettings{}),
 			})
 			co.WithLayoutData(mat.LayoutData{
-				Width:            optional.NewInt(600),
-				Height:           optional.NewInt(600),
-				HorizontalCenter: optional.NewInt(0),
-				VerticalCenter:   optional.NewInt(0),
+				Width:            optional.Value(600),
+				Height:           optional.Value(600),
+				HorizontalCenter: optional.Value(0),
+				VerticalCenter:   optional.Value(0),
 			})
 
 			co.WithChild("header", co.New(widget.Toolbar, func() {
 				co.WithLayoutData(mat.LayoutData{
-					Top:   optional.NewInt(0),
-					Left:  optional.NewInt(0),
-					Right: optional.NewInt(0),
+					Top:   optional.Value(0),
+					Left:  optional.Value(0),
+					Right: optional.Value(0),
 				})
 
 				co.WithChild("twod_texture", co.New(widget.ToolbarButton, func() {
@@ -118,15 +117,15 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				})
 
 				co.WithLayoutData(mat.LayoutData{
-					Left:   optional.NewInt(0),
-					Right:  optional.NewInt(0),
-					Top:    optional.NewInt(widget.ToolbarHeight),
-					Bottom: optional.NewInt(widget.ToolbarHeight),
+					Left:   optional.Value(0),
+					Right:  optional.Value(0),
+					Top:    optional.Value(widget.ToolbarHeight),
+					Bottom: optional.Value(widget.ToolbarHeight),
 				})
 
 				co.WithChild("content", co.New(mat.Container, func() {
 					co.WithData(mat.ContainerData{
-						BackgroundColor: optional.NewColor(ui.RGB(240, 240, 240)),
+						BackgroundColor: optional.Value(ui.RGB(240, 240, 240)),
 						Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
 							ContentAlignment: mat.AlignmentLeft,
 						}),
@@ -168,9 +167,9 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 					Flipped: true,
 				})
 				co.WithLayoutData(mat.LayoutData{
-					Left:   optional.NewInt(0),
-					Right:  optional.NewInt(0),
-					Bottom: optional.NewInt(0),
+					Left:   optional.Value(0),
+					Right:  optional.Value(0),
+					Bottom: optional.Value(0),
 				})
 
 				co.WithChild("open", co.New(widget.ToolbarButton, func() {
@@ -217,12 +216,12 @@ func (l *assetDialogLifecycle) OnCreate(props co.Properties) {
 }
 
 func (l *assetDialogLifecycle) OnUpdate(props co.Properties) {
-	var data AssetDialogData
-	props.InjectData(&data)
-	l.registry = data.Registry
+	var (
+		data         = co.GetData[AssetDialogData](props)
+		callbackData = co.GetOptionalCallbackData(props, AssetDialogCallbackData{})
+	)
 
-	var callbackData AssetDialogCallbackData
-	props.InjectOptionalCallbackData(&callbackData, AssetDialogCallbackData{})
+	l.registry = data.Registry
 	l.onClose = callbackData.OnClose
 	l.onAssetSelected = callbackData.OnAssetSelected
 }
@@ -275,13 +274,12 @@ var defaultAssetItemCallbackData = AssetItemCallbackData{
 }
 
 var AssetItem = co.Define(func(props co.Properties) co.Instance {
-	var lifecycle *assetItemLifecycle
-	co.UseLifecycle(func(handle co.LifecycleHandle) co.Lifecycle {
+	lifecycle := co.UseLifecycle(func(handle co.LifecycleHandle) *assetItemLifecycle {
 		return &assetItemLifecycle{
 			Lifecycle: co.NewBaseLifecycle(),
 			handle:    handle,
 		}
-	}, &lifecycle)
+	})
 
 	return co.New(widget.ListItem, func() {
 		co.WithData(widget.ListItemData{
@@ -309,13 +307,13 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 			co.WithChild("preview", co.New(mat.Picture, func() {
 				co.WithData(mat.PictureData{
 					Image:           lifecycle.PreviewImage(),
-					BackgroundColor: optional.NewColor(ui.Black()),
-					ImageColor:      optional.NewColor(ui.White()),
+					BackgroundColor: optional.Value(ui.Black()),
+					ImageColor:      optional.Value(ui.White()),
 					Mode:            mat.ImageModeFit,
 				})
 				co.WithLayoutData(mat.LayoutData{
-					Width:  optional.NewInt(64),
-					Height: optional.NewInt(64),
+					Width:  optional.Value(64),
+					Height: optional.Value(64),
 				})
 			}))
 
@@ -330,8 +328,8 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 				co.WithChild("id", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.GetFont("roboto", "regular"),
-						FontSize:  optional.NewInt(16),
-						FontColor: optional.NewColor(ui.Black()),
+						FontSize:  optional.Value(float32(16)),
+						FontColor: optional.Value(ui.Black()),
 						Text:      fmt.Sprintf("ID: %s", lifecycle.AssetID()),
 					})
 				}))
@@ -339,8 +337,8 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 				co.WithChild("kind", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.GetFont("roboto", "regular"),
-						FontSize:  optional.NewInt(16),
-						FontColor: optional.NewColor(ui.Black()),
+						FontSize:  optional.Value(float32(16)),
+						FontColor: optional.Value(ui.Black()),
 						Text:      fmt.Sprintf("Kind: %s", lifecycle.AssetKind()),
 					})
 				}))
@@ -348,8 +346,8 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 				co.WithChild("id", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.GetFont("roboto", "regular"),
-						FontSize:  optional.NewInt(16),
-						FontColor: optional.NewColor(ui.Black()),
+						FontSize:  optional.Value(float32(16)),
+						FontColor: optional.Value(ui.Black()),
 						Text:      fmt.Sprintf("Name: %s", lifecycle.AssetName()),
 					})
 				}))
@@ -362,7 +360,7 @@ type assetItemLifecycle struct {
 	co.Lifecycle
 	handle co.LifecycleHandle
 
-	previewImage ui.Image
+	previewImage *ui.Image
 	assetID      string
 	assetKind    string
 	assetName    string
@@ -375,10 +373,10 @@ func (l *assetItemLifecycle) OnCreate(props co.Properties) {
 }
 
 func (l *assetItemLifecycle) OnUpdate(props co.Properties) {
-	var data AssetItemData
-	props.InjectData(&data)
-	var callbackData AssetItemCallbackData
-	props.InjectOptionalCallbackData(&callbackData, defaultAssetItemCallbackData)
+	var (
+		data         = co.GetData[AssetItemData](props)
+		callbackData = co.GetOptionalCallbackData(props, defaultAssetItemCallbackData)
+	)
 
 	if l.previewImage != nil {
 		l.previewImage.Destroy()
@@ -400,7 +398,7 @@ func (l *assetItemLifecycle) OnDestroy() {
 	l.previewImage = nil
 }
 
-func (l *assetItemLifecycle) PreviewImage() ui.Image {
+func (l *assetItemLifecycle) PreviewImage() *ui.Image {
 	return l.previewImage
 }
 

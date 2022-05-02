@@ -18,12 +18,13 @@ import (
 	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
+	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
 
-var dirLight graphics.DirectionalLight
+var dirLight *graphics.Light
 
 func NewTwoDTextureEditor(studio *Studio, resource *data.Resource) (*TwoDTextureEditor, error) {
 	gfxScene := studio.GraphicsEngine().CreateScene()
@@ -107,22 +108,26 @@ type TwoDTextureEditor struct {
 	propsAssetExpanded  bool
 	propsConfigExpanded bool
 
-	gfxEngine       graphics.Engine
-	gfxScene        graphics.Scene
-	gfxCamera       graphics.Camera
+	gfxEngine       *graphics.Engine
+	gfxScene        *graphics.Scene
+	gfxCamera       *graphics.Camera
 	gfxCameraPitch  sprec.Angle
 	gfxCameraYaw    sprec.Angle
 	gfxCameraFoV    sprec.Angle
-	gfxMesh         graphics.Mesh
-	gfxMeshTemplate graphics.MeshTemplate
-	gfxMaterial     graphics.Material
-	gfxImage        graphics.TwoDTexture
+	gfxMesh         *graphics.Mesh
+	gfxMeshTemplate *graphics.MeshTemplate
+	gfxMaterial     *graphics.Material
+	gfxImage        *graphics.TwoDTexture
 
 	assetImage asset.TwoDTexture
 
 	rotatingCamera bool
 	oldMouseX      int
 	oldMouseY      int
+}
+
+func (e *TwoDTextureEditor) API() render.API {
+	return e.studio.api
 }
 
 func (e *TwoDTextureEditor) IsPropertiesVisible() bool {
@@ -150,7 +155,7 @@ func (e *TwoDTextureEditor) Name() string {
 	return e.resource.Name()
 }
 
-func (e *TwoDTextureEditor) Icon() ui.Image {
+func (e *TwoDTextureEditor) Icon() *ui.Image {
 	return co.OpenImage("resources/icons/texture.png")
 }
 
@@ -257,11 +262,11 @@ func (e *TwoDTextureEditor) OnViewportMouseEvent(event widget.ViewportMouseEvent
 	}
 }
 
-func (e *TwoDTextureEditor) Scene() graphics.Scene {
+func (e *TwoDTextureEditor) Scene() *graphics.Scene {
 	return e.gfxScene
 }
 
-func (e *TwoDTextureEditor) Camera() graphics.Camera {
+func (e *TwoDTextureEditor) Camera() *graphics.Camera {
 	return e.gfxCamera
 }
 
@@ -580,8 +585,6 @@ func (e *TwoDTextureEditor) assetToGraphicsWrap(wrap asset.WrapMode) graphics.Wr
 	switch wrap {
 	case asset.WrapModeClampToEdge:
 		return graphics.WrapClampToEdge
-	case asset.WrapModeMirroredClampToEdge:
-		return graphics.WrapMirroredClampToEdge
 	case asset.WrapModeRepeat:
 		return graphics.WrapRepeat
 	case asset.WrapModeMirroredRepeat:

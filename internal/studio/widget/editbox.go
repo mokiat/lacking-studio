@@ -1,10 +1,11 @@
 package widget
 
 import (
+	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 type EditboxData struct {
@@ -21,15 +22,14 @@ var Editbox = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
 
 	var layoutData mat.LayoutData
 	props.InjectOptionalLayoutData(&layoutData, mat.LayoutData{})
-	layoutData.Height = optional.NewInt(EditboxHeight)
+	layoutData.Height = optional.Value(EditboxHeight)
 
 	var callbackData EditboxCallbackData
 	props.InjectOptionalCallbackData(&callbackData, EditboxCallbackData{})
 
-	var essence *editboxEssence
-	co.UseState(func() interface{} {
+	essence := co.UseState(func() *editboxEssence {
 		return &editboxEssence{}
-	}).Inject(&essence)
+	}).Get()
 	if data.Text != essence.text {
 		essence.text = data.Text
 		essence.volatileText = data.Text
@@ -41,8 +41,11 @@ var Editbox = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
 	return co.New(mat.Element, func() {
 		co.WithData(mat.ElementData{
 			Essence:   essence,
-			Focusable: optional.NewBool(true),
-			IdealSize: optional.NewSize(ui.NewSize(200, essence.font.TextSize(essence.text, essence.fontSize).Height)),
+			Focusable: optional.Value(true),
+			IdealSize: optional.Value(ui.NewSize(
+				200,
+				int(essence.font.TextSize(essence.text, essence.fontSize).Y)),
+			),
 		})
 		co.WithLayoutData(layoutData)
 	})
@@ -54,8 +57,8 @@ var _ ui.ElementRenderHandler = (*editboxEssence)(nil)
 type editboxEssence struct {
 	text         string
 	volatileText string
-	font         ui.Font
-	fontSize     int
+	font         *ui.Font
+	fontSize     float32
 	onChanged    func(string)
 }
 
@@ -83,7 +86,7 @@ func (e *editboxEssence) OnKeyboardEvent(element *ui.Element, event ui.KeyboardE
 	return true
 }
 
-func (e *editboxEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
+func (e *editboxEssence) OnRender(element *ui.Element, canvas *ui.Canvas) {
 	var strokeColor ui.Color
 	var text string
 	if co.Window().IsElementFocused(element) {
@@ -95,46 +98,33 @@ func (e *editboxEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
 	}
 
 	size := element.Bounds().Size
-	canvas.Shape().Begin(ui.Fill{
+	canvas.Reset()
+	canvas.RoundRectangle(
+		sprec.ZeroVec2(),
+		sprec.NewVec2(float32(size.Width), float32(size.Height)),
+		sprec.NewVec4(5, 5, 5, 5),
+	)
+	canvas.Fill(ui.Fill{
 		Color: BackgroundColor,
 	})
-	canvas.Shape().RoundRectangle(
-		ui.NewPosition(0, 0),
-		size,
-		ui.RectRoundness{
-			TopLeftRadius:     5,
-			TopRightRadius:    5,
-			BottomLeftRadius:  5,
-			BottomRightRadius: 5,
-		},
-	)
-	canvas.Shape().End()
 
 	textBounds := e.font.TextSize(text, e.fontSize)
-	canvas.Text().Begin(ui.Typography{
+	canvas.Reset()
+	canvas.FillText(text, sprec.NewVec2(2, (float32(size.Height)-textBounds.Y)/2), ui.Typography{
 		Font:  e.font,
 		Size:  e.fontSize,
 		Color: ui.Black(),
 	})
-	canvas.Text().Line(text, ui.NewPosition(2, (size.Height-textBounds.Height)/2))
-	canvas.Text().End()
 
-	canvas.Contour().Begin()
-	canvas.Contour().RoundRectangle(
-		ui.NewPosition(0, 0),
-		size,
-		ui.RectRoundness{
-			TopLeftRadius:     5,
-			TopRightRadius:    5,
-			BottomLeftRadius:  5,
-			BottomRightRadius: 5,
-		},
-		ui.Stroke{
-			Size:  1,
-			Color: strokeColor,
-		},
+	canvas.Reset()
+	canvas.SetStrokeSize(1.0)
+	canvas.SetStrokeColor(strokeColor)
+	canvas.RoundRectangle(
+		sprec.ZeroVec2(),
+		sprec.NewVec2(float32(size.Width), float32(size.Height)),
+		sprec.NewVec4(5, 5, 5, 5),
 	)
-	canvas.Contour().End()
+	canvas.Stroke()
 }
 
 func (e *editboxEssence) handleTextChange(text string) {

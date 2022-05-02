@@ -37,7 +37,7 @@ type TwoDTextureEditor interface {
 	ChangeDataFormat(format asset.TexelFormat)
 
 	Update()
-	Scene() graphics.Scene
-	Camera() graphics.Camera
+	Scene() *graphics.Scene
+	Camera() *graphics.Camera
 	OnViewportMouseEvent(event widget.ViewportMouseEvent) bool
 }

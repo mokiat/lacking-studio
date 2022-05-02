@@ -7,7 +7,7 @@ import (
 	"github.com/mokiat/lacking/game/physics"
 )
 
-func NewController(gfxEngine graphics.Engine) *Controller {
+func NewController(gfxEngine *graphics.Engine) *Controller {
 	return &Controller{
 		gfxEngine:     gfxEngine,
 		physicsEngine: physics.NewEngine(),
@@ -18,7 +18,7 @@ func NewController(gfxEngine graphics.Engine) *Controller {
 type Controller struct {
 	app.NopController
 
-	gfxEngine     graphics.Engine
+	gfxEngine     *graphics.Engine
 	physicsEngine *physics.Engine
 	ecsEngine     *ecs.Engine
 }

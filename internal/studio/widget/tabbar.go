@@ -4,17 +4,17 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 var Tabbar = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
 	var layoutData mat.LayoutData
 	props.InjectOptionalLayoutData(&layoutData, mat.LayoutData{})
-	layoutData.Height = optional.NewInt(TabbarHeight)
+	layoutData.Height = optional.Value(TabbarHeight)
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.NewColor(Gray),
+			BackgroundColor: optional.Value(Gray),
 			Padding: ui.Spacing{
 				Left:   5,
 				Right:  5,

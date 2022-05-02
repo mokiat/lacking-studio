@@ -1,10 +1,11 @@
 package widget
 
 import (
+	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 var defaultAccordionData = AccordionData{}
@@ -29,13 +30,12 @@ var Accordion = co.ShallowCached(co.Define(func(props co.Properties) co.Instance
 	var callbackData AccordionCallbackData
 	props.InjectOptionalCallbackData(&callbackData, defaultAccordionCallbackData)
 
-	var headerEssence *accordionHeaderEssence
-	co.UseState(func() interface{} {
+	headerEssence := co.UseState(func() *accordionHeaderEssence {
 		return &accordionHeaderEssence{}
-	}).Inject(&headerEssence)
+	}).Get()
 	headerEssence.onToggle = callbackData.OnToggle
 
-	var icon ui.Image
+	var icon *ui.Image
 	if data.Expanded {
 		icon = co.OpenImage("resources/icons/expanded.png")
 	} else {
@@ -71,20 +71,20 @@ var Accordion = co.ShallowCached(co.Define(func(props co.Properties) co.Instance
 			co.WithChild("icon", co.New(mat.Picture, func() {
 				co.WithData(mat.PictureData{
 					Image:      icon,
-					ImageColor: optional.NewColor(ui.Black()),
+					ImageColor: optional.Value(ui.Black()),
 					Mode:       mat.ImageModeFit,
 				})
 				co.WithLayoutData(mat.LayoutData{
-					Width:  optional.NewInt(24),
-					Height: optional.NewInt(24),
+					Width:  optional.Value(24),
+					Height: optional.Value(24),
 				})
 			}))
 
 			co.WithChild("title", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "regular"),
-					FontSize:  optional.NewInt(20),
-					FontColor: optional.NewColor(ui.Black()),
+					FontSize:  optional.Value(float32(20)),
+					FontColor: optional.Value(ui.Black()),
 					Text:      data.Title,
 				})
 			}))
@@ -132,7 +132,7 @@ func (e *accordionHeaderEssence) OnMouseEvent(element *ui.Element, event ui.Mous
 	return true
 }
 
-func (e *accordionHeaderEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
+func (e *accordionHeaderEssence) OnRender(element *ui.Element, canvas *ui.Canvas) {
 	var backgroundColor ui.Color
 	switch e.state {
 	case buttonStateOver:
@@ -144,24 +144,22 @@ func (e *accordionHeaderEssence) OnRender(element *ui.Element, canvas ui.Canvas)
 	}
 
 	size := element.Bounds().Size
-	canvas.Shape().Begin(ui.Fill{
+	canvas.Reset()
+	canvas.Rectangle(
+		sprec.ZeroVec2(),
+		sprec.NewVec2(float32(size.Width), float32(size.Height)),
+	)
+	canvas.Fill(ui.Fill{
 		Color: backgroundColor,
 	})
-	canvas.Shape().Rectangle(
-		ui.NewPosition(0, 0),
-		size,
-	)
-	canvas.Shape().End()
 
-	stroke := ui.Stroke{
-		Size:  PaperBorderSize,
-		Color: Gray,
-	}
-	canvas.Contour().Begin()
-	canvas.Contour().MoveTo(ui.NewPosition(0, 0), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(0, size.Height), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(size.Width, size.Height), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(size.Width, 0), stroke)
-	canvas.Contour().CloseLoop()
-	canvas.Contour().End()
+	canvas.Reset()
+	canvas.SetStrokeSize(PaperBorderSize)
+	canvas.SetStrokeColor(Gray)
+	canvas.MoveTo(sprec.NewVec2(0, 0))
+	canvas.LineTo(sprec.NewVec2(0, float32(size.Height)))
+	canvas.LineTo(sprec.NewVec2(float32(size.Width), float32(size.Height)))
+	canvas.LineTo(sprec.NewVec2(float32(size.Width), 0))
+	canvas.CloseLoop()
+	canvas.Stroke()
 }

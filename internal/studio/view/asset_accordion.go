@@ -5,7 +5,7 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 type AssetAccordionData struct {
@@ -21,11 +21,8 @@ type AssetAccordionCallbackData struct {
 }
 
 var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
-	var data AssetAccordionData
-	props.InjectData(&data)
-
-	var callbackData AssetAccordionCallbackData
-	props.InjectCallbackData(&callbackData)
+	data := co.GetData[AssetAccordionData](props)
+	callbackData := co.GetCallbackData[AssetAccordionCallbackData](props)
 
 	return co.New(widget.Accordion, func() {
 		co.WithData(widget.AccordionData{
@@ -65,8 +62,8 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 				co.WithChild("label", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.GetFont("roboto", "bold"),
-						FontSize:  optional.NewInt(18),
-						FontColor: optional.NewColor(ui.Black()),
+						FontSize:  optional.Value(float32(18)),
+						FontColor: optional.Value(ui.Black()),
 						Text:      "ID:",
 					})
 				}))
@@ -74,8 +71,8 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 				co.WithChild("value", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.GetFont("roboto", "regular"),
-						FontSize:  optional.NewInt(18),
-						FontColor: optional.NewColor(ui.Black()),
+						FontSize:  optional.Value(float32(18)),
+						FontColor: optional.Value(ui.Black()),
 						Text:      data.AssetID,
 					})
 				}))
@@ -92,8 +89,8 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 				co.WithChild("label", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.GetFont("roboto", "bold"),
-						FontSize:  optional.NewInt(18),
-						FontColor: optional.NewColor(ui.Black()),
+						FontSize:  optional.Value(float32(18)),
+						FontColor: optional.Value(ui.Black()),
 						Text:      "Type:",
 					})
 				}))
@@ -101,8 +98,8 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 				co.WithChild("value", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.GetFont("roboto", "regular"),
-						FontSize:  optional.NewInt(18),
-						FontColor: optional.NewColor(ui.Black()),
+						FontSize:  optional.Value(float32(18)),
+						FontColor: optional.Value(ui.Black()),
 						Text:      data.AssetType,
 					})
 				}))
@@ -119,8 +116,8 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 				co.WithChild("label", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.GetFont("roboto", "bold"),
-						FontSize:  optional.NewInt(18),
-						FontColor: optional.NewColor(ui.Black()),
+						FontSize:  optional.Value(float32(18)),
+						FontColor: optional.Value(ui.Black()),
 						Text:      "Name:",
 					})
 				}))
@@ -130,7 +127,7 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 						Text: data.AssetName,
 					})
 					co.WithLayoutData(mat.LayoutData{
-						Height: optional.NewInt(18),
+						Height: optional.Value(18),
 					})
 					co.WithCallbackData(widget.EditboxCallbackData{
 						OnChanged: callbackData.OnNameChanged,

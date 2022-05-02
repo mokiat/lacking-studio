@@ -12,17 +12,19 @@ import (
 	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/game/physics"
+	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 func NewStudio(
 	projectDir string,
 	window *ui.Window,
+	api render.API,
 	registry asset.Registry,
-	gfxEngine graphics.Engine,
+	gfxEngine *graphics.Engine,
 	physicsEngine *physics.Engine,
 	ecsEngine *ecs.Engine,
 ) *Studio {
@@ -33,6 +35,8 @@ func NewStudio(
 
 	result := &Studio{
 		Controller: co.NewBaseController(),
+
+		api: api,
 
 		projectDir: projectDir,
 		window:     window,
@@ -49,10 +53,12 @@ func NewStudio(
 type Studio struct {
 	co.Controller
 
+	api render.API
+
 	projectDir string
 	window     *ui.Window
 	registry   *data.Registry
-	gfxEngine  graphics.Engine
+	gfxEngine  *graphics.Engine
 
 	actionsVisible    bool
 	propertiesVisible bool
@@ -72,7 +78,7 @@ func (s *Studio) Registry() *data.Registry {
 	return s.registry
 }
 
-func (s *Studio) GraphicsEngine() graphics.Engine {
+func (s *Studio) GraphicsEngine() *graphics.Engine {
 	return s.gfxEngine
 }
 
@@ -267,7 +273,7 @@ var StudioView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.NewColor(widget.BackgroundColor),
+			BackgroundColor: optional.Value(widget.BackgroundColor),
 			Layout:          mat.NewFrameLayout(),
 		})
 

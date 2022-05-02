@@ -13,7 +13,7 @@ type ModelEditor interface {
 	SetAssetAccordionExpanded(expanded bool)
 
 	Update()
-	Scene() graphics.Scene
-	Camera() graphics.Camera
+	Scene() *graphics.Scene
+	Camera() *graphics.Camera
 	OnViewportMouseEvent(event widget.ViewportMouseEvent) bool
 }

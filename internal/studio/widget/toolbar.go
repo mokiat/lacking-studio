@@ -1,10 +1,11 @@
 package widget
 
 import (
+	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 type ToolbarData struct {
@@ -15,14 +16,13 @@ var Toolbar = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
 	var data ToolbarData
 	props.InjectOptionalData(&data, ToolbarData{})
 
-	var essence *toolbarEssence
-	co.UseState(func() interface{} {
+	essence := co.UseState(func() *toolbarEssence {
 		return &toolbarEssence{}
-	}).Inject(&essence)
+	}).Get()
 
 	var layoutData mat.LayoutData
 	props.InjectOptionalLayoutData(&layoutData, mat.LayoutData{})
-	layoutData.Height = optional.NewInt(ToolbarHeight)
+	layoutData.Height = optional.Value(ToolbarHeight)
 
 	return co.New(mat.Element, func() {
 		co.WithData(mat.ElementData{
@@ -48,26 +48,24 @@ var _ ui.ElementRenderHandler = (*toolbarEssence)(nil)
 
 type toolbarEssence struct{}
 
-func (e *toolbarEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
+func (e *toolbarEssence) OnRender(element *ui.Element, canvas *ui.Canvas) {
 	size := element.Bounds().Size
 
-	canvas.Shape().Begin(ui.Fill{
+	canvas.Reset()
+	canvas.Rectangle(
+		sprec.ZeroVec2(),
+		sprec.NewVec2(float32(size.Width), float32(size.Height)),
+	)
+	canvas.Fill(ui.Fill{
 		Color: ToolbarColor,
 	})
-	canvas.Shape().Rectangle(
-		ui.NewPosition(0, 0),
-		size,
-	)
-	canvas.Shape().End()
 
-	stroke := ui.Stroke{
-		Color: ToolbarBorderColor,
-		Size:  ToolbarBorderSize,
-	}
-	canvas.Contour().Begin()
-	canvas.Contour().MoveTo(ui.NewPosition(0, size.Height), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(size.Width, size.Height), stroke)
-	canvas.Contour().MoveTo(ui.NewPosition(size.Width, 0), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(0, 0), stroke)
-	canvas.Contour().End()
+	canvas.Reset()
+	canvas.SetStrokeSize(float32(ToolbarBorderSize))
+	canvas.SetStrokeColor(ToolbarBorderColor)
+	canvas.MoveTo(sprec.NewVec2(0, float32(size.Height)))
+	canvas.LineTo(sprec.NewVec2(float32(size.Width), float32(size.Height)))
+	canvas.MoveTo(sprec.NewVec2(float32(size.Width), 0))
+	canvas.LineTo(sprec.NewVec2(0, 0))
+	canvas.Stroke()
 }

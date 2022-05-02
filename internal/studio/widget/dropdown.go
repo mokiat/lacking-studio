@@ -3,10 +3,11 @@ package widget
 import (
 	"fmt"
 
+	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 type DropdownData struct {
@@ -52,10 +53,9 @@ var Dropdown = co.ShallowCached(co.Define(func(props co.Properties) co.Instance 
 		})))
 	}
 
-	var essence *dropdownEssence
-	co.UseState(func() interface{} {
+	essence := co.UseState(func() *dropdownEssence {
 		return &dropdownEssence{}
-	}).Inject(&essence)
+	}).Get()
 	essence.clickListener = onOpen
 
 	label := ""
@@ -75,29 +75,29 @@ var Dropdown = co.ShallowCached(co.Define(func(props co.Properties) co.Instance 
 		co.WithChild("label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
 				Font:      co.GetFont("roboto", "bold"),
-				FontSize:  optional.NewInt(18),
-				FontColor: optional.NewColor(ui.Black()),
+				FontSize:  optional.Value(float32(18)),
+				FontColor: optional.Value(ui.Black()),
 				Text:      label,
 			})
 			co.WithLayoutData(mat.LayoutData{
-				Left:           optional.NewInt(0),
-				Right:          optional.NewInt(24),
-				Height:         optional.NewInt(24),
-				VerticalCenter: optional.NewInt(0),
+				Left:           optional.Value(0),
+				Right:          optional.Value(24),
+				Height:         optional.Value(24),
+				VerticalCenter: optional.Value(0),
 			})
 		}))
 
 		co.WithChild("button", co.New(mat.Picture, func() {
 			co.WithData(mat.PictureData{
 				Image:      co.OpenImage("resources/icons/dropdown.png"),
-				ImageColor: optional.NewColor(ui.Black()),
+				ImageColor: optional.Value(ui.Black()),
 				Mode:       mat.ImageModeFit,
 			})
 			co.WithLayoutData(mat.LayoutData{
-				Width:          optional.NewInt(24),
-				Height:         optional.NewInt(24),
-				Right:          optional.NewInt(0),
-				VerticalCenter: optional.NewInt(0),
+				Width:          optional.Value(24),
+				Height:         optional.Value(24),
+				Right:          optional.Value(0),
+				VerticalCenter: optional.Value(0),
 			})
 		}))
 	})
@@ -116,7 +116,7 @@ var DropdownItemList = co.ShallowCached(co.Define(func(props co.Properties) co.I
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.NewColor(ui.RGBA(0x00, 0x00, 0x00, 0xF0)),
+			BackgroundColor: optional.Value(ui.RGBA(0x00, 0x00, 0x00, 0xF0)),
 			Layout:          mat.NewAnchorLayout(mat.AnchorLayoutSettings{}),
 		})
 
@@ -127,8 +127,8 @@ var DropdownItemList = co.ShallowCached(co.Define(func(props co.Properties) co.I
 				}),
 			})
 			co.WithLayoutData(mat.LayoutData{
-				HorizontalCenter: optional.NewInt(0),
-				VerticalCenter:   optional.NewInt(0),
+				HorizontalCenter: optional.Value(0),
+				VerticalCenter:   optional.Value(0),
 			})
 
 			for i, item := range data.Items {
@@ -148,8 +148,8 @@ var DropdownItemList = co.ShallowCached(co.Define(func(props co.Properties) co.I
 						co.WithChild("label", co.New(mat.Label, func() {
 							co.WithData(mat.LabelData{
 								Font:      co.GetFont("roboto", "bold"),
-								FontSize:  optional.NewInt(18),
-								FontColor: optional.NewColor(ui.Black()),
+								FontSize:  optional.Value(float32(18)),
+								FontColor: optional.Value(ui.Black()),
 								Text:      item.Label,
 							})
 						}))
@@ -168,7 +168,7 @@ type dropdownEssence struct {
 	clickListener mat.ClickListener
 }
 
-func (e *dropdownEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
+func (e *dropdownEssence) OnRender(element *ui.Element, canvas *ui.Canvas) {
 	var outlineColor ui.Color
 	switch e.state {
 	case buttonStateOver:
@@ -180,32 +180,24 @@ func (e *dropdownEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
 	}
 
 	size := element.Bounds().Size
-	canvas.Shape().Begin(ui.Fill{
+	canvas.Reset()
+	canvas.Rectangle(
+		sprec.ZeroVec2(),
+		sprec.NewVec2(float32(size.Width), float32(size.Height)),
+	)
+	canvas.Fill(ui.Fill{
 		Color: SurfaceColor,
 	})
-	canvas.Shape().Rectangle(
-		ui.NewPosition(0, 0),
-		size,
-	)
-	canvas.Shape().End()
 
-	stroke := ui.Stroke{
-		Size:  2,
-		Color: outlineColor,
-	}
-	canvas.Contour().Begin()
-	canvas.Contour().RoundRectangle(
-		ui.NewPosition(0, 0),
-		size,
-		ui.RectRoundness{
-			TopLeftRadius:     5,
-			TopRightRadius:    5,
-			BottomLeftRadius:  5,
-			BottomRightRadius: 5,
-		},
-		stroke,
+	canvas.Reset()
+	canvas.SetStrokeSize(2.0)
+	canvas.SetStrokeColor(outlineColor)
+	canvas.RoundRectangle(
+		sprec.ZeroVec2(),
+		sprec.NewVec2(float32(size.Width), float32(size.Height)),
+		sprec.NewVec4(5, 5, 5, 5),
 	)
-	canvas.Contour().End()
+	canvas.Stroke()
 }
 
 func (e *dropdownEssence) OnMouseEvent(element *ui.Element, event ui.MouseEvent) bool {

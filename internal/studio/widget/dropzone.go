@@ -18,10 +18,9 @@ var DropZone = co.ShallowCached(co.Define(func(props co.Properties) co.Instance 
 	var callbackData DropZoneCallbackData
 	props.InjectOptionalCallbackData(&callbackData, defaultDropZoneCallbackData)
 
-	var essence *dropZoneEssence
-	co.UseState(func() interface{} {
+	essence := co.UseState(func() *dropZoneEssence {
 		return &dropZoneEssence{}
-	}).Inject(&essence)
+	}).Get()
 	essence.onDrop = callbackData.OnDrop
 
 	return co.New(mat.Element, func() {

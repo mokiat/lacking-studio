@@ -1,6 +1,7 @@
 package widget
 
 import (
+	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -19,12 +20,11 @@ var defaultListItemCallbackData = ListItemCallbackData{
 }
 
 var ListItem = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
-	var lifecycle *listItemLifecycle
-	co.UseLifecycle(func(handle co.LifecycleHandle) co.Lifecycle {
+	lifecycle := co.UseLifecycle(func(handle co.LifecycleHandle) *listItemLifecycle {
 		return &listItemLifecycle{
 			Lifecycle: co.NewBaseLifecycle(),
 		}
-	}, &lifecycle)
+	})
 
 	return co.New(mat.Element, func() {
 		co.WithData(mat.ElementData{
@@ -103,7 +103,7 @@ func (e *listItemLifecycle) OnMouseEvent(element *ui.Element, event ui.MouseEven
 	}
 }
 
-func (e *listItemLifecycle) OnRender(element *ui.Element, canvas ui.Canvas) {
+func (e *listItemLifecycle) OnRender(element *ui.Element, canvas *ui.Canvas) {
 	var backgroundColor ui.Color
 	switch e.state {
 	case buttonStateOver:
@@ -118,13 +118,13 @@ func (e *listItemLifecycle) OnRender(element *ui.Element, canvas ui.Canvas) {
 	}
 
 	if !backgroundColor.Transparent() {
-		canvas.Shape().Begin(ui.Fill{
+		canvas.Reset()
+		canvas.Rectangle(
+			sprec.ZeroVec2(),
+			sprec.NewVec2(float32(element.Bounds().Size.Width), float32(element.Bounds().Size.Height)),
+		)
+		canvas.Fill(ui.Fill{
 			Color: backgroundColor,
 		})
-		canvas.Shape().Rectangle(
-			ui.NewPosition(0, 0),
-			element.Bounds().Size,
-		)
-		canvas.Shape().End()
 	}
 }

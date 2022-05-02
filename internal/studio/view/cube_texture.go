@@ -5,7 +5,7 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 var CubeTexture = co.Define(func(props co.Properties) co.Instance {
@@ -13,7 +13,7 @@ var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.NewColor(widget.BackgroundColor),
+			BackgroundColor: optional.Value(widget.BackgroundColor),
 			Layout:          mat.NewFrameLayout(),
 		})
 		co.WithLayoutData(props.LayoutData())
@@ -30,6 +30,7 @@ var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("viewport", co.New(widget.Viewport, func() {
 				co.WithData(widget.ViewportData{
+					API:    editor.API(),
 					Scene:  editor.Scene(),
 					Camera: editor.Camera(),
 				})
@@ -45,7 +46,7 @@ var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 				co.WithData(editor)
 				co.WithLayoutData(mat.LayoutData{
 					Alignment: mat.AlignmentRight,
-					Width:     optional.NewInt(500),
+					Width:     optional.Value(500),
 				})
 			}))
 		}

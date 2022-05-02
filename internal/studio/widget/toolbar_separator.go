@@ -1,22 +1,22 @@
 package widget
 
 import (
+	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/ui/optional"
+	"github.com/mokiat/lacking/util/optional"
 )
 
 var ToolbarSeparator = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
-	var essence *toolbarSeparatorEssence
-	co.UseState(func() interface{} {
+	essence := co.UseState(func() *toolbarSeparatorEssence {
 		return &toolbarSeparatorEssence{}
-	}).Inject(&essence)
+	}).Get()
 
 	return co.New(mat.Element, func() {
 		co.WithData(mat.ElementData{
 			Essence: essence,
-			IdealSize: optional.NewSize(ui.NewSize(
+			IdealSize: optional.Value(ui.NewSize(
 				ToolbarSeparatorWidth,
 				ToolbarItemHeight,
 			)),
@@ -29,18 +29,16 @@ var _ ui.ElementRenderHandler = (*toolbarSeparatorEssence)(nil)
 
 type toolbarSeparatorEssence struct{}
 
-func (e *toolbarSeparatorEssence) OnRender(element *ui.Element, canvas ui.Canvas) {
+func (e *toolbarSeparatorEssence) OnRender(element *ui.Element, canvas *ui.Canvas) {
 	size := element.Bounds().Size
 
 	lineLength := ToolbarSeparatorLineLength
 	linePadding := (size.Height - lineLength) / 2
 
-	stroke := ui.Stroke{
-		Color: ToolbarSeparatorLineColor,
-		Size:  ToolbarSeparatorLineSize,
-	}
-	canvas.Contour().Begin()
-	canvas.Contour().MoveTo(ui.NewPosition(size.Width/2, linePadding), stroke)
-	canvas.Contour().LineTo(ui.NewPosition(size.Width/2, linePadding+lineLength), stroke)
-	canvas.Contour().End()
+	canvas.Reset()
+	canvas.SetStrokeSize(ToolbarSeparatorLineSize)
+	canvas.SetStrokeColor(ToolbarSeparatorLineColor)
+	canvas.MoveTo(sprec.NewVec2(float32(size.Width)/2, float32(linePadding)))
+	canvas.LineTo(sprec.NewVec2(float32(size.Width)/2, float32(linePadding+lineLength)))
+	canvas.Stroke()
 }

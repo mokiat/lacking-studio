@@ -29,6 +29,6 @@ type CubeTextureEditor interface {
 
 	OnViewportMouseEvent(event widget.ViewportMouseEvent) bool
 	Update()
-	Scene() graphics.Scene
-	Camera() graphics.Camera
+	Scene() *graphics.Scene
+	Camera() *graphics.Camera
 }

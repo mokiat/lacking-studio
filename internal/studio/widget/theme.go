@@ -19,7 +19,7 @@ var (
 	Gray      ui.Color = ui.RGB(0xAA, 0xAA, 0xAA)
 	DarkGray  ui.Color = ui.RGB(0x66, 0x66, 0x66)
 
-	PaperBorderSize = 1
+	PaperBorderSize = float32(1.0)
 
 	ToolbarHeight              = 64
 	ToolbarColor               = SurfaceColor
@@ -29,7 +29,7 @@ var (
 	ToolbarItemHeight          = ToolbarHeight - 2
 	ToolbarSeparatorWidth      = 3
 	ToolbarSeparatorLineColor  = Gray
-	ToolbarSeparatorLineSize   = 1
+	ToolbarSeparatorLineSize   = float32(1.0)
 	ToolbarSeparatorLineLength = (70 * ToolbarItemHeight) / 100
 	ToolbarButtonFontSize      = 24
 
