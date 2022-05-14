@@ -2,7 +2,9 @@ package view
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
+	"github.com/mokiat/lacking/game/graphics"
+	"github.com/mokiat/lacking/render"
+	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/util/optional"
@@ -13,30 +15,37 @@ var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.Value(widget.BackgroundColor),
+			BackgroundColor: optional.Value(mat.SurfaceColor),
 			Layout:          mat.NewFrameLayout(),
 		})
 		co.WithLayoutData(props.LayoutData())
 
-		co.WithChild("center", co.New(widget.DropZone, func() {
-			co.WithCallbackData(widget.DropZoneCallbackData{
-				OnDrop: func(paths []string) {
+		co.WithChild("center", co.New(mat.DropZone, func() {
+			co.WithCallbackData(mat.DropZoneCallbackData{
+				OnDrop: func(paths []string) bool {
 					editor.ChangeSourcePath(paths[0])
+					return true
 				},
 			})
 			co.WithLayoutData(mat.LayoutData{
 				Alignment: mat.AlignmentCenter,
 			})
 
-			co.WithChild("viewport", co.New(widget.Viewport, func() {
-				co.WithData(widget.ViewportData{
-					API:    editor.API(),
-					Scene:  editor.Scene(),
-					Camera: editor.Camera(),
+			co.WithChild("viewport", co.New(mat.Viewport, func() {
+				co.WithData(mat.ViewportData{
+					API: editor.API(),
 				})
-				co.WithCallbackData(widget.ViewportCallbackData{
-					OnUpdate:     editor.Update,
+				co.WithCallbackData(mat.ViewportCallbackData{
 					OnMouseEvent: editor.OnViewportMouseEvent,
+					OnRender: func(framebuffer render.Framebuffer, size ui.Size) {
+						editor.Update()
+						editor.Scene().RenderFramebuffer(framebuffer, graphics.Viewport{
+							X:      0,
+							Y:      0,
+							Width:  size.Width,
+							Height: size.Height,
+						}, editor.Camera())
+					},
 				})
 			}))
 		}))

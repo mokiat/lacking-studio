@@ -1,7 +1,6 @@
 package view
 
 import (
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -24,13 +23,13 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 	data := co.GetData[AssetAccordionData](props)
 	callbackData := co.GetCallbackData[AssetAccordionCallbackData](props)
 
-	return co.New(widget.Accordion, func() {
-		co.WithData(widget.AccordionData{
+	return co.New(mat.Accordion, func() {
+		co.WithData(mat.AccordionData{
 			Title:    "Asset",
 			Expanded: data.Expanded,
 		})
 		co.WithLayoutData(props.LayoutData())
-		co.WithCallbackData(widget.AccordionCallbackData{
+		co.WithCallbackData(mat.AccordionCallbackData{
 			OnToggle: callbackData.OnToggleExpanded,
 		})
 
@@ -122,14 +121,14 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 					})
 				}))
 
-				co.WithChild("value", co.New(widget.Editbox, func() {
-					co.WithData(widget.EditboxData{
+				co.WithChild("value", co.New(mat.Editbox, func() {
+					co.WithData(mat.EditboxData{
 						Text: data.AssetName,
 					})
 					co.WithLayoutData(mat.LayoutData{
-						Height: optional.Value(18),
+						Width: optional.Value(300),
 					})
-					co.WithCallbackData(widget.EditboxCallbackData{
+					co.WithCallbackData(mat.EditboxCallbackData{
 						OnChanged: callbackData.OnNameChanged,
 					})
 				}))

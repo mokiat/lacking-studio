@@ -6,7 +6,6 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/data/asset"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/render"
@@ -118,7 +117,7 @@ func (e *ModelEditor) Update() {
 	e.gfxCamera.SetFoV(e.gfxCameraFoV)
 }
 
-func (e *ModelEditor) OnViewportMouseEvent(event widget.ViewportMouseEvent) bool {
+func (e *ModelEditor) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
 	switch event.Type {
 	case ui.MouseEventTypeDown:
 		if event.Button == ui.MouseButtonMiddle {

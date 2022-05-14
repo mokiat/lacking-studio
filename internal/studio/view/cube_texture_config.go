@@ -2,7 +2,6 @@ package view
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -13,13 +12,13 @@ import (
 var CubeTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 	editor := props.Data().(model.CubeTextureEditor)
 
-	return co.New(widget.Accordion, func() {
-		co.WithData(widget.AccordionData{
+	return co.New(mat.Accordion, func() {
+		co.WithData(mat.AccordionData{
 			Title:    "Config",
 			Expanded: editor.IsConfigAccordionExpanded(),
 		})
 		co.WithLayoutData(props.LayoutData())
-		co.WithCallbackData(widget.AccordionCallbackData{
+		co.WithCallbackData(mat.AccordionCallbackData{
 			OnToggle: func() {
 				editor.SetConfigAccordionExpanded(!editor.IsConfigAccordionExpanded())
 			},
@@ -51,9 +50,9 @@ var CubeTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 				})
 			}))
 
-			co.WithChild("min-filter-dropdown", co.New(widget.Dropdown, func() {
-				co.WithData(widget.DropdownData{
-					Items: []widget.DropdownItem{
+			co.WithChild("min-filter-dropdown", co.New(mat.Dropdown, func() {
+				co.WithData(mat.DropdownData{
+					Items: []mat.DropdownItem{
 						{Key: asset.FilterModeNearest, Label: "Nearest"},
 						{Key: asset.FilterModeLinear, Label: "Linear"},
 						{Key: asset.FilterModeNearestMipmapNearest, Label: "Nearest Mipmap Nearest"},
@@ -66,7 +65,7 @@ var CubeTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 				co.WithLayoutData(mat.LayoutData{
 					GrowHorizontally: true,
 				})
-				co.WithCallbackData(widget.DropdownCallbackData{
+				co.WithCallbackData(mat.DropdownCallbackData{
 					OnItemSelected: func(key interface{}) {
 						editor.ChangeMinFilter(key.(asset.FilterMode))
 					},
@@ -82,9 +81,9 @@ var CubeTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 				})
 			}))
 
-			co.WithChild("mag-filter-dropdown", co.New(widget.Dropdown, func() {
-				co.WithData(widget.DropdownData{
-					Items: []widget.DropdownItem{
+			co.WithChild("mag-filter-dropdown", co.New(mat.Dropdown, func() {
+				co.WithData(mat.DropdownData{
+					Items: []mat.DropdownItem{
 						{Key: asset.FilterModeNearest, Label: "Nearest"},
 						{Key: asset.FilterModeLinear, Label: "Linear"},
 					},
@@ -93,7 +92,7 @@ var CubeTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 				co.WithLayoutData(mat.LayoutData{
 					GrowHorizontally: true,
 				})
-				co.WithCallbackData(widget.DropdownCallbackData{
+				co.WithCallbackData(mat.DropdownCallbackData{
 					OnItemSelected: func(key interface{}) {
 						editor.ChangeMagFilter(key.(asset.FilterMode))
 					},
@@ -109,9 +108,9 @@ var CubeTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 				})
 			}))
 
-			co.WithChild("data-format-dropdown", co.New(widget.Dropdown, func() {
-				co.WithData(widget.DropdownData{
-					Items: []widget.DropdownItem{
+			co.WithChild("data-format-dropdown", co.New(mat.Dropdown, func() {
+				co.WithData(mat.DropdownData{
+					Items: []mat.DropdownItem{
 						{Key: asset.TexelFormatRGBA8, Label: "RGBA8"},
 						{Key: asset.TexelFormatRGBA32F, Label: "RGBA32F"},
 					},
@@ -120,7 +119,7 @@ var CubeTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 				co.WithLayoutData(mat.LayoutData{
 					GrowHorizontally: true,
 				})
-				co.WithCallbackData(widget.DropdownCallbackData{
+				co.WithCallbackData(mat.DropdownCallbackData{
 					OnItemSelected: func(key interface{}) {
 						editor.ChangeDataFormat(key.(asset.TexelFormat))
 					},

@@ -2,6 +2,7 @@ package view
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
+	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
@@ -11,6 +12,12 @@ var ModelProperties = co.Controlled(co.Define(func(props co.Properties) co.Insta
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
+			Padding: ui.Spacing{
+				Left:   5,
+				Right:  5,
+				Top:    5,
+				Bottom: 5,
+			},
 			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
 				ContentAlignment: mat.AlignmentLeft,
 				ContentSpacing:   5,

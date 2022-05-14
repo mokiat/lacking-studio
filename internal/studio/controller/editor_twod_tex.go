@@ -13,7 +13,6 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/data/buffer"
 	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/game/asset"
@@ -28,7 +27,7 @@ var dirLight *graphics.Light
 
 func NewTwoDTextureEditor(studio *Studio, resource *data.Resource) (*TwoDTextureEditor, error) {
 	gfxScene := studio.GraphicsEngine().CreateScene()
-	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.1, 0.3, 0.5))
+	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.2, 0.2, 0.2))
 
 	dirLight = gfxScene.CreateDirectionalLight()
 	dirLight.SetIntensity(sprec.NewVec3(1.0, 1.0, 1.0))
@@ -229,7 +228,7 @@ func matrixToQuat(matrix sprec.Mat4) sprec.Quat {
 	return sprec.UnitQuat(sprec.NewQuat(w, x, y, z))
 }
 
-func (e *TwoDTextureEditor) OnViewportMouseEvent(event widget.ViewportMouseEvent) bool {
+func (e *TwoDTextureEditor) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
 	switch event.Type {
 	case ui.MouseEventTypeDown:
 		if event.Button == ui.MouseButtonMiddle {

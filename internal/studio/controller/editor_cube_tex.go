@@ -12,7 +12,6 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
@@ -150,7 +149,7 @@ func (e *CubeTextureEditor) Update() {
 	))
 }
 
-func (e *CubeTextureEditor) OnViewportMouseEvent(event widget.ViewportMouseEvent) bool {
+func (e *CubeTextureEditor) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
 	switch event.Type {
 	case ui.MouseEventTypeDown:
 		if event.Button == ui.MouseButtonMiddle {

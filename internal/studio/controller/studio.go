@@ -7,7 +7,6 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/graphics"
@@ -234,46 +233,14 @@ func (s *Studio) editorIndex(editor model.Editor) int {
 	return -1
 }
 
-// type ApplicationController struct {
-// 	co.Controller
-// 	propertiesVisible bool
-
-// 	viewportController *ViewportController
-// }
-
-// func (c *ApplicationController) Init() {
-// 	c.viewportController.Init()
-// }
-
-// func (c *ApplicationController) Free() {
-// 	c.viewportController.Free()
-// }
-
-// func (c *ApplicationController) IsPropertiesVisible() bool {
-// 	return c.propertiesVisible
-// }
-
-// func (c *ApplicationController) TogglePropertiesVisible() {
-// 	c.propertiesVisible = !c.propertiesVisible
-// 	c.NotifyChanged()
-// }
-
 var StudioView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 	controller := props.Data().(*Studio)
 
 	co.OpenFontCollection("resources/fonts/roboto.ttc")
 
-	// co.Once(func() {
-	// 	controller.Init()
-	// })
-
-	// co.Defer(func() {
-	// 	controller.Free()
-	// })
-
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.Value(widget.BackgroundColor),
+			BackgroundColor: optional.Value(mat.SurfaceColor),
 			Layout:          mat.NewFrameLayout(),
 		})
 
@@ -284,95 +251,12 @@ var StudioView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 			})
 		}))
 
-		// if controller.IsActionsVisible() {
-		// 	co.WithChild("left", co.New(widget.Paper, func() {
-		// 		co.WithData(widget.PaperData{
-		// 			Padding: ui.Spacing{
-		// 				Top:    20,
-		// 				Bottom: 20,
-		// 				Left:   1,
-		// 				Right:  1,
-		// 			},
-		// 			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-		// 				ContentSpacing: 10,
-		// 			}),
-		// 		})
-		// 		co.WithLayoutData(mat.LayoutData{
-		// 			Alignment: mat.AlignmentLeft,
-		// 		})
-
-		// 		co.WithChild("model", co.New(widget.ToolbarButton, func() {
-		// 			co.WithData(widget.ToolbarButtonData{
-		// 				Icon:     co.OpenImage("resources/icons/model.png"),
-		// 				Vertical: true,
-		// 			})
-		// 		}))
-
-		// 		co.WithChild("light", co.New(widget.ToolbarButton, func() {
-		// 			co.WithData(widget.ToolbarButtonData{
-		// 				Icon:     co.OpenImage("resources/icons/light.png"),
-		// 				Vertical: true,
-		// 			})
-		// 		}))
-
-		// 		co.WithChild("camera", co.New(widget.ToolbarButton, func() {
-		// 			co.WithData(widget.ToolbarButtonData{
-		// 				Icon:     co.OpenImage("resources/icons/camera.png"),
-		// 				Vertical: true,
-		// 			})
-		// 		}))
-		// 	}))
-		// }
-
-		// if controller.IsPropertiesVisible() {
-		// 	co.WithChild("right", co.New(mat.Container, func() {
-		// 		co.WithData(mat.ContainerData{
-		// 			BackgroundColor: optional.NewColor(ui.White()),
-		// 			Layout:          mat.NewFillLayout(),
-		// 		})
-		// 		co.WithLayoutData(mat.LayoutData{
-		// 			Alignment: mat.AlignmentRight,
-		// 			Width:     optional.NewInt(500),
-		// 		})
-
-		// 		if editor := controller.ActiveEditor(); editor != nil {
-		// 			key := fmt.Sprintf("content-%s", editor.ID())
-		// 			co.WithChild(key, editor.RenderProperties())
-		// 		}
-		// 	}))
-		// }
-
 		if editor := controller.ActiveEditor(); editor != nil {
 			key := fmt.Sprintf("center-%s", editor.ID())
 			co.WithChild(key, editor.Render(mat.LayoutData{
 				Alignment: mat.AlignmentCenter,
 			}))
 		}
-
-		// co.WithChild("center", co.New(mat.Container, func() {
-		// 	co.WithData(mat.ContainerData{
-		// 		BackgroundColor: optional.NewColor(ui.Black()),
-		// 	})
-		// 	co.WithLayoutData(mat.LayoutData{
-		// 		Alignment: mat.AlignmentCenter,
-		// 	})
-		// }))
-
-		// co.WithChild("center", co.New(widget.Viewport, func() {
-		// 	if editor := controller.ActiveEditor(); editor != nil {
-		// 		co.WithData(widget.ViewportData{
-		// 			Scene:  editor.Scene(),
-		// 			Camera: editor.Camera(),
-		// 		})
-		// 		co.WithCallbackData(widget.ViewportCallbackData{
-		// 			OnUpdate:     editor.Update,
-		// 			OnMouseEvent: editor.OnViewportMouseEvent,
-		// 		})
-		// 	}
-		// 	co.WithLayoutData(mat.LayoutData{
-		// 		Alignment: mat.AlignmentCenter,
-		// 	})
-		// }))
 	})
 }))
 
@@ -404,8 +288,8 @@ var StudioTopPanel = co.Controlled(co.Define(func(props co.Properties) co.Instan
 var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 	controller := props.Data().(*Studio)
 
-	assetsOverlay := co.UseState(func() interface{} {
-		return co.Overlay{}
+	assetsOverlay := co.UseState(func() *co.Overlay {
+		return nil
 	})
 
 	onAssetsClicked := func() {
@@ -418,7 +302,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 					controller.OpenAsset(id)
 				},
 				OnClose: func() {
-					overlay := assetsOverlay.Get().(co.Overlay)
+					overlay := assetsOverlay.Get()
 					overlay.Close()
 				},
 			})
@@ -429,67 +313,67 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 		controller.SetPropertiesVisible(!controller.IsPropertiesVisible())
 	}
 
-	return co.New(widget.Toolbar, func() {
+	return co.New(mat.Toolbar, func() {
 		co.WithLayoutData(props.LayoutData())
 
-		co.WithChild("assets", co.New(widget.ToolbarButton, func() {
-			co.WithData(widget.ToolbarButtonData{
+		co.WithChild("assets", co.New(mat.ToolbarButton, func() {
+			co.WithData(mat.ToolbarButtonData{
 				Icon: co.OpenImage("resources/icons/assets.png"),
 				Text: "Assets",
 			})
-			co.WithCallbackData(widget.ToolbarButtonCallbackData{
-				ClickListener: onAssetsClicked,
+			co.WithCallbackData(mat.ToolbarButtonCallbackData{
+				OnClick: onAssetsClicked,
 			})
 		}))
 
-		co.WithChild("separator1", co.New(widget.ToolbarSeparator, nil))
+		co.WithChild("separator1", co.New(mat.ToolbarSeparator, nil))
 
-		co.WithChild("save", co.New(widget.ToolbarButton, func() {
-			co.WithData(widget.ToolbarButtonData{
+		co.WithChild("save", co.New(mat.ToolbarButton, func() {
+			co.WithData(mat.ToolbarButtonData{
 				Icon:     co.OpenImage("resources/icons/save.png"),
 				Disabled: !controller.SaveEnabled(),
 			})
-			co.WithCallbackData(widget.ToolbarButtonCallbackData{
-				ClickListener: func() {
+			co.WithCallbackData(mat.ToolbarButtonCallbackData{
+				OnClick: func() {
 					controller.Save()
 				},
 			})
 		}))
 
-		co.WithChild("separator2", co.New(widget.ToolbarSeparator, nil))
+		co.WithChild("separator2", co.New(mat.ToolbarSeparator, nil))
 
-		co.WithChild("undo", co.New(widget.ToolbarButton, func() {
-			co.WithData(widget.ToolbarButtonData{
+		co.WithChild("undo", co.New(mat.ToolbarButton, func() {
+			co.WithData(mat.ToolbarButtonData{
 				Icon:     co.OpenImage("resources/icons/undo.png"),
 				Disabled: !controller.UndoEnabled(),
 			})
-			co.WithCallbackData(widget.ToolbarButtonCallbackData{
-				ClickListener: func() {
+			co.WithCallbackData(mat.ToolbarButtonCallbackData{
+				OnClick: func() {
 					controller.Undo()
 				},
 			})
 		}))
 
-		co.WithChild("redo", co.New(widget.ToolbarButton, func() {
-			co.WithData(widget.ToolbarButtonData{
+		co.WithChild("redo", co.New(mat.ToolbarButton, func() {
+			co.WithData(mat.ToolbarButtonData{
 				Icon:     co.OpenImage("resources/icons/redo.png"),
 				Disabled: !controller.RedoEnabled(),
 			})
-			co.WithCallbackData(widget.ToolbarButtonCallbackData{
-				ClickListener: func() {
+			co.WithCallbackData(mat.ToolbarButtonCallbackData{
+				OnClick: func() {
 					controller.Redo()
 				},
 			})
 		}))
 
-		co.WithChild("separator3", co.New(widget.ToolbarSeparator, nil))
+		co.WithChild("separator3", co.New(mat.ToolbarSeparator, nil))
 
-		co.WithChild("properties", co.New(widget.ToolbarButton, func() {
-			co.WithData(widget.ToolbarButtonData{
+		co.WithChild("properties", co.New(mat.ToolbarButton, func() {
+			co.WithData(mat.ToolbarButtonData{
 				Icon: co.OpenImage("resources/icons/properties.png"),
 			})
-			co.WithCallbackData(widget.ToolbarButtonCallbackData{
-				ClickListener: onPropertiesVisibleClicked,
+			co.WithCallbackData(mat.ToolbarButtonCallbackData{
+				OnClick: onPropertiesVisibleClicked,
 			})
 		}))
 	})
@@ -498,17 +382,17 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 var Tabbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 	controller := props.Data().(*Studio)
 
-	return co.New(widget.Tabbar, func() {
+	return co.New(mat.Tabbar, func() {
 		co.WithLayoutData(props.LayoutData())
 
 		controller.EachEditor(func(editor model.Editor) {
-			co.WithChild(editor.ID(), co.New(widget.TabbarTab, func() {
-				co.WithData(widget.TabbarTabData{
+			co.WithChild(editor.ID(), co.New(mat.TabbarTab, func() {
+				co.WithData(mat.TabbarTabData{
 					Icon:     editor.Icon(),
 					Text:     editor.Name(),
 					Selected: editor == controller.ActiveEditor(),
 				})
-				co.WithCallbackData(widget.TabbarTabCallbackData{
+				co.WithCallbackData(mat.TabbarTabCallbackData{
 					OnClick: func() {
 						controller.SelectEditor(editor)
 					},
@@ -518,33 +402,5 @@ var Tabbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 				})
 			}))
 		})
-
-		// co.WithChild("forest", co.New(widget.TabbarTab, func() {
-		// 	co.WithData(widget.TabbarTabData{
-		// 		Icon: co.OpenImage("resources/icons/scene.png"),
-		// 		Text: "Мега Сцена",
-		// 	})
-		// }))
-
-		// co.WithChild("tree", co.New(widget.TabbarTab, func() {
-		// 	co.WithData(widget.TabbarTabData{
-		// 		Icon: co.OpenImage("resources/icons/model.png"),
-		// 		Text: "Дърво",
-		// 	})
-		// }))
-
-		// co.WithChild("car", co.New(widget.TabbarTab, func() {
-		// 	co.WithData(widget.TabbarTabData{
-		// 		Icon: co.OpenImage("resources/icons/model.png"),
-		// 		Text: "Кола",
-		// 	})
-		// }))
-
-		// co.WithChild("stone", co.New(widget.TabbarTab, func() {
-		// 	co.WithData(widget.TabbarTabData{
-		// 		Icon: co.OpenImage("resources/icons/model.png"),
-		// 		Text: "Камък",
-		// 	})
-		// }))
 	})
 }))

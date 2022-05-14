@@ -18,6 +18,7 @@ import (
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/game/physics"
 	"github.com/mokiat/lacking/ui"
+	"github.com/mokiat/lacking/ui/mat"
 )
 
 var (
@@ -68,7 +69,7 @@ func runApplication() error {
 
 	renderAPI := glrender.NewAPI()
 	graphicsEngine := graphics.NewEngine(renderAPI, glgame.NewShaderCollection())
-	resourceLocator := ui.NewFileResourceLocator(studioDir)
+	resourceLocator := mat.WrappedResourceLocator(ui.NewFileResourceLocator(studioDir))
 
 	uiCfg := ui.NewConfig(resourceLocator, renderAPI, glui.NewShaderCollection())
 	controller := app.NewLayeredController(

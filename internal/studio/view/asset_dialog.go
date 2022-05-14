@@ -5,7 +5,6 @@ import (
 	"image"
 
 	"github.com/mokiat/lacking-studio/internal/studio/data"
-	"github.com/mokiat/lacking-studio/internal/studio/widget"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -36,12 +35,12 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.Value(ui.RGBA(0x00, 0x00, 0x00, 0xF0)),
+			BackgroundColor: optional.Value(mat.ModalOverlayColor),
 			Layout:          mat.NewAnchorLayout(mat.AnchorLayoutSettings{}),
 		})
 
-		co.WithChild("content", co.New(widget.Paper, func() {
-			co.WithData(widget.PaperData{
+		co.WithChild("content", co.New(mat.Paper, func() {
+			co.WithData(mat.PaperData{
 				Layout: mat.NewAnchorLayout(mat.AnchorLayoutSettings{}),
 			})
 			co.WithLayoutData(mat.LayoutData{
@@ -51,60 +50,60 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				VerticalCenter:   optional.Value(0),
 			})
 
-			co.WithChild("header", co.New(widget.Toolbar, func() {
+			co.WithChild("header", co.New(mat.Toolbar, func() {
 				co.WithLayoutData(mat.LayoutData{
 					Top:   optional.Value(0),
 					Left:  optional.Value(0),
 					Right: optional.Value(0),
 				})
 
-				co.WithChild("twod_texture", co.New(widget.ToolbarButton, func() {
-					co.WithData(widget.ToolbarButtonData{
+				co.WithChild("twod_texture", co.New(mat.ToolbarButton, func() {
+					co.WithData(mat.ToolbarButtonData{
 						Icon:     co.OpenImage("resources/icons/texture.png"),
 						Text:     "2D Texture",
 						Selected: lifecycle.SelectedKind() == "twod_texture",
 					})
-					co.WithCallbackData(widget.ToolbarButtonCallbackData{
-						ClickListener: func() {
+					co.WithCallbackData(mat.ToolbarButtonCallbackData{
+						OnClick: func() {
 							lifecycle.SetSelectedKind("twod_texture")
 						},
 					})
 				}))
 
-				co.WithChild("cube_texture", co.New(widget.ToolbarButton, func() {
-					co.WithData(widget.ToolbarButtonData{
+				co.WithChild("cube_texture", co.New(mat.ToolbarButton, func() {
+					co.WithData(mat.ToolbarButtonData{
 						Icon:     co.OpenImage("resources/icons/texture.png"),
 						Text:     "Cube Texture",
 						Selected: lifecycle.SelectedKind() == "cube_texture",
 					})
-					co.WithCallbackData(widget.ToolbarButtonCallbackData{
-						ClickListener: func() {
+					co.WithCallbackData(mat.ToolbarButtonCallbackData{
+						OnClick: func() {
 							lifecycle.SetSelectedKind("cube_texture")
 						},
 					})
 				}))
 
-				co.WithChild("model", co.New(widget.ToolbarButton, func() {
-					co.WithData(widget.ToolbarButtonData{
+				co.WithChild("model", co.New(mat.ToolbarButton, func() {
+					co.WithData(mat.ToolbarButtonData{
 						Icon:     co.OpenImage("resources/icons/model.png"),
 						Text:     "Model",
 						Selected: lifecycle.SelectedKind() == "model",
 					})
-					co.WithCallbackData(widget.ToolbarButtonCallbackData{
-						ClickListener: func() {
+					co.WithCallbackData(mat.ToolbarButtonCallbackData{
+						OnClick: func() {
 							lifecycle.SetSelectedKind("model")
 						},
 					})
 				}))
 
-				co.WithChild("scene", co.New(widget.ToolbarButton, func() {
-					co.WithData(widget.ToolbarButtonData{
+				co.WithChild("scene", co.New(mat.ToolbarButton, func() {
+					co.WithData(mat.ToolbarButtonData{
 						Text:     "Scene",
 						Icon:     co.OpenImage("resources/icons/scene.png"),
 						Selected: lifecycle.SelectedKind() == "scene",
 					})
-					co.WithCallbackData(widget.ToolbarButtonCallbackData{
-						ClickListener: func() {
+					co.WithCallbackData(mat.ToolbarButtonCallbackData{
+						OnClick: func() {
 							lifecycle.SetSelectedKind("scene")
 						},
 					})
@@ -119,17 +118,11 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				co.WithLayoutData(mat.LayoutData{
 					Left:   optional.Value(0),
 					Right:  optional.Value(0),
-					Top:    optional.Value(widget.ToolbarHeight),
-					Bottom: optional.Value(widget.ToolbarHeight),
+					Top:    optional.Value(mat.ToolbarHeight), // FIXME: Use frame layout
+					Bottom: optional.Value(mat.ToolbarHeight), // FIXME: Use frame layout
 				})
 
-				co.WithChild("content", co.New(mat.Container, func() {
-					co.WithData(mat.ContainerData{
-						BackgroundColor: optional.Value(ui.RGB(240, 240, 240)),
-						Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-							ContentAlignment: mat.AlignmentLeft,
-						}),
-					})
+				co.WithChild("content", co.New(mat.List, func() {
 					co.WithLayoutData(mat.LayoutData{
 						GrowHorizontally: true,
 					})
@@ -162,9 +155,10 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				}))
 			}))
 
-			co.WithChild("footer", co.New(widget.Toolbar, func() {
-				co.WithData(widget.ToolbarData{
-					Flipped: true,
+			co.WithChild("footer", co.New(mat.Toolbar, func() {
+				co.WithData(mat.ToolbarData{
+					Orientation: mat.ToolbarOrientationRightToLeft,
+					Positioning: mat.ToolbarPositioningBottom,
 				})
 				co.WithLayoutData(mat.LayoutData{
 					Left:   optional.Value(0),
@@ -172,24 +166,24 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 					Bottom: optional.Value(0),
 				})
 
-				co.WithChild("open", co.New(widget.ToolbarButton, func() {
-					co.WithData(widget.ToolbarButtonData{
+				co.WithChild("open", co.New(mat.ToolbarButton, func() {
+					co.WithData(mat.ToolbarButtonData{
 						Text:     "Open",
 						Disabled: lifecycle.SelectedResourceID() == "",
 					})
-					co.WithCallbackData(widget.ToolbarButtonCallbackData{
-						ClickListener: func() {
+					co.WithCallbackData(mat.ToolbarButtonCallbackData{
+						OnClick: func() {
 							lifecycle.OnOpen(lifecycle.SelectedResourceID())
 						},
 					})
 				}))
 
-				co.WithChild("cancel", co.New(widget.ToolbarButton, func() {
-					co.WithData(widget.ToolbarButtonData{
+				co.WithChild("cancel", co.New(mat.ToolbarButton, func() {
+					co.WithData(mat.ToolbarButtonData{
 						Text: "Cancel",
 					})
-					co.WithCallbackData(widget.ToolbarButtonCallbackData{
-						ClickListener: func() {
+					co.WithCallbackData(mat.ToolbarButtonCallbackData{
+						OnClick: func() {
 							lifecycle.OnCancel()
 						},
 					})
@@ -281,23 +275,17 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 		}
 	})
 
-	return co.New(widget.ListItem, func() {
-		co.WithData(widget.ListItemData{
+	return co.New(mat.ListItem, func() {
+		co.WithData(mat.ListItemData{
 			Selected: lifecycle.IsSelected(),
 		})
-		co.WithCallbackData(widget.ListItemCallbackData{
+		co.WithCallbackData(mat.ListItemCallbackData{
 			OnSelected: lifecycle.OnSelected,
 		})
 		co.WithLayoutData(props.LayoutData())
 
-		co.WithChild("item", co.New(widget.Paper, func() {
-			co.WithData(widget.PaperData{
-				Padding: ui.Spacing{
-					Left:   5,
-					Right:  5,
-					Top:    5,
-					Bottom: 5,
-				},
+		co.WithChild("item", co.New(mat.Element, func() {
+			co.WithData(mat.ElementData{
 				Layout: mat.NewHorizontalLayout(mat.HorizontalLayoutSettings{
 					ContentAlignment: mat.AlignmentLeft,
 					ContentSpacing:   10,
