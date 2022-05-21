@@ -70,21 +70,13 @@ func NewTwoDTextureEditor(studio *Studio, resource *data.Resource) (*TwoDTexture
 				Controller: result,
 				ToAsset:    assetImage,
 			},
-			&change.TwoDTextureWrapS{
+			&change.TwoDTextureWrapping{
 				Controller: result,
-				ToWrap:     assetImage.WrapModeS,
+				ToWrap:     assetImage.Wrapping,
 			},
-			&change.TwoDTextureWrapT{
+			&change.TwoDTextureFiltering{
 				Controller: result,
-				ToWrap:     assetImage.WrapModeT,
-			},
-			&change.TwoDTextureMinFilter{
-				Controller: result,
-				ToFilter:   assetImage.MinFilter,
-			},
-			&change.TwoDTextureMagFilter{
-				Controller: result,
-				ToFilter:   assetImage.MagFilter,
+				ToFilter:   assetImage.Filtering,
 			},
 		},
 	}
@@ -330,74 +322,38 @@ func (e *TwoDTextureEditor) SetAssetData(data asset.TwoDTexture) {
 	e.NotifyChanged()
 }
 
-func (e *TwoDTextureEditor) WrapS() asset.WrapMode {
-	return e.assetImage.WrapModeS
+func (e *TwoDTextureEditor) Wrapping() asset.WrapMode {
+	return e.assetImage.Wrapping
 }
 
-func (e *TwoDTextureEditor) SetWrapS(mode asset.WrapMode) {
-	e.assetImage.WrapModeS = mode
+func (e *TwoDTextureEditor) SetWrapping(mode asset.WrapMode) {
+	e.assetImage.Wrapping = mode
 	e.rebuildGraphicsImage()
 	e.NotifyChanged()
 }
 
-func (e *TwoDTextureEditor) ChangeWrapS(wrap asset.WrapMode) {
-	e.changes.Push(&change.TwoDTextureWrapS{
+func (e *TwoDTextureEditor) ChangeWrapping(wrap asset.WrapMode) {
+	e.changes.Push(&change.TwoDTextureWrapping{
 		Controller: e,
-		FromWrap:   e.assetImage.WrapModeS,
+		FromWrap:   e.assetImage.Wrapping,
 		ToWrap:     wrap,
 	})
 }
 
-func (e *TwoDTextureEditor) WrapT() asset.WrapMode {
-	return e.assetImage.WrapModeT
+func (e *TwoDTextureEditor) Filtering() asset.FilterMode {
+	return e.assetImage.Filtering
 }
 
-func (e *TwoDTextureEditor) SetWrapT(mode asset.WrapMode) {
-	e.assetImage.WrapModeT = mode
+func (e *TwoDTextureEditor) SetFiltering(filter asset.FilterMode) {
+	e.assetImage.Filtering = filter
 	e.rebuildGraphicsImage()
 	e.NotifyChanged()
 }
 
-func (e *TwoDTextureEditor) ChangeWrapT(wrap asset.WrapMode) {
-	e.changes.Push(&change.TwoDTextureWrapT{
+func (e *TwoDTextureEditor) ChangeFiltering(filter asset.FilterMode) {
+	e.changes.Push(&change.TwoDTextureFiltering{
 		Controller: e,
-		FromWrap:   e.assetImage.WrapModeT,
-		ToWrap:     wrap,
-	})
-}
-
-func (e *TwoDTextureEditor) MinFilter() asset.FilterMode {
-	return e.assetImage.MinFilter
-}
-
-func (e *TwoDTextureEditor) SetMinFilter(filter asset.FilterMode) {
-	e.assetImage.MinFilter = filter
-	e.rebuildGraphicsImage()
-	e.NotifyChanged()
-}
-
-func (e *TwoDTextureEditor) ChangeMinFilter(filter asset.FilterMode) {
-	e.changes.Push(&change.TwoDTextureMinFilter{
-		Controller: e,
-		FromFilter: e.assetImage.MinFilter,
-		ToFilter:   filter,
-	})
-}
-
-func (e *TwoDTextureEditor) MagFilter() asset.FilterMode {
-	return e.assetImage.MagFilter
-}
-
-func (e *TwoDTextureEditor) SetMagFilter(filter asset.FilterMode) {
-	e.assetImage.MagFilter = filter
-	e.rebuildGraphicsImage()
-	e.NotifyChanged()
-}
-
-func (e *TwoDTextureEditor) ChangeMagFilter(filter asset.FilterMode) {
-	e.changes.Push(&change.TwoDTextureMagFilter{
-		Controller: e,
-		FromFilter: e.assetImage.MagFilter,
+		FromFilter: e.assetImage.Filtering,
 		ToFilter:   filter,
 	})
 }
@@ -567,16 +523,15 @@ func (v vertex) Serialize(plotter *buffer.Plotter) {
 
 func (e *TwoDTextureEditor) buildGraphicsDefinition(src asset.TwoDTexture) graphics.TwoDTextureDefinition {
 	return graphics.TwoDTextureDefinition{
-		Width:          int(src.Width),
-		Height:         int(src.Height),
-		WrapS:          e.assetToGraphicsWrap(src.WrapModeS),
-		WrapT:          e.assetToGraphicsWrap(src.WrapModeT),
-		MinFilter:      e.assetToGraphicsFilter(src.MinFilter),
-		MagFilter:      e.assetToGraphicsFilter(src.MagFilter),
-		UseAnisotropy:  false,
-		InternalFormat: e.assetFormatToInternalFormat(src.Format),
-		DataFormat:     e.assetFormatToDataFormat(src.Format),
-		Data:           src.Data,
+		Width:           int(src.Width),
+		Height:          int(src.Height),
+		Wrapping:        e.assetToGraphicsWrap(src.Wrapping),
+		Filtering:       e.assetToGraphicsFilter(src.Filtering),
+		GenerateMipmaps: src.Flags.Has(asset.TextureFlagMipmapping),
+		GammaCorrection: !src.Flags.Has(asset.TextureFlagLinear),
+		InternalFormat:  e.assetFormatToInternalFormat(src.Format),
+		DataFormat:      e.assetFormatToDataFormat(src.Format),
+		Data:            src.Data,
 	}
 }
 
@@ -595,20 +550,12 @@ func (e *TwoDTextureEditor) assetToGraphicsWrap(wrap asset.WrapMode) graphics.Wr
 
 func (e *TwoDTextureEditor) assetToGraphicsFilter(filter asset.FilterMode) graphics.Filter {
 	switch filter {
-	case asset.FilterModeUnspecified:
-		fallthrough
 	case asset.FilterModeNearest:
 		return graphics.FilterNearest
 	case asset.FilterModeLinear:
 		return graphics.FilterLinear
-	case asset.FilterModeNearestMipmapNearest:
-		return graphics.FilterNearestMipmapNearest
-	case asset.FilterModeNearestMipmapLinear:
-		return graphics.FilterNearestMipmapLinear
-	case asset.FilterModeLinearMipmapNearest:
-		return graphics.FilterLinearMipmapNearest
-	case asset.FilterModeLinearMipmapLinear:
-		return graphics.FilterLinearMipmapLinear
+	case asset.FilterModeAnisotropic:
+		return graphics.FilterAnisotropic
 	default:
 		panic(fmt.Errorf("unsupported filter: %v", filter))
 	}

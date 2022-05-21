@@ -61,13 +61,9 @@ func NewCubeTextureEditor(studio *Studio, resource *data.Resource) (*CubeTexture
 				Controller: result,
 				ToAsset:    assetImage,
 			},
-			&change.CubeTextureMinFilter{
+			&change.CubeTextureFiltering{
 				Controller: result,
-				ToFilter:   assetImage.MinFilter,
-			},
-			&change.CubeTextureMagFilter{
-				Controller: result,
-				ToFilter:   assetImage.MagFilter,
+				ToFilter:   assetImage.Filtering,
 			},
 		},
 	}
@@ -283,38 +279,20 @@ func (e *CubeTextureEditor) SetAssetData(data asset.CubeTexture) {
 	e.NotifyChanged()
 }
 
-func (e *CubeTextureEditor) MinFilter() asset.FilterMode {
-	return e.assetImage.MinFilter
+func (e *CubeTextureEditor) Filtering() asset.FilterMode {
+	return e.assetImage.Filtering
 }
 
-func (e *CubeTextureEditor) SetMinFilter(filter asset.FilterMode) {
-	e.assetImage.MinFilter = filter
+func (e *CubeTextureEditor) SetFiltering(filter asset.FilterMode) {
+	e.assetImage.Filtering = filter
 	e.rebuildGraphicsImage()
 	e.NotifyChanged()
 }
 
-func (e *CubeTextureEditor) ChangeMinFilter(filter asset.FilterMode) {
-	e.changes.Push(&change.CubeTextureMinFilter{
+func (e *CubeTextureEditor) ChangeFiltering(filter asset.FilterMode) {
+	e.changes.Push(&change.CubeTextureFiltering{
 		Controller: e,
-		FromFilter: e.assetImage.MinFilter,
-		ToFilter:   filter,
-	})
-}
-
-func (e *CubeTextureEditor) MagFilter() asset.FilterMode {
-	return e.assetImage.MagFilter
-}
-
-func (e *CubeTextureEditor) SetMagFilter(filter asset.FilterMode) {
-	e.assetImage.MagFilter = filter
-	e.rebuildGraphicsImage()
-	e.NotifyChanged()
-}
-
-func (e *CubeTextureEditor) ChangeMagFilter(filter asset.FilterMode) {
-	e.changes.Push(&change.CubeTextureMagFilter{
-		Controller: e,
-		FromFilter: e.assetImage.MagFilter,
+		FromFilter: e.assetImage.Filtering,
 		ToFilter:   filter,
 	})
 }
@@ -368,8 +346,7 @@ func (e *CubeTextureEditor) rebuildGraphicsImage() {
 func (e *CubeTextureEditor) buildGraphicsDefinition(src asset.CubeTexture) graphics.CubeTextureDefinition {
 	return graphics.CubeTextureDefinition{
 		Dimension:      int(src.Dimension),
-		MinFilter:      e.assetToGraphicsFilter(src.MinFilter),
-		MagFilter:      e.assetToGraphicsFilter(src.MagFilter),
+		Filtering:      e.assetToGraphicsFilter(src.Filtering),
 		InternalFormat: e.assetFormatToInternalFormat(src.Format),
 		DataFormat:     e.assetFormatToDataFormat(src.Format),
 		FrontSideData:  src.FrontSide.Data,
@@ -383,20 +360,12 @@ func (e *CubeTextureEditor) buildGraphicsDefinition(src asset.CubeTexture) graph
 
 func (e *CubeTextureEditor) assetToGraphicsFilter(filter asset.FilterMode) graphics.Filter {
 	switch filter {
-	case asset.FilterModeUnspecified:
-		fallthrough
 	case asset.FilterModeNearest:
 		return graphics.FilterNearest
 	case asset.FilterModeLinear:
 		return graphics.FilterLinear
-	case asset.FilterModeNearestMipmapNearest:
-		return graphics.FilterNearestMipmapNearest
-	case asset.FilterModeNearestMipmapLinear:
-		return graphics.FilterNearestMipmapLinear
-	case asset.FilterModeLinearMipmapNearest:
-		return graphics.FilterLinearMipmapNearest
-	case asset.FilterModeLinearMipmapLinear:
-		return graphics.FilterLinearMipmapLinear
+	case asset.FilterModeAnisotropic:
+		return graphics.FilterAnisotropic
 	default:
 		panic(fmt.Errorf("unsupported filter: %v", filter))
 	}
@@ -406,6 +375,8 @@ func (e *CubeTextureEditor) assetFormatToInternalFormat(format asset.TexelFormat
 	switch format {
 	case asset.TexelFormatRGBA8:
 		return graphics.InternalFormatRGBA8
+	case asset.TexelFormatRGBA16F:
+		return graphics.InternalFormatRGBA16F
 	case asset.TexelFormatRGBA32F:
 		return graphics.InternalFormatRGBA32F
 	default:
@@ -417,6 +388,8 @@ func (e *CubeTextureEditor) assetFormatToDataFormat(format asset.TexelFormat) gr
 	switch format {
 	case asset.TexelFormatRGBA8:
 		return graphics.DataFormatRGBA8
+	case asset.TexelFormatRGBA16F:
+		return graphics.DataFormatRGBA16F
 	case asset.TexelFormatRGBA32F:
 		return graphics.DataFormatRGBA32F
 	default:

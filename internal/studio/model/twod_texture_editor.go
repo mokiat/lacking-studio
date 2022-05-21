@@ -17,23 +17,19 @@ type TwoDTextureEditor interface {
 	IsConfigAccordionExpanded() bool
 	SetConfigAccordionExpanded(expanded bool)
 
-	SetWrapS(wrap asset.WrapMode)
-	WrapS() asset.WrapMode
-	SetWrapT(wrap asset.WrapMode)
-	WrapT() asset.WrapMode
-	SetAssetData(data asset.TwoDTexture)
-	MinFilter() asset.FilterMode
-	SetMinFilter(filter asset.FilterMode)
-	MagFilter() asset.FilterMode
-	SetMagFilter(filter asset.FilterMode)
+	Wrapping() asset.WrapMode
+	SetWrapping(wrap asset.WrapMode)
+
+	Filtering() asset.FilterMode
+	SetFiltering(filter asset.FilterMode)
+
 	DataFormat() asset.TexelFormat
+	SetAssetData(data asset.TwoDTexture)
 
 	ChangeName(name string)
 	ChangeSourcePath(path string)
-	ChangeWrapS(wrap asset.WrapMode)
-	ChangeWrapT(wrap asset.WrapMode)
-	ChangeMinFilter(filter asset.FilterMode)
-	ChangeMagFilter(filter asset.FilterMode)
+	ChangeWrapping(wrap asset.WrapMode)
+	ChangeFiltering(filter asset.FilterMode)
 	ChangeDataFormat(format asset.TexelFormat)
 
 	Update()

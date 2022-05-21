@@ -44,78 +44,40 @@ func (ch *TwoDTextureData) Revert() error {
 	return nil
 }
 
-var _ history.Change = (*TwoDTextureWrapS)(nil)
+var _ history.Change = (*TwoDTextureWrapping)(nil)
 
-type TwoDTextureWrapS struct {
+type TwoDTextureWrapping struct {
 	Controller model.TwoDTextureEditor
 
 	FromWrap asset.WrapMode
 	ToWrap   asset.WrapMode
 }
 
-func (ch *TwoDTextureWrapS) Apply() error {
-	ch.Controller.SetWrapS(ch.ToWrap)
+func (ch *TwoDTextureWrapping) Apply() error {
+	ch.Controller.SetWrapping(ch.ToWrap)
 	return nil
 }
 
-func (ch *TwoDTextureWrapS) Revert() error {
-	ch.Controller.SetWrapS(ch.FromWrap)
+func (ch *TwoDTextureWrapping) Revert() error {
+	ch.Controller.SetWrapping(ch.FromWrap)
 	return nil
 }
 
-var _ history.Change = (*TwoDTextureWrapT)(nil)
+var _ history.Change = (*TwoDTextureFiltering)(nil)
 
-type TwoDTextureWrapT struct {
-	Controller model.TwoDTextureEditor
-
-	FromWrap asset.WrapMode
-	ToWrap   asset.WrapMode
-}
-
-func (ch *TwoDTextureWrapT) Apply() error {
-	ch.Controller.SetWrapT(ch.ToWrap)
-	return nil
-}
-
-func (ch *TwoDTextureWrapT) Revert() error {
-	ch.Controller.SetWrapT(ch.FromWrap)
-	return nil
-}
-
-var _ history.Change = (*TwoDTextureMinFilter)(nil)
-
-type TwoDTextureMinFilter struct {
+type TwoDTextureFiltering struct {
 	Controller model.TwoDTextureEditor
 
 	FromFilter asset.FilterMode
 	ToFilter   asset.FilterMode
 }
 
-func (ch *TwoDTextureMinFilter) Apply() error {
-	ch.Controller.SetMinFilter(ch.ToFilter)
+func (ch *TwoDTextureFiltering) Apply() error {
+	ch.Controller.SetFiltering(ch.ToFilter)
 	return nil
 }
 
-func (ch *TwoDTextureMinFilter) Revert() error {
-	ch.Controller.SetMinFilter(ch.FromFilter)
-	return nil
-}
-
-var _ history.Change = (*TwoDTextureMagFilter)(nil)
-
-type TwoDTextureMagFilter struct {
-	Controller model.TwoDTextureEditor
-
-	FromFilter asset.FilterMode
-	ToFilter   asset.FilterMode
-}
-
-func (ch *TwoDTextureMagFilter) Apply() error {
-	ch.Controller.SetMagFilter(ch.ToFilter)
-	return nil
-}
-
-func (ch *TwoDTextureMagFilter) Revert() error {
-	ch.Controller.SetMagFilter(ch.FromFilter)
+func (ch *TwoDTextureFiltering) Revert() error {
+	ch.Controller.SetFiltering(ch.FromFilter)
 	return nil
 }

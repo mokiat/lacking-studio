@@ -41,118 +41,58 @@ var TwoDTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 				},
 			})
 
-			co.WithChild("wrap-s-label", co.New(mat.Label, func() {
+			co.WithChild("wrapping-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "bold"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(ui.Black()),
-					Text:      "Wrap S:",
+					Text:      "Wrapping:",
 				})
 			}))
 
-			co.WithChild("wrap-s-dropdown", co.New(mat.Dropdown, func() {
+			co.WithChild("wrapping-dropdown", co.New(mat.Dropdown, func() {
 				co.WithData(mat.DropdownData{
 					Items: []mat.DropdownItem{
 						{Key: asset.WrapModeClampToEdge, Label: "Clamp To Edge"},
-						{Key: asset.WrapModeMirroredClampToEdge, Label: "Mirrored Clamp To Edge"},
 						{Key: asset.WrapModeRepeat, Label: "Repeat"},
 						{Key: asset.WrapModeMirroredRepeat, Label: "Mirrored Repeat"},
 					},
-					SelectedKey: editor.WrapS(),
+					SelectedKey: editor.Wrapping(),
 				})
 				co.WithLayoutData(mat.LayoutData{
 					GrowHorizontally: true,
 				})
 				co.WithCallbackData(mat.DropdownCallbackData{
 					OnItemSelected: func(key interface{}) {
-						editor.ChangeWrapS(key.(asset.WrapMode))
+						editor.ChangeWrapping(key.(asset.WrapMode))
 					},
 				})
 			}))
 
-			co.WithChild("wrap-t-label", co.New(mat.Label, func() {
+			co.WithChild("filtering-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "bold"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(ui.Black()),
-					Text:      "Wrap T:",
+					Text:      "Filtering:",
 				})
 			}))
 
-			co.WithChild("wrap-t-dropdown", co.New(mat.Dropdown, func() {
-				co.WithData(mat.DropdownData{
-					Items: []mat.DropdownItem{
-						{Key: asset.WrapModeClampToEdge, Label: "Clamp To Edge"},
-						{Key: asset.WrapModeMirroredClampToEdge, Label: "Mirrored Clamp To Edge"},
-						{Key: asset.WrapModeRepeat, Label: "Repeat"},
-						{Key: asset.WrapModeMirroredRepeat, Label: "Mirrored Repeat"},
-					},
-					SelectedKey: editor.WrapT(),
-				})
-				co.WithLayoutData(mat.LayoutData{
-					GrowHorizontally: true,
-				})
-				co.WithCallbackData(mat.DropdownCallbackData{
-					OnItemSelected: func(key interface{}) {
-						editor.ChangeWrapT(key.(asset.WrapMode))
-					},
-				})
-			}))
-
-			co.WithChild("min-filter-label", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.GetFont("roboto", "bold"),
-					FontSize:  optional.Value(float32(18)),
-					FontColor: optional.Value(ui.Black()),
-					Text:      "Minification Filter:",
-				})
-			}))
-
-			co.WithChild("min-filter-dropdown", co.New(mat.Dropdown, func() {
+			co.WithChild("filtering-dropdown", co.New(mat.Dropdown, func() {
 				co.WithData(mat.DropdownData{
 					Items: []mat.DropdownItem{
 						{Key: asset.FilterModeNearest, Label: "Nearest"},
 						{Key: asset.FilterModeLinear, Label: "Linear"},
-						{Key: asset.FilterModeNearestMipmapNearest, Label: "Nearest Mipmap Nearest"},
-						{Key: asset.FilterModeNearestMipmapLinear, Label: "Nearest Mipmap Linear"},
-						{Key: asset.FilterModeLinearMipmapNearest, Label: "Linear Mipmap Nearest"},
-						{Key: asset.FilterModeLinearMipmapLinear, Label: "Linear Mipmap Linear"},
+						{Key: asset.FilterModeAnisotropic, Label: "Anisotropic"},
 					},
-					SelectedKey: editor.MinFilter(),
+					SelectedKey: editor.Filtering(),
 				})
 				co.WithLayoutData(mat.LayoutData{
 					GrowHorizontally: true,
 				})
 				co.WithCallbackData(mat.DropdownCallbackData{
 					OnItemSelected: func(key interface{}) {
-						editor.ChangeMinFilter(key.(asset.FilterMode))
-					},
-				})
-			}))
-
-			co.WithChild("mag-filter-label", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.GetFont("roboto", "bold"),
-					FontSize:  optional.Value(float32(18)),
-					FontColor: optional.Value(ui.Black()),
-					Text:      "Magnification Filter:",
-				})
-			}))
-
-			co.WithChild("mag-filter-dropdown", co.New(mat.Dropdown, func() {
-				co.WithData(mat.DropdownData{
-					Items: []mat.DropdownItem{
-						{Key: asset.FilterModeNearest, Label: "Nearest"},
-						{Key: asset.FilterModeLinear, Label: "Linear"},
-					},
-					SelectedKey: editor.MagFilter(),
-				})
-				co.WithLayoutData(mat.LayoutData{
-					GrowHorizontally: true,
-				})
-				co.WithCallbackData(mat.DropdownCallbackData{
-					OnItemSelected: func(key interface{}) {
-						editor.ChangeMagFilter(key.(asset.FilterMode))
+						editor.ChangeFiltering(key.(asset.FilterMode))
 					},
 				})
 			}))

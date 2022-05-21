@@ -19,7 +19,7 @@ type AssetAccordionCallbackData struct {
 	OnNameChanged    func(name string)
 }
 
-var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Instance {
+var AssetAccordion = co.Define(func(props co.Properties) co.Instance {
 	data := co.GetData[AssetAccordionData](props)
 	callbackData := co.GetCallbackData[AssetAccordionCallbackData](props)
 
@@ -135,4 +135,4 @@ var AssetAccordion = co.ShallowCached(co.Define(func(props co.Properties) co.Ins
 			}))
 		}))
 	})
-}))
+})

@@ -25,40 +25,21 @@ func (ch *CubeTextureData) Revert() error {
 	return nil
 }
 
-var _ history.Change = (*CubeTextureMinFilter)(nil)
+var _ history.Change = (*CubeTextureFiltering)(nil)
 
-type CubeTextureMinFilter struct {
+type CubeTextureFiltering struct {
 	Controller model.CubeTextureEditor
 
 	FromFilter asset.FilterMode
 	ToFilter   asset.FilterMode
 }
 
-func (ch *CubeTextureMinFilter) Apply() error {
-	ch.Controller.SetMinFilter(ch.ToFilter)
+func (ch *CubeTextureFiltering) Apply() error {
+	ch.Controller.SetFiltering(ch.ToFilter)
 	return nil
 }
 
-func (ch *CubeTextureMinFilter) Revert() error {
-	ch.Controller.SetMinFilter(ch.FromFilter)
-	return nil
-}
-
-var _ history.Change = (*CubeTextureMagFilter)(nil)
-
-type CubeTextureMagFilter struct {
-	Controller model.CubeTextureEditor
-
-	FromFilter asset.FilterMode
-	ToFilter   asset.FilterMode
-}
-
-func (ch *CubeTextureMagFilter) Apply() error {
-	ch.Controller.SetMagFilter(ch.ToFilter)
-	return nil
-}
-
-func (ch *CubeTextureMagFilter) Revert() error {
-	ch.Controller.SetMagFilter(ch.FromFilter)
+func (ch *CubeTextureFiltering) Revert() error {
+	ch.Controller.SetFiltering(ch.FromFilter)
 	return nil
 }

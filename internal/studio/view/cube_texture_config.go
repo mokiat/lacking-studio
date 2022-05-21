@@ -41,60 +41,30 @@ var CubeTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 				},
 			})
 
-			co.WithChild("min-filter-label", co.New(mat.Label, func() {
+			co.WithChild("filtering-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.GetFont("roboto", "bold"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(ui.Black()),
-					Text:      "Minification Filter:",
+					Text:      "Filtering:",
 				})
 			}))
 
-			co.WithChild("min-filter-dropdown", co.New(mat.Dropdown, func() {
+			co.WithChild("filtering-dropdown", co.New(mat.Dropdown, func() {
 				co.WithData(mat.DropdownData{
 					Items: []mat.DropdownItem{
 						{Key: asset.FilterModeNearest, Label: "Nearest"},
 						{Key: asset.FilterModeLinear, Label: "Linear"},
-						{Key: asset.FilterModeNearestMipmapNearest, Label: "Nearest Mipmap Nearest"},
-						{Key: asset.FilterModeNearestMipmapLinear, Label: "Nearest Mipmap Linear"},
-						{Key: asset.FilterModeLinearMipmapNearest, Label: "Linear Mipmap Nearest"},
-						{Key: asset.FilterModeLinearMipmapLinear, Label: "Linear Mipmap Linear"},
+						{Key: asset.FilterModeAnisotropic, Label: "Anisotropic"},
 					},
-					SelectedKey: editor.MinFilter(),
+					SelectedKey: editor.Filtering(),
 				})
 				co.WithLayoutData(mat.LayoutData{
 					GrowHorizontally: true,
 				})
 				co.WithCallbackData(mat.DropdownCallbackData{
 					OnItemSelected: func(key interface{}) {
-						editor.ChangeMinFilter(key.(asset.FilterMode))
-					},
-				})
-			}))
-
-			co.WithChild("mag-filter-label", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.GetFont("roboto", "bold"),
-					FontSize:  optional.Value(float32(18)),
-					FontColor: optional.Value(ui.Black()),
-					Text:      "Magnification Filter:",
-				})
-			}))
-
-			co.WithChild("mag-filter-dropdown", co.New(mat.Dropdown, func() {
-				co.WithData(mat.DropdownData{
-					Items: []mat.DropdownItem{
-						{Key: asset.FilterModeNearest, Label: "Nearest"},
-						{Key: asset.FilterModeLinear, Label: "Linear"},
-					},
-					SelectedKey: editor.MagFilter(),
-				})
-				co.WithLayoutData(mat.LayoutData{
-					GrowHorizontally: true,
-				})
-				co.WithCallbackData(mat.DropdownCallbackData{
-					OnItemSelected: func(key interface{}) {
-						editor.ChangeMagFilter(key.(asset.FilterMode))
+						editor.ChangeFiltering(key.(asset.FilterMode))
 					},
 				})
 			}))
@@ -112,6 +82,7 @@ var CubeTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 				co.WithData(mat.DropdownData{
 					Items: []mat.DropdownItem{
 						{Key: asset.TexelFormatRGBA8, Label: "RGBA8"},
+						{Key: asset.TexelFormatRGBA16F, Label: "RGBA16F"},
 						{Key: asset.TexelFormatRGBA32F, Label: "RGBA32F"},
 					},
 					SelectedKey: editor.DataFormat(),
