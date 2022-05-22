@@ -3,7 +3,6 @@ package data
 import (
 	"fmt"
 	"image"
-	"strings"
 
 	"golang.org/x/image/draw"
 
@@ -38,7 +37,7 @@ func (r *Registry) Init() error {
 		r.resources[i] = &Resource{
 			registry: r,
 			id:       assetResource.GUID,
-			kind:     assetResource.Kind,
+			kind:     ResourceKind(assetResource.Kind),
 			name:     assetResource.Name,
 		}
 		r.resourcesFromID[assetResource.GUID] = r.resources[i]
@@ -68,22 +67,12 @@ func (r *Registry) GetResourceByID(id string) *Resource {
 	return r.resourcesFromID[id]
 }
 
-func (r *Registry) ListResourcesOfKind(kind string) []*Resource {
-	result := make([]*Resource, 0, len(r.resources))
+func (r *Registry) EachResource(filter Filter[*Resource], fn func(*Resource)) {
 	for _, resource := range r.resources {
-		if !strings.EqualFold(resource.kind, kind) {
-			continue
+		if filter(resource) {
+			fn(resource)
 		}
-		// previewImg, err := r.delegate.ReadPreview(delegateResource.GUID)
-		// if err != nil {
-		// 	if !errors.Is(err, asset.ErrNotFound) {
-		// 		panic(err)
-		// 	}
-		// 	previewImg = image.NewRGBA(image.Rect(0, 0, 64, 64))
-		// }
-		result = append(result, resource)
 	}
-	return result
 }
 
 func (r *Registry) PreparePreview(img image.Image) image.Image {
@@ -127,7 +116,7 @@ func (r *Registry) saveResources() error {
 	for i, resource := range r.resources {
 		assetResources[i] = asset.Resource{
 			GUID: resource.id,
-			Kind: resource.kind,
+			Kind: string(resource.kind),
 			Name: resource.name,
 		}
 	}

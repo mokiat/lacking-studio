@@ -9,7 +9,16 @@ import (
 	"github.com/google/uuid"
 )
 
-func newResource(registry *Registry, kind string) *Resource {
+const (
+	ResourceKindTwoDTexture ResourceKind = "twod_texture"
+	ResourceKindCubeTexture ResourceKind = "cube_texture"
+	ResourceKindModel       ResourceKind = "model"
+	ResourceKindScene       ResourceKind = "scene"
+)
+
+type ResourceKind string
+
+func newResource(registry *Registry, kind ResourceKind) *Resource {
 	return &Resource{
 		id:   uuid.Must(uuid.NewRandom()).String(),
 		kind: kind,
@@ -21,7 +30,7 @@ type Resource struct {
 	registry *Registry
 
 	id            string
-	kind          string
+	kind          ResourceKind
 	name          string
 	resourceDirty bool
 
@@ -35,7 +44,7 @@ func (r *Resource) ID() string {
 	return r.id
 }
 
-func (r *Resource) Kind() string {
+func (r *Resource) Kind() ResourceKind {
 	return r.kind
 }
 
