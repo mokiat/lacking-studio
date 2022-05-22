@@ -271,7 +271,6 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 	lifecycle := co.UseLifecycle(func(handle co.LifecycleHandle) *assetItemLifecycle {
 		return &assetItemLifecycle{
 			Lifecycle: co.NewBaseLifecycle(),
-			handle:    handle,
 		}
 	})
 
@@ -313,30 +312,21 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 					}),
 				})
 
-				co.WithChild("id", co.New(mat.Label, func() {
+				co.WithChild("name", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.GetFont("roboto", "regular"),
+						Font:      co.OpenFont("mat:///roboto-bold.ttf"),
 						FontSize:  optional.Value(float32(16)),
 						FontColor: optional.Value(ui.Black()),
-						Text:      fmt.Sprintf("ID: %s", lifecycle.AssetID()),
-					})
-				}))
-
-				co.WithChild("kind", co.New(mat.Label, func() {
-					co.WithData(mat.LabelData{
-						Font:      co.GetFont("roboto", "regular"),
-						FontSize:  optional.Value(float32(16)),
-						FontColor: optional.Value(ui.Black()),
-						Text:      fmt.Sprintf("Kind: %s", lifecycle.AssetKind()),
+						Text:      lifecycle.AssetName(),
 					})
 				}))
 
 				co.WithChild("id", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.GetFont("roboto", "regular"),
+						Font:      co.OpenFont("mat:///roboto-regular.ttf"),
 						FontSize:  optional.Value(float32(16)),
 						FontColor: optional.Value(ui.Black()),
-						Text:      fmt.Sprintf("Name: %s", lifecycle.AssetName()),
+						Text:      lifecycle.AssetID(),
 					})
 				}))
 			}))
@@ -346,7 +336,6 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 
 type assetItemLifecycle struct {
 	co.Lifecycle
-	handle co.LifecycleHandle
 
 	previewImage *ui.Image
 	assetID      string
