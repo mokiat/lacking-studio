@@ -147,25 +147,25 @@ func (s *Studio) OpenAsset(id string) {
 	}
 
 	switch resource.Kind() {
-	case "twod_texture":
+	case data.ResourceKindTwoDTexture:
 		editor, err := NewTwoDTextureEditor(s, resource)
 		if err != nil {
 			panic(err) // TODO
 		}
 		s.OpenEditor(editor)
-	case "cube_texture":
+	case data.ResourceKindCubeTexture:
 		editor, err := NewCubeTextureEditor(s, resource)
 		if err != nil {
 			panic(err) // TODO
 		}
 		s.OpenEditor(editor)
-	case "model":
+	case data.ResourceKindModel:
 		editor, err := NewModelEditor(s, resource)
 		if err != nil {
 			panic(err) // TODO
 		}
 		s.OpenEditor(editor)
-	case "scene":
+	case data.ResourceKindScene:
 		log.Println("TODO")
 	}
 }

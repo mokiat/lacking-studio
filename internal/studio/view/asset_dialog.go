@@ -5,7 +5,6 @@ import (
 	"image"
 
 	"github.com/mokiat/lacking-studio/internal/studio/data"
-	"github.com/mokiat/lacking/log"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -239,7 +238,8 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 					co.WithCallbackData(mat.ButtonCallbackData{
 						ClickListener: func() {
-							log.Info("DELETE")
+							// TODO: Open confirm dialog
+							lifecycle.OnDelete()
 						},
 					})
 				}))
@@ -253,7 +253,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 					co.WithCallbackData(mat.ButtonCallbackData{
 						ClickListener: func() {
-							log.Info("CLONE")
+							lifecycle.OnClone()
 						},
 					})
 				}))
@@ -276,7 +276,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 					co.WithCallbackData(mat.ButtonCallbackData{
 						ClickListener: func() {
-							log.Info("NEW")
+							lifecycle.OnNew()
 						},
 					})
 				}))
@@ -401,6 +401,34 @@ func (l *assetDialogLifecycle) EachResource(fn func(*data.Resource)) {
 		)
 	}
 	l.registry.EachResource(filter, fn)
+}
+
+func (l *assetDialogLifecycle) OnNew() {
+	resource, err := l.registry.NewResource(l.selectedKind)
+	if err != nil {
+		panic(err)
+	}
+	l.searchText = resource.Name()
+	l.selectedResource = resource
+	l.handle.NotifyChanged()
+}
+
+func (l *assetDialogLifecycle) OnClone() {
+	resource, err := l.selectedResource.Clone()
+	if err != nil {
+		panic(err)
+	}
+	l.searchText = resource.Name()
+	l.selectedResource = resource
+	l.handle.NotifyChanged()
+}
+
+func (l *assetDialogLifecycle) OnDelete() {
+	if err := l.selectedResource.Delete(); err != nil {
+		panic(err)
+	}
+	l.selectedResource = nil
+	l.handle.NotifyChanged()
 }
 
 type AssetItemData struct {

@@ -1,12 +1,16 @@
 package data
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"image"
+	"io"
 
 	"github.com/mokiat/lacking/game/asset"
 
 	"github.com/google/uuid"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -112,4 +116,72 @@ func (r *Resource) SaveContent(target asset.Encodable) error {
 		return fmt.Errorf("error writing content: %w", err)
 	}
 	return nil
+}
+
+func (r *Resource) Clone() (*Resource, error) {
+	newResource := &Resource{
+		registry:          r.registry,
+		id:                uuid.NewString(),
+		kind:              r.kind,
+		name:              fmt.Sprintf("%s copy", r.name),
+		resourceDirty:     true,
+		dependencies:      slices.Clone(r.dependencies),
+		dependenciesDirty: true,
+		previewImage:      r.previewImage,
+	}
+	r.registry.resources = append(r.registry.resources, newResource)
+	r.registry.resourcesFromID[newResource.id] = newResource
+	if err := newResource.Save(); err != nil {
+		return nil, fmt.Errorf("error saving resource: %w", err)
+	}
+	if r.previewImage != nil {
+		if err := r.registry.writePreview(r.id, r.previewImage); err != nil {
+			return nil, fmt.Errorf("error writing preview: %w", err)
+		}
+	}
+	var tmp rawResource
+	if err := r.registry.readContent(r.id, &tmp); err != nil {
+		return nil, fmt.Errorf("error reading content: %w", err)
+	}
+	if err := r.registry.writeContent(newResource.id, &tmp); err != nil {
+		return nil, fmt.Errorf("error writing content: %w", err)
+	}
+	return newResource, nil
+}
+
+func (r *Resource) Delete() error {
+	if err := r.registry.delegate.DeleteContent(r.id); err != nil {
+		if !errors.Is(err, asset.ErrNotFound) {
+			return fmt.Errorf("error deleting content: %w", err)
+		}
+	}
+	if err := r.registry.delegate.DeletePreview(r.id); err != nil {
+		if !errors.Is(err, asset.ErrNotFound) {
+			return fmt.Errorf("error deleting preview: %w", err)
+		}
+	}
+	delete(r.registry.resourcesFromID, r.id)
+	index := slices.Index(r.registry.resources, r)
+	r.registry.resources = slices.Delete(r.registry.resources, index, index+1)
+	if err := r.registry.saveResources(); err != nil {
+		return fmt.Errorf("error saving resources: %w", err)
+	}
+	if err := r.registry.saveDependencies(); err != nil {
+		return fmt.Errorf("error saving dependencies: %w", err)
+	}
+	return nil
+}
+
+type rawResource struct {
+	data bytes.Buffer
+}
+
+func (b *rawResource) DecodeFrom(in io.Reader) error {
+	_, err := io.Copy(&b.data, in)
+	return err
+}
+
+func (b *rawResource) EncodeTo(out io.Writer) error {
+	_, err := io.Copy(out, &b.data)
+	return err
 }

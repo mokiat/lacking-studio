@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"image"
 	"os"
@@ -44,7 +45,18 @@ func NewTwoDTextureEditor(studio *Studio, resource *data.Resource) (*TwoDTexture
 
 	var assetImage asset.TwoDTexture
 	if err := resource.LoadContent(&assetImage); err != nil {
-		return nil, fmt.Errorf("failed load content: %w", err)
+		if !errors.Is(err, asset.ErrNotFound) {
+			return nil, fmt.Errorf("failed load content: %w", err)
+		}
+		assetImage = asset.TwoDTexture{
+			Width:     1,
+			Height:    1,
+			Wrapping:  asset.WrapModeClampToEdge,
+			Filtering: asset.FilterModeNearest,
+			Format:    asset.TexelFormatRGBA8,
+			Flags:     asset.TextureFlagMipmapping,
+			Data:      []byte{0xFF, 0x00, 0x00, 0xFF},
+		}
 	}
 	result := &TwoDTextureEditor{
 		BaseEditor: NewBaseEditor(),
@@ -155,7 +167,84 @@ func (e *TwoDTextureEditor) CanSave() bool {
 }
 
 func (e *TwoDTextureEditor) Save() error {
-	previewImage := image.NewRGBA(image.Rect(0, 0, data.PreviewSize, data.PreviewSize)) // TODO: Use snapshot
+	colorTexture := e.API().CreateColorTexture2D(render.ColorTexture2DInfo{
+		Width:           data.PreviewSize,
+		Height:          data.PreviewSize,
+		Wrapping:        render.WrapModeClamp,
+		Filtering:       render.FilterModeNearest,
+		Mipmapping:      false,
+		GammaCorrection: false,
+		Format:          render.DataFormatRGBA8,
+	})
+	defer colorTexture.Release()
+
+	framebuffer := e.API().CreateFramebuffer(render.FramebufferInfo{
+		ColorAttachments: [4]render.Texture{
+			colorTexture,
+		},
+	})
+	defer framebuffer.Release()
+
+	buffer := e.API().CreatePixelTransferBuffer(render.BufferInfo{
+		Size: 4 * data.PreviewSize * data.PreviewSize,
+	})
+	defer buffer.Release()
+
+	e.API().BeginRenderPass(render.RenderPassInfo{
+		Framebuffer: framebuffer,
+		Viewport: render.Area{
+			X:      0,
+			Y:      0,
+			Width:  data.PreviewSize,
+			Height: data.PreviewSize,
+		},
+		DepthLoadOp:    render.LoadOperationDontCare,
+		DepthStoreOp:   render.StoreOperationDontCare,
+		StencilLoadOp:  render.LoadOperationDontCare,
+		StencilStoreOp: render.StoreOperationDontCare,
+		Colors: [4]render.ColorAttachmentInfo{
+			{
+				LoadOp:     render.LoadOperationClear,
+				ClearValue: [4]float32{0.0, 1.0, 0.0, 1.0},
+			},
+		},
+	})
+
+	e.gfxScene.RenderFramebuffer(framebuffer, graphics.Viewport{
+		X:      0,
+		Y:      0,
+		Width:  data.PreviewSize,
+		Height: data.PreviewSize,
+	}, e.gfxCamera)
+
+	commands := e.API().CreateCommandQueue()
+	defer commands.Release()
+	commands.CopyContentToBuffer(render.CopyContentToBufferInfo{
+		Buffer: buffer,
+		X:      0,
+		Y:      0,
+		Width:  data.PreviewSize,
+		Height: data.PreviewSize,
+		Format: render.DataFormatRGBA8,
+	})
+	e.API().SubmitQueue(commands)
+
+	previewImage := image.NewRGBA(image.Rect(0, 0, data.PreviewSize, data.PreviewSize))
+	buffer.Fetch(render.BufferFetchInfo{
+		Offset: 0,
+		Target: previewImage.Pix,
+	})
+	for y := 0; y < data.PreviewSize/2; y++ {
+		topOffset := y * (4 * data.PreviewSize)
+		bottomOffset := (data.PreviewSize - y - 1) * (4 * data.PreviewSize)
+		for x := 0; x < data.PreviewSize*4; x++ {
+			previewImage.Pix[topOffset+x], previewImage.Pix[bottomOffset+x] =
+				previewImage.Pix[bottomOffset+x], previewImage.Pix[topOffset+x]
+		}
+	}
+
+	e.API().EndRenderPass()
+
 	if err := e.resource.Save(); err != nil {
 		return fmt.Errorf("error saving resource: %w", err)
 	}

@@ -6,6 +6,7 @@ import (
 
 	"golang.org/x/image/draw"
 
+	"github.com/google/uuid"
 	"github.com/mokiat/lacking/game/asset"
 )
 
@@ -41,6 +42,7 @@ func (r *Registry) Init() error {
 			name:     assetResource.Name,
 		}
 		r.resourcesFromID[assetResource.GUID] = r.resources[i]
+		_, _ = r.resources[i].LoadPreview()
 	}
 
 	assetDependencies, err := r.delegate.ReadDependencies()
@@ -109,6 +111,26 @@ func (r *Registry) PreparePreview(img image.Image) image.Image {
 	dst := image.NewNRGBA(dstRect)
 	draw.ApproxBiLinear.Scale(dst, dstRect, img, img.Bounds(), draw.Src, nil)
 	return dst
+}
+
+func (r *Registry) NewResource(kind ResourceKind) (*Resource, error) {
+	newResource := &Resource{
+		registry:          r,
+		id:                uuid.NewString(),
+		kind:              kind,
+		name:              "Unnamed",
+		resourceDirty:     false,
+		dependenciesDirty: false,
+	}
+	r.resources = append(r.resources, newResource)
+	r.resourcesFromID[newResource.id] = newResource
+	if err := r.saveResources(); err != nil {
+		return nil, fmt.Errorf("error saving resources: %w", err)
+	}
+	if err := r.saveDependencies(); err != nil {
+		return nil, fmt.Errorf("error saving dependencies: %w", err)
+	}
+	return newResource, nil
 }
 
 func (r *Registry) saveResources() error {
