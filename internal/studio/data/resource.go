@@ -5,12 +5,13 @@ import (
 	"image"
 
 	"github.com/mokiat/lacking/game/asset"
-	uuid "github.com/satori/go.uuid"
+
+	"github.com/google/uuid"
 )
 
 func newResource(registry *Registry, kind string) *Resource {
 	return &Resource{
-		id:   uuid.NewV4().String(),
+		id:   uuid.Must(uuid.NewRandom()).String(),
 		kind: kind,
 		name: "Unnamed",
 	}

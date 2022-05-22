@@ -3,10 +3,10 @@ module github.com/mokiat/lacking-studio
 go 1.18
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/mokiat/gomath v0.2.0
 	github.com/mokiat/lacking v0.6.0
 	github.com/mokiat/lacking-gl v0.3.0
-	github.com/satori/go.uuid v1.2.0
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9
 )
 
