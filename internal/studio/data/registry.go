@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	PreviewSize = 128
+	PreviewSize = 64
 )
 
 func NewRegistry(delegate asset.Registry) *Registry {
@@ -27,7 +27,6 @@ type Registry struct {
 }
 
 func (r *Registry) Init() error {
-	assetResources := make([]asset.Resource, len(r.resources))
 	assetResources, err := r.delegate.ReadResources()
 	if err != nil {
 		return fmt.Errorf("error reading resources: %w", err)
