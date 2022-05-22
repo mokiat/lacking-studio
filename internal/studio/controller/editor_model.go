@@ -18,7 +18,7 @@ func NewModelEditor(studio *Studio, resource *data.Resource) (*ModelEditor, erro
 	gfxScene := studio.GraphicsEngine().CreateScene()
 	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.1, 0.3, 0.5))
 
-	dirLight = gfxScene.CreateDirectionalLight()
+	dirLight := gfxScene.CreateDirectionalLight()
 	dirLight.SetIntensity(sprec.NewVec3(1.0, 1.0, 1.0))
 	dirLight.SetRotation(sprec.IdentityQuat())
 

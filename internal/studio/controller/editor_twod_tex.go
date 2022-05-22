@@ -24,13 +24,11 @@ import (
 	"github.com/mokiat/lacking/ui/mat"
 )
 
-var dirLight *graphics.Light
-
 func NewTwoDTextureEditor(studio *Studio, resource *data.Resource) (*TwoDTextureEditor, error) {
 	gfxScene := studio.GraphicsEngine().CreateScene()
 	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.2, 0.2, 0.2))
 
-	dirLight = gfxScene.CreateDirectionalLight()
+	dirLight := gfxScene.CreateDirectionalLight()
 	dirLight.SetIntensity(sprec.NewVec3(1.0, 1.0, 1.0))
 	dirLight.SetRotation(sprec.IdentityQuat())
 
