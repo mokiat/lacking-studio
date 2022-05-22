@@ -113,7 +113,7 @@ func (e *ModelEditor) Update() {
 		sprec.TranslationMat4(0.0, 0.0, 3.0),
 	)
 	e.gfxCamera.SetPosition(transform.Translation())
-	e.gfxCamera.SetRotation(matrixToQuat(transform))
+	e.gfxCamera.SetRotation(transform.RotationQuat())
 	e.gfxCamera.SetFoV(e.gfxCameraFoV)
 }
 
