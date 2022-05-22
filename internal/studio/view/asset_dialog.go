@@ -41,7 +41,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("content", co.New(mat.Paper, func() {
 			co.WithData(mat.PaperData{
-				Layout: mat.NewAnchorLayout(mat.AnchorLayoutSettings{}),
+				Layout: mat.NewFrameLayout(),
 			})
 			co.WithLayoutData(mat.LayoutData{
 				Width:            optional.Value(600),
@@ -52,9 +52,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("header", co.New(mat.Toolbar, func() {
 				co.WithLayoutData(mat.LayoutData{
-					Top:   optional.Value(0),
-					Left:  optional.Value(0),
-					Right: optional.Value(0),
+					Alignment: mat.AlignmentTop,
 				})
 
 				co.WithChild("twod_texture", co.New(mat.ToolbarButton, func() {
@@ -116,10 +114,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				})
 
 				co.WithLayoutData(mat.LayoutData{
-					Left:   optional.Value(0),
-					Right:  optional.Value(0),
-					Top:    optional.Value(mat.ToolbarHeight), // FIXME: Use frame layout
-					Bottom: optional.Value(mat.ToolbarHeight), // FIXME: Use frame layout
+					Alignment: mat.AlignmentCenter,
 				})
 
 				co.WithChild("content", co.New(mat.List, func() {
@@ -161,9 +156,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 					Positioning: mat.ToolbarPositioningBottom,
 				})
 				co.WithLayoutData(mat.LayoutData{
-					Left:   optional.Value(0),
-					Right:  optional.Value(0),
-					Bottom: optional.Value(0),
+					Alignment: mat.AlignmentBottom,
 				})
 
 				co.WithChild("open", co.New(mat.ToolbarButton, func() {
