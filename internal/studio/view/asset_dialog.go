@@ -517,12 +517,13 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 type assetItemLifecycle struct {
 	co.Lifecycle
 
-	previewImage *ui.Image
-	assetID      string
-	assetKind    data.ResourceKind
-	assetName    string
-	selected     bool
-	onSelected   func(id string)
+	previewImage        *ui.Image
+	defaultPreviewImage *ui.Image
+	assetID             string
+	assetKind           data.ResourceKind
+	assetName           string
+	selected            bool
+	onSelected          func(id string)
 }
 
 func (l *assetItemLifecycle) OnCreate(props co.Properties) {
@@ -541,6 +542,7 @@ func (l *assetItemLifecycle) OnUpdate(props co.Properties) {
 	if data.PreviewImage != nil {
 		l.previewImage = co.CreateImage(data.PreviewImage)
 	}
+	l.defaultPreviewImage = co.OpenImage("resources/icons/broken-image.png")
 	l.assetID = data.ID
 	l.assetKind = data.Kind
 	l.assetName = data.Name
@@ -556,6 +558,9 @@ func (l *assetItemLifecycle) OnDestroy() {
 }
 
 func (l *assetItemLifecycle) PreviewImage() *ui.Image {
+	if l.previewImage == nil {
+		return l.defaultPreviewImage
+	}
 	return l.previewImage
 }
 
