@@ -1,6 +1,7 @@
 package view
 
 import (
+	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/render"
@@ -33,7 +34,7 @@ var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("viewport", co.New(mat.Viewport, func() {
 				co.WithData(mat.ViewportData{
-					API: editor.API(),
+					API: co.GetContext[global.Context]().API,
 				})
 				co.WithCallbackData(mat.ViewportCallbackData{
 					OnMouseEvent: editor.OnViewportMouseEvent,

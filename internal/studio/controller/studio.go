@@ -138,17 +138,21 @@ func (s *Studio) Save() {
 }
 
 func (s *Studio) OpenAsset(id string) {
-	resource := s.registry.GetResourceByID(id)
 	for _, editor := range s.editors {
-		if editor.ID() == resource.ID() {
+		if editor.ID() == id {
 			s.SelectEditor(editor)
 			return
 		}
 	}
 
+	resource := s.registry.GetResourceByID(id)
 	switch resource.Kind() {
 	case data.ResourceKindTwoDTexture:
-		editor, err := NewTwoDTextureEditor(s, resource)
+		texModel, err := model.OpenTwoDTexture(s.registry, id)
+		if err != nil {
+			panic(err)
+		}
+		editor, err := NewTwoDTextureEditor(s, texModel)
 		if err != nil {
 			panic(err) // TODO
 		}

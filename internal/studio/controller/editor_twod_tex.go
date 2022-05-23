@@ -1,311 +1,91 @@
 package controller
 
 import (
-	"encoding/binary"
-	"errors"
 	"fmt"
 	"image"
 	"os"
-	"path/filepath"
 
-	"github.com/mokiat/gomath/sprec"
-	"github.com/mokiat/lacking-studio/internal/studio/change"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
-	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
+	"github.com/mokiat/lacking-studio/internal/studio/model/change"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
-	"github.com/mokiat/lacking/data/buffer"
-	"github.com/mokiat/lacking/data/pack"
+	"github.com/mokiat/lacking-studio/internal/studio/visualization"
 	"github.com/mokiat/lacking/game/asset"
-	"github.com/mokiat/lacking/game/graphics"
-	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
 
-func NewTwoDTextureEditor(studio *Studio, resource *data.Resource) (*TwoDTextureEditor, error) {
-	gfxScene := studio.GraphicsEngine().CreateScene()
-	gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.2, 0.2, 0.2))
+func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) (*TwoDTextureEditor, error) {
+	viz := visualization.NewTwoDTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel)
 
-	dirLight := gfxScene.CreateDirectionalLight()
-	dirLight.SetIntensity(sprec.NewVec3(1.0, 1.0, 1.0))
-	dirLight.SetRotation(sprec.IdentityQuat())
-
-	gfxCamera := gfxScene.CreateCamera()
-	gfxCamera.SetPosition(sprec.NewVec3(0.0, 0.0, 3.0))
-	gfxCamera.SetRotation(sprec.IdentityQuat())
-	gfxCamera.SetFoVMode(graphics.FoVModeHorizontalPlus)
-	gfxCamera.SetFoV(sprec.Degrees(66))
-	gfxCamera.SetAutoExposure(false)
-	gfxCamera.SetExposure(3.14)
-	gfxCamera.SetAutoFocus(false)
-
-	var assetImage asset.TwoDTexture
-	if err := resource.LoadContent(&assetImage); err != nil {
-		if !errors.Is(err, asset.ErrNotFound) {
-			return nil, fmt.Errorf("failed load content: %w", err)
-		}
-		assetImage = asset.TwoDTexture{
-			Width:     1,
-			Height:    1,
-			Wrapping:  asset.WrapModeClampToEdge,
-			Filtering: asset.FilterModeNearest,
-			Format:    asset.TexelFormatRGBA8,
-			Flags:     asset.TextureFlagMipmapping,
-			Data:      []byte{0xFF, 0x00, 0x00, 0xFF},
-		}
-	}
-	result := &TwoDTextureEditor{
+	return &TwoDTextureEditor{
 		BaseEditor: NewBaseEditor(),
 
 		studio:   studio,
-		resource: resource,
+		texModel: texModel,
 
 		propsAssetExpanded:  false,
 		propsConfigExpanded: true,
 
-		gfxEngine:      studio.GraphicsEngine(),
-		gfxScene:       gfxScene,
-		gfxCamera:      gfxCamera,
-		gfxCameraPitch: sprec.Degrees(0),
-		gfxCameraYaw:   sprec.Degrees(0),
-		gfxCameraFoV:   sprec.Degrees(66),
-
-		assetImage: assetImage,
-	}
-	result.savedChange = &change.Combined{
-		Changes: []history.Change{
-			&change.TwoDTextureData{
-				Controller: result,
-				ToAsset:    assetImage,
-			},
-			&change.TwoDTextureWrapping{
-				Controller: result,
-				ToWrap:     assetImage.Wrapping,
-			},
-			&change.TwoDTextureFiltering{
-				Controller: result,
-				ToFilter:   assetImage.Filtering,
-			},
-		},
-	}
-	if err := result.changes.Push(result.savedChange); err != nil {
-		return nil, fmt.Errorf("failed to init editor: %w", err)
-	}
-	return result, nil
+		viz: viz,
+	}, nil
 }
 
-var _ model.Editor = (*TwoDTextureEditor)(nil)
 var _ model.TwoDTextureEditor = (*TwoDTextureEditor)(nil)
 
 type TwoDTextureEditor struct {
 	BaseEditor
 
-	studio      *Studio
-	resource    *data.Resource
-	savedChange history.Change
+	studio   *Studio
+	texModel *model.TwoDTexture
 
 	propsAssetExpanded  bool
 	propsConfigExpanded bool
 
-	gfxEngine       *graphics.Engine
-	gfxScene        *graphics.Scene
-	gfxCamera       *graphics.Camera
-	gfxCameraPitch  sprec.Angle
-	gfxCameraYaw    sprec.Angle
-	gfxCameraFoV    sprec.Angle
-	gfxMesh         *graphics.Mesh
-	gfxMeshTemplate *graphics.MeshTemplate
-	gfxMaterial     *graphics.Material
-	gfxImage        *graphics.TwoDTexture
-
-	assetImage asset.TwoDTexture
-
-	rotatingCamera bool
-	oldMouseX      int
-	oldMouseY      int
-}
-
-func (e *TwoDTextureEditor) API() render.API {
-	return e.studio.api
-}
-
-func (e *TwoDTextureEditor) IsPropertiesVisible() bool {
-	return e.studio.IsPropertiesVisible()
+	viz *visualization.TwoDTexture
 }
 
 func (e *TwoDTextureEditor) ID() string {
-	return e.resource.ID()
-}
-
-func (e *TwoDTextureEditor) ChangeName(newName string) {
-	e.changes.Push(&change.TwoDTextureName{
-		Controller: e,
-		From:       e.resource.Name(),
-		To:         newName,
-	})
-}
-
-func (e *TwoDTextureEditor) SetName(name string) {
-	e.resource.SetName(name)
-	e.studio.NotifyChanged()
+	return e.texModel.ID()
 }
 
 func (e *TwoDTextureEditor) Name() string {
-	return e.resource.Name()
+	return e.texModel.Name()
 }
 
 func (e *TwoDTextureEditor) Icon() *ui.Image {
 	return co.OpenImage("resources/icons/texture.png")
 }
 
-func (e *TwoDTextureEditor) CanSave() bool {
-	return e.savedChange != e.changes.LastChange()
-}
-
 func (e *TwoDTextureEditor) Save() error {
-	colorTexture := e.API().CreateColorTexture2D(render.ColorTexture2DInfo{
-		Width:           data.PreviewSize,
-		Height:          data.PreviewSize,
-		Wrapping:        render.WrapModeClamp,
-		Filtering:       render.FilterModeNearest,
-		Mipmapping:      false,
-		GammaCorrection: false,
-		Format:          render.DataFormatRGBA8,
-	})
-	defer colorTexture.Release()
-
-	framebuffer := e.API().CreateFramebuffer(render.FramebufferInfo{
-		ColorAttachments: [4]render.Texture{
-			colorTexture,
-		},
-	})
-	defer framebuffer.Release()
-
-	buffer := e.API().CreatePixelTransferBuffer(render.BufferInfo{
-		Size: 4 * data.PreviewSize * data.PreviewSize,
-	})
-	defer buffer.Release()
-
-	e.API().BeginRenderPass(render.RenderPassInfo{
-		Framebuffer: framebuffer,
-		Viewport: render.Area{
-			X:      0,
-			Y:      0,
-			Width:  data.PreviewSize,
-			Height: data.PreviewSize,
-		},
-		DepthLoadOp:    render.LoadOperationDontCare,
-		DepthStoreOp:   render.StoreOperationDontCare,
-		StencilLoadOp:  render.LoadOperationDontCare,
-		StencilStoreOp: render.StoreOperationDontCare,
-		Colors: [4]render.ColorAttachmentInfo{
-			{
-				LoadOp:     render.LoadOperationClear,
-				ClearValue: [4]float32{0.0, 1.0, 0.0, 1.0},
-			},
-		},
-	})
-
-	e.gfxScene.RenderFramebuffer(framebuffer, graphics.Viewport{
-		X:      0,
-		Y:      0,
+	previewImg := e.viz.TakeSnapshot(ui.Size{
 		Width:  data.PreviewSize,
 		Height: data.PreviewSize,
-	}, e.gfxCamera)
-
-	commands := e.API().CreateCommandQueue()
-	defer commands.Release()
-	commands.CopyContentToBuffer(render.CopyContentToBufferInfo{
-		Buffer: buffer,
-		X:      0,
-		Y:      0,
-		Width:  data.PreviewSize,
-		Height: data.PreviewSize,
-		Format: render.DataFormatRGBA8,
 	})
-	e.API().SubmitQueue(commands)
+	e.texModel.SetPreviewImage(previewImg)
 
-	previewImage := image.NewRGBA(image.Rect(0, 0, data.PreviewSize, data.PreviewSize))
-	buffer.Fetch(render.BufferFetchInfo{
-		Offset: 0,
-		Target: previewImage.Pix,
+	if err := e.texModel.Save(); err != nil {
+		return fmt.Errorf("error saving texture model %w", err)
+	}
+	return e.BaseEditor.Save()
+}
+
+func (e *TwoDTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
+	return co.New(view.TwoDTexture, func() {
+		co.WithData(e)
+		co.WithLayoutData(layoutData)
 	})
-	for y := 0; y < data.PreviewSize/2; y++ {
-		topOffset := y * (4 * data.PreviewSize)
-		bottomOffset := (data.PreviewSize - y - 1) * (4 * data.PreviewSize)
-		for x := 0; x < data.PreviewSize*4; x++ {
-			previewImage.Pix[topOffset+x], previewImage.Pix[bottomOffset+x] =
-				previewImage.Pix[bottomOffset+x], previewImage.Pix[topOffset+x]
-		}
-	}
-
-	e.API().EndRenderPass()
-
-	if err := e.resource.Save(); err != nil {
-		return fmt.Errorf("error saving resource: %w", err)
-	}
-	if err := e.resource.SavePreview(previewImage); err != nil {
-		return fmt.Errorf("error saving preview: %w", err)
-	}
-	if err := e.resource.SaveContent(&e.assetImage); err != nil {
-		return fmt.Errorf("error saving content: %w", err)
-	}
-	e.savedChange = e.changes.LastChange()
-	return nil
 }
 
-func (e *TwoDTextureEditor) Update() {
-	transform := sprec.Mat4MultiProd(
-		sprec.RotationMat4(-e.gfxCameraYaw, 0.0, 1.0, 0.0),
-		sprec.RotationMat4(-e.gfxCameraPitch, 1.0, 0.0, 0.0),
-		sprec.TranslationMat4(0.0, 0.0, 3.0),
-	)
-	e.gfxCamera.SetPosition(transform.Translation())
-	e.gfxCamera.SetRotation(transform.RotationQuat())
-	e.gfxCamera.SetFoV(e.gfxCameraFoV)
+func (e *TwoDTextureEditor) Destroy() {
+	e.viz.Destroy()
 }
 
-func (e *TwoDTextureEditor) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
-	switch event.Type {
-	case ui.MouseEventTypeDown:
-		if event.Button == ui.MouseButtonMiddle {
-			e.rotatingCamera = true
-			e.oldMouseX = event.Position.X
-			e.oldMouseY = event.Position.Y
-		}
-		return true
-	case ui.MouseEventTypeMove:
-		if e.rotatingCamera {
-			e.gfxCameraPitch += sprec.Degrees(float32(event.Position.Y-e.oldMouseY) / 5)
-			e.gfxCameraYaw += sprec.Degrees(float32(event.Position.X-e.oldMouseX) / 5)
-			e.oldMouseX = event.Position.X
-			e.oldMouseY = event.Position.Y
-		}
-		return true
-	case ui.MouseEventTypeUp:
-		if event.Button == ui.MouseButtonMiddle {
-			e.rotatingCamera = false
-		}
-		return true
-	case ui.MouseEventTypeScroll:
-		fov := e.gfxCameraFoV.Degrees()
-		fov -= 2 * float32(event.ScrollY)
-		fov = sprec.Clamp(fov, 0.1, 179.0)
-		e.gfxCameraFoV = sprec.Degrees(fov)
-		return true
-	default:
-		return false
-	}
-}
-
-func (e *TwoDTextureEditor) Scene() *graphics.Scene {
-	return e.gfxScene
-}
-
-func (e *TwoDTextureEditor) Camera() *graphics.Camera {
-	return e.gfxCamera
+func (e *TwoDTextureEditor) IsPropertiesVisible() bool {
+	// TODO: Figure out how to untie this. Either create subscription hell
+	// or maybe allow editors to create their own toolbar buttons in the studio.
+	return e.studio.IsPropertiesVisible()
 }
 
 func (e *TwoDTextureEditor) IsAssetAccordionExpanded() bool {
@@ -326,114 +106,101 @@ func (e *TwoDTextureEditor) SetConfigAccordionExpanded(expanded bool) {
 	e.NotifyChanged()
 }
 
-func (e *TwoDTextureEditor) ChangeSourcePath(path string) {
-	err := e.Alter(func() error {
-		if !filepath.IsAbs(path) {
-			path = filepath.Join(e.studio.ProjectDir(), path)
-		}
-
-		img, err := e.openImage(path)
-		if err != nil {
-			return fmt.Errorf("failed to open source image: %w", err)
-		}
-
-		twodImg := pack.BuildImageResource(img)
-
-		ch := &change.TwoDTextureData{
-			Controller: e,
-			FromAsset:  e.assetImage,
-			ToAsset: asset.TwoDTexture{
-				Width:  uint16(twodImg.Width),
-				Height: uint16(twodImg.Height),
-				Format: asset.TexelFormatRGBA8,
-				Data:   twodImg.RGBA8Data(),
-			},
-		}
-		if err := e.changes.Push(ch); err != nil {
-			return fmt.Errorf("failed to apply change: %w", err)
-		}
-		e.studio.NotifyChanged()
-		return nil
-	})
-	if err != nil {
-		panic(err) // TODO
-	}
-}
-
-func (e *TwoDTextureEditor) SetAssetData(data asset.TwoDTexture) {
-	e.assetImage.Width = data.Width
-	e.assetImage.Height = data.Height
-	e.assetImage.Format = data.Format
-	e.assetImage.Data = data.Data
-	e.rebuildGraphicsImage()
-	e.NotifyChanged()
-}
-
 func (e *TwoDTextureEditor) Wrapping() asset.WrapMode {
-	return e.assetImage.Wrapping
-}
-
-func (e *TwoDTextureEditor) SetWrapping(mode asset.WrapMode) {
-	e.assetImage.Wrapping = mode
-	e.rebuildGraphicsImage()
-	e.NotifyChanged()
-}
-
-func (e *TwoDTextureEditor) ChangeWrapping(wrap asset.WrapMode) {
-	e.changes.Push(&change.TwoDTextureWrapping{
-		Controller: e,
-		FromWrap:   e.assetImage.Wrapping,
-		ToWrap:     wrap,
-	})
+	return e.texModel.Wrapping()
 }
 
 func (e *TwoDTextureEditor) Filtering() asset.FilterMode {
-	return e.assetImage.Filtering
+	return e.texModel.Filtering()
 }
 
-func (e *TwoDTextureEditor) SetFiltering(filter asset.FilterMode) {
-	e.assetImage.Filtering = filter
-	e.rebuildGraphicsImage()
+func (e *TwoDTextureEditor) DataFormat() asset.TexelFormat {
+	return e.texModel.Format()
+}
+
+func (e *TwoDTextureEditor) ChangeName(newName string) {
+	e.changes.Push(change.TwoDTextureName(e.texModel,
+		change.TwoDTextureNameState{
+			Value: e.texModel.Name(),
+		},
+		change.TwoDTextureNameState{
+			Value: newName,
+		},
+	))
+
+	// TODO: Remove. This should come as a notification from the model.
+	e.studio.NotifyChanged()
+}
+
+func (e *TwoDTextureEditor) ChangeContent(path string) {
+	// err := e.Alter(func() error {
+	// 	if !filepath.IsAbs(path) {
+	// 		path = filepath.Join(e.studio.ProjectDir(), path)
+	// 	}
+
+	// 	img, err := e.openImage(path)
+	// 	if err != nil {
+	// 		return fmt.Errorf("failed to open source image: %w", err)
+	// 	}
+
+	// 	twodImg := pack.BuildImageResource(img)
+
+	// 	ch := &change.TwoDTextureData{
+	// 		Controller: e,
+	// 		FromAsset:  e.assetImage,
+	// 		ToAsset: asset.TwoDTexture{
+	// 			Width:  uint16(twodImg.Width),
+	// 			Height: uint16(twodImg.Height),
+	// 			Format: asset.TexelFormatRGBA8,
+	// 			Data:   twodImg.RGBA8Data(),
+	// 		},
+	// 	}
+	// 	if err := e.changes.Push(ch); err != nil {
+	// 		return fmt.Errorf("failed to apply change: %w", err)
+	// 	}
+	// 	e.studio.NotifyChanged()
+	// 	return nil
+	// })
+	// if err != nil {
+	// 	panic(err) // TODO
+	// }
+}
+
+func (e *TwoDTextureEditor) ChangeWrapping(wrap asset.WrapMode) {
+	e.changes.Push(change.TwoDTextureWrapping(e.texModel,
+		change.TwoDTextureWrappingState{
+			Value: e.texModel.Wrapping(),
+		},
+		change.TwoDTextureWrappingState{
+			Value: wrap,
+		},
+	))
+
+	// TODO: Remove. This should come as a notification from the model.
 	e.NotifyChanged()
 }
 
 func (e *TwoDTextureEditor) ChangeFiltering(filter asset.FilterMode) {
-	e.changes.Push(&change.TwoDTextureFiltering{
-		Controller: e,
-		FromFilter: e.assetImage.Filtering,
-		ToFilter:   filter,
-	})
-}
+	e.changes.Push(change.TwoDTextureFiltering(
+		e.texModel,
+		change.TwoDTextureFilteringState{
+			Value: e.texModel.Filtering(),
+		},
+		change.TwoDTextureFilteringState{
+			Value: filter,
+		},
+	))
 
-func (e *TwoDTextureEditor) DataFormat() asset.TexelFormat {
-	return e.assetImage.Format
+	// TODO: Remove. This should come as a notification from the model.
+	e.NotifyChanged()
 }
 
 func (e *TwoDTextureEditor) ChangeDataFormat(format asset.TexelFormat) {
 	// TODO
 }
 
-func (e *TwoDTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
-	return co.New(view.TwoDTexture, func() {
-		co.WithData(e)
-		co.WithLayoutData(layoutData)
-	})
-}
-
-func (e *TwoDTextureEditor) Destroy() {
-	e.gfxScene.Delete()
-	if e.gfxMesh != nil {
-		e.gfxMesh.Delete()
-	}
-	if e.gfxMeshTemplate != nil {
-		e.gfxMeshTemplate.Delete()
-	}
-	if e.gfxMaterial != nil {
-		e.gfxMaterial.Delete()
-	}
-	if e.gfxImage != nil {
-		e.gfxImage.Delete()
-	}
+func (e *TwoDTextureEditor) Visualization() model.Visualization {
+	return e.viz
 }
 
 func (e *TwoDTextureEditor) openImage(path string) (image.Image, error) {
@@ -448,184 +215,4 @@ func (e *TwoDTextureEditor) openImage(path string) (image.Image, error) {
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 	return img, nil
-}
-
-func (e *TwoDTextureEditor) rebuildGraphicsImage() {
-	oldImage := e.gfxImage
-	oldMaterial := e.gfxMaterial
-	oldMeshTemplate := e.gfxMeshTemplate
-	oldMesh := e.gfxMesh
-
-	definition := e.buildGraphicsDefinition(e.assetImage)
-	e.gfxImage = e.gfxEngine.CreateTwoDTexture(definition)
-
-	e.gfxMaterial = e.gfxEngine.CreatePBRMaterial(graphics.PBRMaterialDefinition{
-		BackfaceCulling: false,
-		AlphaBlending:   false,
-		AlphaTesting:    false,
-		Metalness:       0.0,
-		Roughness:       0.5,
-		AlbedoColor:     sprec.NewVec4(1.0, 1.0, 1.0, 1.0),
-		AlbedoTexture:   e.gfxImage,
-	})
-
-	quadCount := 5
-	vertexSize := 3*4 + 3*4 + 2*4
-	vertexData := make([]byte, 4*vertexSize*quadCount)
-	vertexPlotter := buffer.NewPlotter(vertexData, binary.LittleEndian)
-
-	renderQuad := func(vertexPlotter *buffer.Plotter, offset sprec.Vec3, texOffset sprec.Vec2) {
-		vertex{
-			Coord:    sprec.Vec3Sum(sprec.NewVec3(-0.5, 0.5, 0.0), offset),
-			TexCoord: sprec.Vec2Sum(sprec.NewVec2(0.0, 1.0), texOffset),
-		}.Serialize(vertexPlotter)
-		vertex{
-			Coord:    sprec.Vec3Sum(sprec.NewVec3(-0.5, -0.5, 0.0), offset),
-			TexCoord: sprec.Vec2Sum(sprec.NewVec2(0.0, 0.0), texOffset),
-		}.Serialize(vertexPlotter)
-		vertex{
-			Coord:    sprec.Vec3Sum(sprec.NewVec3(0.5, -0.5, 0.0), offset),
-			TexCoord: sprec.Vec2Sum(sprec.NewVec2(1.0, 0.0), texOffset),
-		}.Serialize(vertexPlotter)
-		vertex{
-			Coord:    sprec.Vec3Sum(sprec.NewVec3(0.5, 0.5, 0.0), offset),
-			TexCoord: sprec.Vec2Sum(sprec.NewVec2(1.0, 1.0), texOffset),
-		}.Serialize(vertexPlotter)
-	}
-
-	renderQuad(vertexPlotter, sprec.NewVec3(0.0, 0.0, 0.0), sprec.NewVec2(0.0, 0.0))
-	renderQuad(vertexPlotter, sprec.NewVec3(0.0, 1.01, 0.0), sprec.NewVec2(0.0, 1.0))
-	renderQuad(vertexPlotter, sprec.NewVec3(0.0, -1.01, 0.0), sprec.NewVec2(0.0, -1.0))
-	renderQuad(vertexPlotter, sprec.NewVec3(-1.01, 0.0, 0.0), sprec.NewVec2(-1.0, 0.0))
-	renderQuad(vertexPlotter, sprec.NewVec3(1.01, 0.0, 0.0), sprec.NewVec2(1.0, 0.0))
-
-	indexData := make([]byte, 6*2*quadCount)
-	indexPlotter := buffer.NewPlotter(indexData, binary.LittleEndian)
-	for i := uint16(0); i < uint16(quadCount); i++ {
-		indexPlotter.PlotUint16(0 + i*4)
-		indexPlotter.PlotUint16(1 + i*4)
-		indexPlotter.PlotUint16(2 + i*4)
-
-		indexPlotter.PlotUint16(0 + i*4)
-		indexPlotter.PlotUint16(2 + i*4)
-		indexPlotter.PlotUint16(3 + i*4)
-	}
-
-	e.gfxMeshTemplate = e.gfxEngine.CreateMeshTemplate(graphics.MeshTemplateDefinition{
-		VertexData: vertexData,
-		VertexFormat: graphics.VertexFormat{
-			HasCoord:            true,
-			CoordOffsetBytes:    0,
-			CoordStrideBytes:    vertexSize,
-			HasNormal:           true,
-			NormalOffsetBytes:   3 * 4,
-			NormalStrideBytes:   vertexSize,
-			HasTexCoord:         true,
-			TexCoordOffsetBytes: 3*4 + 3*4,
-			TexCoordStrideBytes: vertexSize,
-		},
-		IndexData:   indexData,
-		IndexFormat: graphics.IndexFormatU16,
-		SubMeshes: []graphics.SubMeshTemplateDefinition{
-			{
-				Primitive:   graphics.PrimitiveTriangles,
-				IndexOffset: 0,
-				IndexCount:  6 * quadCount,
-				Material:    e.gfxMaterial,
-			},
-		},
-	})
-
-	e.gfxMesh = e.gfxScene.CreateMesh(e.gfxMeshTemplate)
-
-	if oldMesh != nil {
-		oldMesh.Delete()
-	}
-	if oldMeshTemplate != nil {
-		oldMeshTemplate.Delete()
-	}
-	if oldMaterial != nil {
-		oldMaterial.Delete()
-	}
-	if oldImage != nil {
-		oldImage.Delete()
-	}
-}
-
-type vertex struct {
-	Coord    sprec.Vec3
-	TexCoord sprec.Vec2
-}
-
-func (v vertex) Serialize(plotter *buffer.Plotter) {
-	plotter.PlotFloat32(v.Coord.X)
-	plotter.PlotFloat32(v.Coord.Y)
-	plotter.PlotFloat32(v.Coord.Z)
-	plotter.PlotFloat32(0.0)
-	plotter.PlotFloat32(0.0)
-	plotter.PlotFloat32(1.0)
-	plotter.PlotFloat32(v.TexCoord.X)
-	plotter.PlotFloat32(v.TexCoord.Y)
-}
-
-func (e *TwoDTextureEditor) buildGraphicsDefinition(src asset.TwoDTexture) graphics.TwoDTextureDefinition {
-	return graphics.TwoDTextureDefinition{
-		Width:           int(src.Width),
-		Height:          int(src.Height),
-		Wrapping:        e.assetToGraphicsWrap(src.Wrapping),
-		Filtering:       e.assetToGraphicsFilter(src.Filtering),
-		GenerateMipmaps: src.Flags.Has(asset.TextureFlagMipmapping),
-		GammaCorrection: !src.Flags.Has(asset.TextureFlagLinear),
-		InternalFormat:  e.assetFormatToInternalFormat(src.Format),
-		DataFormat:      e.assetFormatToDataFormat(src.Format),
-		Data:            src.Data,
-	}
-}
-
-func (e *TwoDTextureEditor) assetToGraphicsWrap(wrap asset.WrapMode) graphics.Wrap {
-	switch wrap {
-	case asset.WrapModeClampToEdge:
-		return graphics.WrapClampToEdge
-	case asset.WrapModeRepeat:
-		return graphics.WrapRepeat
-	case asset.WrapModeMirroredRepeat:
-		return graphics.WrapMirroredRepat
-	default:
-		panic(fmt.Errorf("unsupported wrap: %v", wrap))
-	}
-}
-
-func (e *TwoDTextureEditor) assetToGraphicsFilter(filter asset.FilterMode) graphics.Filter {
-	switch filter {
-	case asset.FilterModeNearest:
-		return graphics.FilterNearest
-	case asset.FilterModeLinear:
-		return graphics.FilterLinear
-	case asset.FilterModeAnisotropic:
-		return graphics.FilterAnisotropic
-	default:
-		panic(fmt.Errorf("unsupported filter: %v", filter))
-	}
-}
-
-func (e *TwoDTextureEditor) assetFormatToInternalFormat(format asset.TexelFormat) graphics.InternalFormat {
-	switch format {
-	case asset.TexelFormatRGBA8:
-		return graphics.InternalFormatRGBA8
-	case asset.TexelFormatRGBA32F:
-		return graphics.InternalFormatRGBA32F
-	default:
-		panic(fmt.Errorf("unsupported format: %v", format))
-	}
-}
-
-func (e *TwoDTextureEditor) assetFormatToDataFormat(format asset.TexelFormat) graphics.DataFormat {
-	switch format {
-	case asset.TexelFormatRGBA8:
-		return graphics.DataFormatRGBA8
-	case asset.TexelFormatRGBA32F:
-		return graphics.DataFormatRGBA32F
-	default:
-		panic(fmt.Errorf("unsupported format: %v", format))
-	}
 }

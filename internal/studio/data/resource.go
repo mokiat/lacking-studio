@@ -90,6 +90,9 @@ func (r *Resource) LoadPreview() (image.Image, error) {
 }
 
 func (r *Resource) SavePreview(img image.Image) error {
+	if img == r.previewImage {
+		return nil
+	}
 	bounds := img.Bounds()
 	if width := bounds.Dx(); width > PreviewSize {
 		return fmt.Errorf("width (%d) is larger than maximum (%d)", width, PreviewSize)
@@ -130,7 +133,7 @@ func (r *Resource) Clone() (*Resource, error) {
 		previewImage:      r.previewImage,
 	}
 	r.registry.resources = append(r.registry.resources, newResource)
-	r.registry.resourcesFromID[newResource.id] = newResource
+	r.registry.resourceFromID[newResource.id] = newResource
 	if err := newResource.Save(); err != nil {
 		return nil, fmt.Errorf("error saving resource: %w", err)
 	}
@@ -160,7 +163,7 @@ func (r *Resource) Delete() error {
 			return fmt.Errorf("error deleting preview: %w", err)
 		}
 	}
-	delete(r.registry.resourcesFromID, r.id)
+	delete(r.registry.resourceFromID, r.id)
 	index := slices.Index(r.registry.resources, r)
 	r.registry.resources = slices.Delete(r.registry.resources, index, index+1)
 	if err := r.registry.saveResources(); err != nil {

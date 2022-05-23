@@ -63,5 +63,5 @@ func (q *Queue) CanUnpop() bool {
 
 func (q *Queue) CanPop() bool {
 	previousIndex := q.changeIndex + 1
-	return (previousIndex < len(q.changes)) && (q.changes[previousIndex] != nil)
+	return (q.changes[q.changeIndex] != nil) && (previousIndex < len(q.changes))
 }

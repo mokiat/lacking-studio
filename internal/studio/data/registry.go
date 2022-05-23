@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mokiat/lacking/game/asset"
+	"github.com/mokiat/lacking/util/filter"
 )
 
 const (
@@ -21,9 +22,9 @@ func NewRegistry(delegate asset.Registry) *Registry {
 }
 
 type Registry struct {
-	delegate        asset.Registry
-	resources       []*Resource
-	resourcesFromID map[string]*Resource
+	delegate       asset.Registry
+	resources      []*Resource
+	resourceFromID map[string]*Resource
 }
 
 func (r *Registry) Init() error {
@@ -33,7 +34,7 @@ func (r *Registry) Init() error {
 	}
 
 	r.resources = make([]*Resource, len(assetResources))
-	r.resourcesFromID = make(map[string]*Resource)
+	r.resourceFromID = make(map[string]*Resource)
 	for i, assetResource := range assetResources {
 		r.resources[i] = &Resource{
 			registry: r,
@@ -41,7 +42,7 @@ func (r *Registry) Init() error {
 			kind:     ResourceKind(assetResource.Kind),
 			name:     assetResource.Name,
 		}
-		r.resourcesFromID[assetResource.GUID] = r.resources[i]
+		r.resourceFromID[assetResource.GUID] = r.resources[i]
 		_, _ = r.resources[i].LoadPreview()
 	}
 
@@ -51,11 +52,11 @@ func (r *Registry) Init() error {
 	}
 
 	for _, assetDependency := range assetDependencies {
-		sourceResource := r.resourcesFromID[assetDependency.SourceGUID]
+		sourceResource := r.resourceFromID[assetDependency.SourceGUID]
 		if sourceResource == nil {
 			return fmt.Errorf("cannot find resource with id %q", assetDependency.SourceGUID)
 		}
-		targetResource := r.resourcesFromID[assetDependency.TargetGUID]
+		targetResource := r.resourceFromID[assetDependency.TargetGUID]
 		if targetResource == nil {
 			return fmt.Errorf("cannot find resource with id %q", assetDependency.TargetGUID)
 		}
@@ -65,16 +66,27 @@ func (r *Registry) Init() error {
 	return nil
 }
 
-func (r *Registry) GetResourceByID(id string) *Resource {
-	return r.resourcesFromID[id]
+func (r *Registry) CreateResource(kind ResourceKind) *Resource {
+	resource := &Resource{
+		registry:          r,
+		id:                uuid.NewString(),
+		kind:              kind,
+		name:              "Unnamed",
+		resourceDirty:     true,
+		dependencies:      nil,
+		dependenciesDirty: false,
+	}
+	r.resources = append(r.resources, resource)
+	r.resourceFromID[resource.id] = resource
+	return resource
 }
 
-func (r *Registry) EachResource(filter Filter[*Resource], fn func(*Resource)) {
-	for _, resource := range r.resources {
-		if filter(resource) {
-			fn(resource)
-		}
-	}
+func (r *Registry) GetResourceByID(id string) *Resource {
+	return r.resourceFromID[id]
+}
+
+func (r *Registry) EachResource(fltr filter.Func[*Resource], fn func(*Resource)) {
+	filter.SliceIterator(r.resources, fltr, fn)
 }
 
 func (r *Registry) PreparePreview(img image.Image) image.Image {
@@ -123,7 +135,7 @@ func (r *Registry) NewResource(kind ResourceKind) (*Resource, error) {
 		dependenciesDirty: false,
 	}
 	r.resources = append(r.resources, newResource)
-	r.resourcesFromID[newResource.id] = newResource
+	r.resourceFromID[newResource.id] = newResource
 	if err := r.saveResources(); err != nil {
 		return nil, fmt.Errorf("error saving resources: %w", err)
 	}

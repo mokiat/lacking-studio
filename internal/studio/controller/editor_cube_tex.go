@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 
 	"github.com/mokiat/gomath/sprec"
-	"github.com/mokiat/lacking-studio/internal/studio/change"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
+	"github.com/mokiat/lacking-studio/internal/studio/model/change"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/game/asset"
@@ -55,7 +55,7 @@ func NewCubeTextureEditor(studio *Studio, resource *data.Resource) (*CubeTexture
 
 		assetImage: assetImage,
 	}
-	result.savedChange = &change.Combined{
+	result.savedChange = &history.CombinedChange{
 		Changes: []history.Change{
 			&change.CubeTextureData{
 				Controller: result,

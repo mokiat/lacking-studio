@@ -17,30 +17,40 @@ func NewBaseEditor() BaseEditor {
 
 type BaseEditor struct {
 	co.Controller
-	changes *history.Queue
+	changes     *history.Queue
+	savedChange history.Change
 }
 
-func (e BaseEditor) CanUndo() bool {
+func (e *BaseEditor) CanUndo() bool {
 	return e.changes.CanPop()
 }
 
-func (e BaseEditor) Undo() {
+func (e *BaseEditor) Undo() {
 	if err := e.changes.Pop(); err != nil {
 		panic(err)
 	}
 }
 
-func (e BaseEditor) CanRedo() bool {
+func (e *BaseEditor) CanRedo() bool {
 	return e.changes.CanUnpop()
 }
 
-func (e BaseEditor) Redo() {
+func (e *BaseEditor) Redo() {
 	if err := e.changes.Unpop(); err != nil {
 		panic(err)
 	}
 }
 
-func (e BaseEditor) Render(layoutData mat.LayoutData) co.Instance {
+func (e *BaseEditor) CanSave() bool {
+	return e.savedChange != e.changes.LastChange()
+}
+
+func (e *BaseEditor) Save() error {
+	e.savedChange = e.changes.LastChange()
+	return nil
+}
+
+func (e *BaseEditor) Render(layoutData mat.LayoutData) co.Instance {
 	return co.New(mat.Element, func() {
 		co.WithLayoutData(layoutData)
 	})

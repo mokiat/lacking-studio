@@ -8,6 +8,7 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/util/filter"
 	"github.com/mokiat/lacking/util/optional"
 )
 
@@ -393,14 +394,14 @@ func (l *assetDialogLifecycle) SetSearchText(text string) {
 }
 
 func (l *assetDialogLifecycle) EachResource(fn func(*data.Resource)) {
-	filter := data.FilterWithKind(l.selectedKind)
+	fltr := data.FilterWithKind(l.selectedKind)
 	if l.searchText != "" {
-		filter = data.FilterAnd(
-			filter,
+		fltr = filter.All(
+			fltr,
 			data.FilterWithSimilarName(l.searchText),
 		)
 	}
-	l.registry.EachResource(filter, fn)
+	l.registry.EachResource(fltr, fn)
 }
 
 func (l *assetDialogLifecycle) OnNew() {

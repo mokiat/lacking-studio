@@ -2,6 +2,7 @@ package studio
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/controller"
+	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/graphics"
@@ -29,5 +30,8 @@ func BootstrapApplication(
 		physicsEngine,
 		ecsEngine,
 	)
+	co.RegisterContext(global.Context{
+		API: api,
+	})
 	co.Initialize(window, studio.Render())
 }
