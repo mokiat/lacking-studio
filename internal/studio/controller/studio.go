@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
@@ -35,6 +36,8 @@ func NewStudio(
 	result := &Studio{
 		Controller: co.NewBaseController(),
 
+		target: observer.NewTarget(),
+
 		api: api,
 
 		projectDir: projectDir,
@@ -52,6 +55,8 @@ func NewStudio(
 type Studio struct {
 	co.Controller
 
+	target *observer.Target
+
 	api render.API
 
 	projectDir string
@@ -63,6 +68,16 @@ type Studio struct {
 	propertiesVisible bool
 	activeEditor      model.Editor
 	editors           []model.Editor
+}
+
+func (s *Studio) Target() *observer.Target {
+	return s.target
+}
+
+func (s *Studio) HandleError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (s *Studio) ProjectDir() string {

@@ -32,6 +32,7 @@ func NewModelEditor(studio *Studio, resource *data.Resource) (*ModelEditor, erro
 	gfxCamera.SetAutoFocus(false)
 
 	return &ModelEditor{
+		Controller: co.NewBaseController(),
 		BaseEditor: NewBaseEditor(),
 
 		studio:   studio,
@@ -52,6 +53,7 @@ var _ model.Editor = (*ModelEditor)(nil)
 var _ model.ModelEditor = (*ModelEditor)(nil)
 
 type ModelEditor struct {
+	co.Controller
 	BaseEditor
 
 	studio      *Studio

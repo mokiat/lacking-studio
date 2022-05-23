@@ -5,30 +5,45 @@ import (
 	"image"
 	"os"
 
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/change"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/visualization"
+	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
 
+var (
+	// TODO: Move these to model package so that they are usable from other packages
+	TwoDTextureEditorChange                        = observer.StringChange("twod_texture_editor")
+	TwoDTextureEditorAssetAccordionExpandedChange  = observer.ExtendChange(TwoDTextureEditorChange, observer.StringChange("asset_accordion_expanded"))
+	TwoDTextureEditorConfigAccordionExpandedChange = observer.ExtendChange(TwoDTextureEditorChange, observer.StringChange("config_accordion_expanded"))
+)
+
 func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) (*TwoDTextureEditor, error) {
-	viz := visualization.NewTwoDTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel)
+	target := observer.NewTarget()
+	studioSubscription := observer.WireTargets(studio.Target(), target)
+	texModelSubscription := observer.WireTargets(texModel.Target(), target)
 
 	return &TwoDTextureEditor{
 		BaseEditor: NewBaseEditor(),
 
-		studio:   studio,
-		texModel: texModel,
+		target: observer.NewTarget(),
+
+		studio:               studio,
+		studioSubscription:   studioSubscription,
+		texModel:             texModel,
+		texModelSubscription: texModelSubscription,
 
 		propsAssetExpanded:  false,
 		propsConfigExpanded: true,
 
-		viz: viz,
+		viz: visualization.NewTwoDTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
 	}, nil
 }
 
@@ -37,13 +52,21 @@ var _ model.TwoDTextureEditor = (*TwoDTextureEditor)(nil)
 type TwoDTextureEditor struct {
 	BaseEditor
 
-	studio   *Studio
-	texModel *model.TwoDTexture
+	target *observer.Target
+
+	studio               *Studio
+	studioSubscription   *observer.Subscription
+	texModel             *model.TwoDTexture
+	texModelSubscription *observer.Subscription
 
 	propsAssetExpanded  bool
 	propsConfigExpanded bool
 
 	viz *visualization.TwoDTexture
+}
+
+func (e *TwoDTextureEditor) Target() *observer.Target {
+	return e.target
 }
 
 func (e *TwoDTextureEditor) ID() string {
@@ -80,6 +103,8 @@ func (e *TwoDTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
 
 func (e *TwoDTextureEditor) Destroy() {
 	e.viz.Destroy()
+	e.texModelSubscription.Delete()
+	e.studioSubscription.Delete()
 }
 
 func (e *TwoDTextureEditor) IsPropertiesVisible() bool {
@@ -94,7 +119,7 @@ func (e *TwoDTextureEditor) IsAssetAccordionExpanded() bool {
 
 func (e *TwoDTextureEditor) SetAssetAccordionExpanded(expanded bool) {
 	e.propsAssetExpanded = expanded
-	e.NotifyChanged()
+	e.target.SignalChange(TwoDTextureEditorAssetAccordionExpandedChange)
 }
 
 func (e *TwoDTextureEditor) IsConfigAccordionExpanded() bool {
@@ -103,7 +128,7 @@ func (e *TwoDTextureEditor) IsConfigAccordionExpanded() bool {
 
 func (e *TwoDTextureEditor) SetConfigAccordionExpanded(expanded bool) {
 	e.propsConfigExpanded = expanded
-	e.NotifyChanged()
+	e.target.SignalChange(TwoDTextureEditorConfigAccordionExpandedChange)
 }
 
 func (e *TwoDTextureEditor) Wrapping() asset.WrapMode {
@@ -128,42 +153,37 @@ func (e *TwoDTextureEditor) ChangeName(newName string) {
 		},
 	))
 
-	// TODO: Remove. This should come as a notification from the model.
+	// FIXME: Figure out how to avoid this:
 	e.studio.NotifyChanged()
 }
 
 func (e *TwoDTextureEditor) ChangeContent(path string) {
-	// err := e.Alter(func() error {
-	// 	if !filepath.IsAbs(path) {
-	// 		path = filepath.Join(e.studio.ProjectDir(), path)
-	// 	}
+	img, err := e.openImage(path)
+	if err != nil {
+		e.studio.HandleError(fmt.Errorf("failed to open source image: %w", err))
+		return
+	}
+	twodImg := pack.BuildImageResource(img)
 
-	// 	img, err := e.openImage(path)
-	// 	if err != nil {
-	// 		return fmt.Errorf("failed to open source image: %w", err)
-	// 	}
+	ch := change.TwoDTextureContent(e.texModel,
+		change.TwoDTextureContentState{
+			Width:  e.texModel.Width(),
+			Height: e.texModel.Height(),
+			Format: e.texModel.Format(),
+			Data:   e.texModel.Data(),
+		},
+		change.TwoDTextureContentState{
+			Width:  twodImg.Width,
+			Height: twodImg.Height,
+			Format: asset.TexelFormatRGBA8,
+			Data:   twodImg.RGBA8Data(),
+		},
+	)
 
-	// 	twodImg := pack.BuildImageResource(img)
-
-	// 	ch := &change.TwoDTextureData{
-	// 		Controller: e,
-	// 		FromAsset:  e.assetImage,
-	// 		ToAsset: asset.TwoDTexture{
-	// 			Width:  uint16(twodImg.Width),
-	// 			Height: uint16(twodImg.Height),
-	// 			Format: asset.TexelFormatRGBA8,
-	// 			Data:   twodImg.RGBA8Data(),
-	// 		},
-	// 	}
-	// 	if err := e.changes.Push(ch); err != nil {
-	// 		return fmt.Errorf("failed to apply change: %w", err)
-	// 	}
-	// 	e.studio.NotifyChanged()
-	// 	return nil
-	// })
-	// if err != nil {
-	// 	panic(err) // TODO
-	// }
+	if err := e.changes.Push(ch); err != nil {
+		e.studio.HandleError(fmt.Errorf("failed to apply change: %w", err))
+		return
+	}
 }
 
 func (e *TwoDTextureEditor) ChangeWrapping(wrap asset.WrapMode) {
@@ -175,9 +195,6 @@ func (e *TwoDTextureEditor) ChangeWrapping(wrap asset.WrapMode) {
 			Value: wrap,
 		},
 	))
-
-	// TODO: Remove. This should come as a notification from the model.
-	e.NotifyChanged()
 }
 
 func (e *TwoDTextureEditor) ChangeFiltering(filter asset.FilterMode) {
@@ -190,9 +207,6 @@ func (e *TwoDTextureEditor) ChangeFiltering(filter asset.FilterMode) {
 			Value: filter,
 		},
 	))
-
-	// TODO: Remove. This should come as a notification from the model.
-	e.NotifyChanged()
 }
 
 func (e *TwoDTextureEditor) ChangeDataFormat(format asset.TexelFormat) {

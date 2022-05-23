@@ -10,13 +10,11 @@ const undoCount = 10
 
 func NewBaseEditor() BaseEditor {
 	return BaseEditor{
-		Controller: co.NewBaseController(),
-		changes:    history.NewQueue(undoCount),
+		changes: history.NewQueue(undoCount),
 	}
 }
 
 type BaseEditor struct {
-	co.Controller
 	changes     *history.Queue
 	savedChange history.Change
 }

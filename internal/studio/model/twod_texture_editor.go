@@ -1,11 +1,14 @@
 package model
 
 import (
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking/game/asset"
 )
 
 type TwoDTextureEditor interface {
 	Editor
+
+	Target() *observer.Target
 
 	IsPropertiesVisible() bool
 	IsAssetAccordionExpanded() bool

@@ -1,6 +1,7 @@
 package view
 
 import (
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
@@ -9,8 +10,12 @@ import (
 	"github.com/mokiat/lacking/util/optional"
 )
 
-var TwoDTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Instance {
+var TwoDTextureConfig = co.Define(func(props co.Properties) co.Instance {
 	editor := props.Data().(model.TwoDTextureEditor)
+
+	WithNotifications(editor.Target(), func(change observer.Change) bool {
+		return true // TODO
+	})
 
 	return co.New(mat.Accordion, func() {
 		co.WithData(mat.AccordionData{
@@ -125,4 +130,4 @@ var TwoDTextureConfig = co.Controlled(co.Define(func(props co.Properties) co.Ins
 			}))
 		}))
 	})
-}))
+})

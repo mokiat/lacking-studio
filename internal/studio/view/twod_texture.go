@@ -1,6 +1,9 @@
 package view
 
 import (
+	"fmt"
+
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
@@ -8,8 +11,44 @@ import (
 	"github.com/mokiat/lacking/util/optional"
 )
 
+type notifLifecycle struct {
+	co.BaseLifecycle
+	target       *observer.Target
+	filter       func(change observer.Change) bool
+	handle       co.LifecycleHandle
+	subscription *observer.Subscription
+}
+
+func (l *notifLifecycle) OnCreate(props co.Properties) {
+	l.subscription = l.target.Subscribe(func(change observer.Change) {
+		if l.filter(change) {
+			l.handle.NotifyChanged()
+		}
+	})
+}
+
+func (l *notifLifecycle) OnDestroy() {
+	l.subscription.Delete()
+}
+
+func WithNotifications(target *observer.Target, filter func(change observer.Change) bool) {
+	co.UseLifecycle(func(handle co.LifecycleHandle) *notifLifecycle {
+		return &notifLifecycle{
+			target: target,
+			filter: filter,
+			handle: handle,
+		}
+	})
+}
+
 var TwoDTexture = co.Define(func(props co.Properties) co.Instance {
 	editor := props.Data().(model.TwoDTextureEditor)
+
+	WithNotifications(editor.Target(), func(change observer.Change) bool {
+		fmt.Println("CHANGE:", change.Description())
+		return true // TODO
+	})
+
 	viz := editor.Visualization()
 
 	return co.New(mat.Container, func() {

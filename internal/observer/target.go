@@ -78,3 +78,9 @@ func (t *Target) AccumulateChanges(fn func() error) error {
 	err = fn()
 	return err
 }
+
+func WireTargets(parent, child *Target) *Subscription {
+	return parent.Subscribe(func(change Change) {
+		child.SignalChange(change)
+	})
+}

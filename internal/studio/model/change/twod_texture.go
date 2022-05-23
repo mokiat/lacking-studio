@@ -67,7 +67,7 @@ type TwoDTextureContentState struct {
 func TwoDTextureContent(target *model.TwoDTexture, from, to TwoDTextureContentState) history.Change {
 	return history.FuncChange(
 		func() error {
-			return target.AccumulateChanges(func() error {
+			return target.Target().AccumulateChanges(func() error {
 				target.SetWidth(to.Width)
 				target.SetHeight(to.Height)
 				target.SetFormat(to.Format)
@@ -76,7 +76,7 @@ func TwoDTextureContent(target *model.TwoDTexture, from, to TwoDTextureContentSt
 			})
 		},
 		func() error {
-			return target.AccumulateChanges(func() error {
+			return target.Target().AccumulateChanges(func() error {
 				target.SetWidth(from.Width)
 				target.SetHeight(from.Height)
 				target.SetFormat(from.Format)

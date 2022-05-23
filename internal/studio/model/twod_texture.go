@@ -11,16 +11,21 @@ import (
 )
 
 var (
-	TwoDTextureChangeToName            observer.Change = "twod_texture:name"
-	TwoDTextureChangeToWrapping        observer.Change = "twod_texture:wrapping"
-	TwoDTextureChangeToFiltering       observer.Change = "twod_texture:filtering"
-	TwoDTextureChangeToWidth           observer.Change = "twod_texture:width"
-	TwoDTextureChangeToHeight          observer.Change = "twod_texture:height"
-	TwoDTextureChangeToFormat          observer.Change = "twod_texture:format"
-	TwoDTextureChangeToMipmapping      observer.Change = "twod_texture:mipmapping"
-	TwoDTextureChangeToGammaCorrection observer.Change = "twod_texture:gamme_correction"
-	TwoDTextureChangeToData            observer.Change = "twod_texture:data"
-	TwoDTextureChangeToPreview         observer.Change = "twod_texture:preview"
+	// NOTE: This allows for example the studio to subscribe for name changes only
+	// for an editor.
+	NameChange = observer.StringChange("name")
+
+	TwoDTextureChange                = observer.StringChange("twod_texture")
+	TwoDTextureNameChange            = observer.ExtendChange(TwoDTextureChange, NameChange)
+	TwoDTextureWrappingChange        = observer.ExtendChange(TwoDTextureChange, observer.StringChange("wrapping"))
+	TwoDTextureFilteringChange       = observer.ExtendChange(TwoDTextureChange, observer.StringChange("filtering"))
+	TwoDTextureWidthChange           = observer.ExtendChange(TwoDTextureChange, observer.StringChange("width"))
+	TwoDTextureHeightChange          = observer.ExtendChange(TwoDTextureChange, observer.StringChange("height"))
+	TwoDTextureFormatChange          = observer.ExtendChange(TwoDTextureChange, observer.StringChange("format"))
+	TwoDTextureMipmappingChange      = observer.ExtendChange(TwoDTextureChange, observer.StringChange("mipmapping"))
+	TwoDTextureGammaCorrectionChange = observer.ExtendChange(TwoDTextureChange, observer.StringChange("gamma_correction"))
+	TwoDTextureDataChange            = observer.ExtendChange(TwoDTextureChange, observer.StringChange("data"))
+	TwoDTexturePreviewChange         = observer.ExtendChange(TwoDTextureChange, observer.StringChange("preview"))
 )
 
 func CreateTwoDTexture(registry *data.Registry) (*TwoDTexture, error) {
@@ -45,6 +50,7 @@ func CreateTwoDTexture(registry *data.Registry) (*TwoDTexture, error) {
 		return nil, fmt.Errorf("error saving content: %w", err)
 	}
 	return &TwoDTexture{
+		target:     observer.NewTarget(),
 		resource:   resource,
 		texAsset:   texAsset,
 		previewImg: content,
@@ -65,6 +71,7 @@ func OpenTwoDTexture(registry *data.Registry, id string) (*TwoDTexture, error) {
 		previewImg = nil
 	}
 	return &TwoDTexture{
+		target:     observer.NewTarget(),
 		resource:   resource,
 		texAsset:   texAsset,
 		previewImg: previewImg,
@@ -72,10 +79,14 @@ func OpenTwoDTexture(registry *data.Registry, id string) (*TwoDTexture, error) {
 }
 
 type TwoDTexture struct {
-	observer.Target
+	target     *observer.Target
 	resource   *data.Resource
 	texAsset   *asset.TwoDTexture
 	previewImg image.Image
+}
+
+func (t *TwoDTexture) Target() *observer.Target {
+	return t.target
 }
 
 func (t *TwoDTexture) ID() string {
@@ -88,7 +99,7 @@ func (t *TwoDTexture) Name() string {
 
 func (t *TwoDTexture) SetName(name string) {
 	t.resource.SetName(name)
-	t.SignalChange(TwoDTextureChangeToName)
+	t.target.SignalChange(TwoDTextureNameChange)
 }
 
 func (t *TwoDTexture) Wrapping() asset.WrapMode {
@@ -97,7 +108,7 @@ func (t *TwoDTexture) Wrapping() asset.WrapMode {
 
 func (t *TwoDTexture) SetWrapping(wrapping asset.WrapMode) {
 	t.texAsset.Wrapping = wrapping
-	t.SignalChange(TwoDTextureChangeToWrapping)
+	t.target.SignalChange(TwoDTextureWrappingChange)
 }
 
 func (t *TwoDTexture) Filtering() asset.FilterMode {
@@ -106,7 +117,7 @@ func (t *TwoDTexture) Filtering() asset.FilterMode {
 
 func (t *TwoDTexture) SetFiltering(filtering asset.FilterMode) {
 	t.texAsset.Filtering = filtering
-	t.SignalChange(TwoDTextureChangeToFiltering)
+	t.target.SignalChange(TwoDTextureFilteringChange)
 }
 
 func (t *TwoDTexture) Width() int {
@@ -115,7 +126,7 @@ func (t *TwoDTexture) Width() int {
 
 func (t *TwoDTexture) SetWidth(width int) {
 	t.texAsset.Width = uint16(width)
-	t.SignalChange(TwoDTextureChangeToWidth)
+	t.target.SignalChange(TwoDTextureWidthChange)
 }
 
 func (t *TwoDTexture) Height() int {
@@ -124,7 +135,7 @@ func (t *TwoDTexture) Height() int {
 
 func (t *TwoDTexture) SetHeight(height int) {
 	t.texAsset.Height = uint16(height)
-	t.SignalChange(TwoDTextureChangeToHeight)
+	t.target.SignalChange(TwoDTextureHeightChange)
 }
 
 func (t *TwoDTexture) Format() asset.TexelFormat {
@@ -133,7 +144,7 @@ func (t *TwoDTexture) Format() asset.TexelFormat {
 
 func (t *TwoDTexture) SetFormat(format asset.TexelFormat) {
 	t.texAsset.Format = format
-	t.SignalChange(TwoDTextureChangeToFormat)
+	t.target.SignalChange(TwoDTextureFormatChange)
 }
 
 func (t *TwoDTexture) Mipmapping() bool {
@@ -146,7 +157,7 @@ func (t *TwoDTexture) SetMipmapping(mipmapping bool) {
 	} else {
 		t.texAsset.Flags &= ^asset.TextureFlagMipmapping
 	}
-	t.SignalChange(TwoDTextureChangeToMipmapping)
+	t.target.SignalChange(TwoDTextureMipmappingChange)
 }
 
 func (t *TwoDTexture) GammaCorrection() bool {
@@ -159,7 +170,7 @@ func (t *TwoDTexture) SetGammaCorrection(correction bool) {
 	} else {
 		t.texAsset.Flags |= asset.TextureFlagLinear
 	}
-	t.SignalChange(TwoDTextureChangeToGammaCorrection)
+	t.target.SignalChange(TwoDTextureGammaCorrectionChange)
 }
 
 func (t *TwoDTexture) Data() []byte {
@@ -168,7 +179,7 @@ func (t *TwoDTexture) Data() []byte {
 
 func (t *TwoDTexture) SetData(data []byte) {
 	t.texAsset.Data = data
-	t.SignalChange(TwoDTextureChangeToData)
+	t.target.SignalChange(TwoDTextureDataChange)
 }
 
 func (t *TwoDTexture) PreviewImage() image.Image {
@@ -177,7 +188,7 @@ func (t *TwoDTexture) PreviewImage() image.Image {
 
 func (t *TwoDTexture) SetPreviewImage(img image.Image) {
 	t.previewImg = img
-	t.SignalChange(TwoDTextureChangeToPreview)
+	t.target.SignalChange(TwoDTexturePreviewChange)
 }
 
 func (t *TwoDTexture) Save() error {

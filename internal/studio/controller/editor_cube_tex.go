@@ -38,6 +38,7 @@ func NewCubeTextureEditor(studio *Studio, resource *data.Resource) (*CubeTexture
 		return nil, fmt.Errorf("failed to load content: %w", err)
 	}
 	result := &CubeTextureEditor{
+		Controller: co.NewBaseController(),
 		BaseEditor: NewBaseEditor(),
 
 		studio:   studio,
@@ -77,6 +78,7 @@ var _ model.Editor = (*CubeTextureEditor)(nil)
 var _ model.CubeTextureEditor = (*CubeTextureEditor)(nil)
 
 type CubeTextureEditor struct {
+	co.Controller
 	BaseEditor
 
 	studio      *Studio
