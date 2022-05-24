@@ -11,10 +11,6 @@ import (
 )
 
 var (
-	// NOTE: This allows for example the studio to subscribe for name changes only
-	// for an editor.
-	NameChange = observer.StringChange("name")
-
 	TwoDTextureChange                = observer.StringChange("twod_texture")
 	TwoDTextureNameChange            = observer.ExtendChange(TwoDTextureChange, NameChange)
 	TwoDTextureWrappingChange        = observer.ExtendChange(TwoDTextureChange, observer.StringChange("wrapping"))
@@ -100,6 +96,10 @@ func (t *TwoDTexture) Name() string {
 func (t *TwoDTexture) SetName(name string) {
 	t.resource.SetName(name)
 	t.target.SignalChange(TwoDTextureNameChange)
+}
+
+func (t *TwoDTexture) Kind() data.ResourceKind {
+	return t.resource.Kind()
 }
 
 func (t *TwoDTexture) Wrapping() asset.WrapMode {

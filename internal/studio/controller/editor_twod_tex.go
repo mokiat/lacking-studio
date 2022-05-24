@@ -144,11 +144,11 @@ func (e *TwoDTextureEditor) DataFormat() asset.TexelFormat {
 }
 
 func (e *TwoDTextureEditor) ChangeName(newName string) {
-	e.changes.Push(change.TwoDTextureName(e.texModel,
-		change.TwoDTextureNameState{
+	e.changes.Push(change.ResourceName(e.texModel,
+		change.ResourceNameState{
 			Value: e.texModel.Name(),
 		},
-		change.TwoDTextureNameState{
+		change.ResourceNameState{
 			Value: newName,
 		},
 	))
@@ -187,23 +187,23 @@ func (e *TwoDTextureEditor) ChangeContent(path string) {
 }
 
 func (e *TwoDTextureEditor) ChangeWrapping(wrap asset.WrapMode) {
-	e.changes.Push(change.TwoDTextureWrapping(e.texModel,
-		change.TwoDTextureWrappingState{
+	e.changes.Push(change.Wrapping(e.texModel,
+		change.WrappingState{
 			Value: e.texModel.Wrapping(),
 		},
-		change.TwoDTextureWrappingState{
+		change.WrappingState{
 			Value: wrap,
 		},
 	))
 }
 
 func (e *TwoDTextureEditor) ChangeFiltering(filter asset.FilterMode) {
-	e.changes.Push(change.TwoDTextureFiltering(
+	e.changes.Push(change.Filtering(
 		e.texModel,
-		change.TwoDTextureFilteringState{
+		change.FilteringState{
 			Value: e.texModel.Filtering(),
 		},
-		change.TwoDTextureFilteringState{
+		change.FilteringState{
 			Value: filter,
 		},
 	))

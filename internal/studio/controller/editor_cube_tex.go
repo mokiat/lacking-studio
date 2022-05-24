@@ -58,13 +58,15 @@ func NewCubeTextureEditor(studio *Studio, resource *data.Resource) (*CubeTexture
 	}
 	result.savedChange = &history.CombinedChange{
 		Changes: []history.Change{
+			change.Filtering(result,
+				change.FilteringState{},
+				change.FilteringState{
+					Value: assetImage.Filtering,
+				},
+			),
 			&change.CubeTextureData{
 				Controller: result,
 				ToAsset:    assetImage,
-			},
-			&change.CubeTextureFiltering{
-				Controller: result,
-				ToFilter:   assetImage.Filtering,
 			},
 		},
 	}
@@ -292,11 +294,14 @@ func (e *CubeTextureEditor) SetFiltering(filter asset.FilterMode) {
 }
 
 func (e *CubeTextureEditor) ChangeFiltering(filter asset.FilterMode) {
-	e.changes.Push(&change.CubeTextureFiltering{
-		Controller: e,
-		FromFilter: e.assetImage.Filtering,
-		ToFilter:   filter,
-	})
+	e.changes.Push(change.Filtering(e,
+		change.FilteringState{
+			Value: e.assetImage.Filtering,
+		},
+		change.FilteringState{
+			Value: filter,
+		},
+	))
 }
 
 func (e *CubeTextureEditor) DataFormat() asset.TexelFormat {
