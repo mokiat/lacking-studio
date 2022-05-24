@@ -165,19 +165,17 @@ func (s *Studio) OpenAsset(id string) {
 	case data.ResourceKindTwoDTexture:
 		texModel, err := model.OpenTwoDTexture(s.registry, id)
 		if err != nil {
-			panic(err)
+			s.HandleError(err)
+			return
 		}
-		editor, err := NewTwoDTextureEditor(s, texModel)
-		if err != nil {
-			panic(err) // TODO
-		}
-		s.OpenEditor(editor)
+		s.OpenEditor(NewTwoDTextureEditor(s, texModel))
 	case data.ResourceKindCubeTexture:
-		editor, err := NewCubeTextureEditor(s, resource)
+		texModel, err := model.OpenCubeTexture(s.registry, id)
 		if err != nil {
-			panic(err) // TODO
+			s.HandleError(err)
+			return
 		}
-		s.OpenEditor(editor)
+		s.OpenEditor(NewCubeTextureEditor(s, texModel))
 	case data.ResourceKindModel:
 		editor, err := NewModelEditor(s, resource)
 		if err != nil {

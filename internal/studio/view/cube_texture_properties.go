@@ -1,14 +1,19 @@
 package view
 
 import (
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
 
-var CubeTextureProperties = co.Controlled(co.Define(func(props co.Properties) co.Instance {
+var CubeTextureProperties = co.Define(func(props co.Properties) co.Instance {
 	editor := props.Data().(model.CubeTextureEditor)
+
+	WithNotifications(editor.Target(), func(change observer.Change) bool {
+		return true // TODO
+	})
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
@@ -49,4 +54,4 @@ var CubeTextureProperties = co.Controlled(co.Define(func(props co.Properties) co
 			})
 		}))
 	})
-}))
+})

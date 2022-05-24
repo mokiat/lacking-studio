@@ -6,21 +6,44 @@ import (
 	"github.com/mokiat/lacking/game/asset"
 )
 
-var _ history.Change = (*CubeTextureData)(nil)
-
-type CubeTextureData struct {
-	Controller model.CubeTextureEditor
-
-	FromAsset asset.CubeTexture
-	ToAsset   asset.CubeTexture
+type CubeTextureContentState struct {
+	Dimension  int
+	Format     asset.TexelFormat
+	FrontData  []byte
+	BackData   []byte
+	LeftData   []byte
+	RightData  []byte
+	TopData    []byte
+	BottomData []byte
 }
 
-func (ch *CubeTextureData) Apply() error {
-	ch.Controller.SetAssetData(ch.ToAsset)
-	return nil
-}
-
-func (ch *CubeTextureData) Revert() error {
-	ch.Controller.SetAssetData(ch.FromAsset)
-	return nil
+func CubeTextureContent(target *model.CubeTexture, from, to CubeTextureContentState) history.Change {
+	return history.FuncChange(
+		func() error {
+			return target.Target().AccumulateChanges(func() error {
+				target.SetDimension(to.Dimension)
+				target.SetFormat(to.Format)
+				target.SetFrontData(to.FrontData)
+				target.SetBackData(to.BackData)
+				target.SetLeftData(to.LeftData)
+				target.SetRightData(to.RightData)
+				target.SetTopData(to.TopData)
+				target.SetBottomData(to.BottomData)
+				return nil
+			})
+		},
+		func() error {
+			return target.Target().AccumulateChanges(func() error {
+				target.SetDimension(from.Dimension)
+				target.SetFormat(from.Format)
+				target.SetFrontData(from.FrontData)
+				target.SetBackData(from.BackData)
+				target.SetLeftData(from.LeftData)
+				target.SetRightData(from.RightData)
+				target.SetTopData(from.TopData)
+				target.SetBottomData(from.BottomData)
+				return nil
+			})
+		},
+	)
 }

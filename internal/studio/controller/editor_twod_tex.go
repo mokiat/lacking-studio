@@ -25,7 +25,7 @@ var (
 	TwoDTextureEditorConfigAccordionExpandedChange = observer.ExtendChange(TwoDTextureEditorChange, observer.StringChange("config_accordion_expanded"))
 )
 
-func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) (*TwoDTextureEditor, error) {
+func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) *TwoDTextureEditor {
 	target := observer.NewTarget()
 	studioSubscription := observer.WireTargets(studio.Target(), target)
 	texModelSubscription := observer.WireTargets(texModel.Target(), target)
@@ -33,7 +33,7 @@ func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) (*TwoDTex
 	return &TwoDTextureEditor{
 		BaseEditor: NewBaseEditor(),
 
-		target: observer.NewTarget(),
+		target: target,
 
 		studio:               studio,
 		studioSubscription:   studioSubscription,
@@ -44,7 +44,7 @@ func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) (*TwoDTex
 		propsConfigExpanded: true,
 
 		viz: visualization.NewTwoDTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
-	}, nil
+	}
 }
 
 var _ model.TwoDTextureEditor = (*TwoDTextureEditor)(nil)
@@ -179,7 +179,6 @@ func (e *TwoDTextureEditor) ChangeContent(path string) {
 			Data:   twodImg.RGBA8Data(),
 		},
 	)
-
 	if err := e.changes.Push(ch); err != nil {
 		e.studio.HandleError(fmt.Errorf("failed to apply change: %w", err))
 		return

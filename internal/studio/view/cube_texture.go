@@ -1,11 +1,11 @@
 package view
 
 import (
+	"fmt"
+
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
-	"github.com/mokiat/lacking/game/graphics"
-	"github.com/mokiat/lacking/render"
-	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/util/optional"
@@ -13,6 +13,13 @@ import (
 
 var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 	editor := props.Data().(model.CubeTextureEditor)
+
+	WithNotifications(editor.Target(), func(change observer.Change) bool {
+		fmt.Println("CHANGE:", change.Description())
+		return true // TODO
+	})
+
+	viz := editor.Visualization()
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
@@ -24,7 +31,7 @@ var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 		co.WithChild("center", co.New(mat.DropZone, func() {
 			co.WithCallbackData(mat.DropZoneCallbackData{
 				OnDrop: func(paths []string) bool {
-					editor.ChangeSourcePath(paths[0])
+					editor.ChangeContent(paths[0])
 					return true
 				},
 			})
@@ -37,16 +44,8 @@ var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 					API: co.GetContext[global.Context]().API,
 				})
 				co.WithCallbackData(mat.ViewportCallbackData{
-					OnMouseEvent: editor.OnViewportMouseEvent,
-					OnRender: func(framebuffer render.Framebuffer, size ui.Size) {
-						editor.Update()
-						editor.Scene().RenderFramebuffer(framebuffer, graphics.Viewport{
-							X:      0,
-							Y:      0,
-							Width:  size.Width,
-							Height: size.Height,
-						}, editor.Camera())
-					},
+					OnMouseEvent: viz.OnViewportMouseEvent,
+					OnRender:     viz.OnViewportRender,
 				})
 			}))
 		}))
