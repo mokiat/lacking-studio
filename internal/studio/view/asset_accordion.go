@@ -60,7 +60,7 @@ var AssetAccordion = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("label", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.GetFont("roboto", "bold"),
+						Font:      co.OpenFont("mat:///roboto-bold.ttf"),
 						FontSize:  optional.Value(float32(18)),
 						FontColor: optional.Value(ui.Black()),
 						Text:      "ID:",
@@ -69,7 +69,7 @@ var AssetAccordion = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("value", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.GetFont("roboto", "regular"),
+						Font:      co.OpenFont("mat:///roboto-regular.ttf"),
 						FontSize:  optional.Value(float32(18)),
 						FontColor: optional.Value(ui.Black()),
 						Text:      data.AssetID,
@@ -87,7 +87,7 @@ var AssetAccordion = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("label", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.GetFont("roboto", "bold"),
+						Font:      co.OpenFont("mat:///roboto-bold.ttf"),
 						FontSize:  optional.Value(float32(18)),
 						FontColor: optional.Value(ui.Black()),
 						Text:      "Type:",
@@ -96,7 +96,7 @@ var AssetAccordion = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("value", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.GetFont("roboto", "regular"),
+						Font:      co.OpenFont("mat:///roboto-regular.ttf"),
 						FontSize:  optional.Value(float32(18)),
 						FontColor: optional.Value(ui.Black()),
 						Text:      data.AssetType,
@@ -114,7 +114,7 @@ var AssetAccordion = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("label", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.GetFont("roboto", "bold"),
+						Font:      co.OpenFont("mat:///roboto-bold.ttf"),
 						FontSize:  optional.Value(float32(18)),
 						FontColor: optional.Value(ui.Black()),
 						Text:      "Name:",

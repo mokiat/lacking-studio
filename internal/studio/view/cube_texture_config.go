@@ -48,7 +48,7 @@ var CubeTextureConfig = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("filtering-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
-					Font:      co.GetFont("roboto", "bold"),
+					Font:      co.OpenFont("mat:///roboto-bold.ttf"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(ui.Black()),
 					Text:      "Filtering:",
@@ -76,7 +76,7 @@ var CubeTextureConfig = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("data-format-label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
-					Font:      co.GetFont("roboto", "bold"),
+					Font:      co.OpenFont("mat:///roboto-bold.ttf"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(ui.Black()),
 					Text:      "Data Format:",

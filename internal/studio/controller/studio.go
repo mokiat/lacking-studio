@@ -253,8 +253,6 @@ func (s *Studio) editorIndex(editor model.Editor) int {
 var StudioView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 	controller := props.Data().(*Studio)
 
-	co.OpenFontCollection("resources/fonts/roboto.ttc")
-
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
 			BackgroundColor: optional.Value(mat.SurfaceColor),
