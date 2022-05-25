@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+
+  run:
+    cmds:
+      - go run './cmd/lacking' {{.CLI_ARGS}}
+
+  install:
+    cmds:
+      - go install github.com/mokiat/lacking-studio/cmd/lacking
