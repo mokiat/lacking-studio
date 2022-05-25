@@ -97,7 +97,7 @@ func (e *ModelEditor) Name() string {
 }
 
 func (e *ModelEditor) Icon() *ui.Image {
-	return co.OpenImage("resources/icons/model.png")
+	return co.OpenImage("icons/model.png")
 }
 
 func (e *ModelEditor) CanSave() bool {

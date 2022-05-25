@@ -333,7 +333,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("assets", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon: co.OpenImage("resources/icons/assets.png"),
+				Icon: co.OpenImage("icons/assets.png"),
 				Text: "Assets",
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -345,7 +345,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("save", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon:    co.OpenImage("resources/icons/save.png"),
+				Icon:    co.OpenImage("icons/save.png"),
 				Enabled: optional.Value(controller.SaveEnabled()),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -359,7 +359,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("undo", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon:    co.OpenImage("resources/icons/undo.png"),
+				Icon:    co.OpenImage("icons/undo.png"),
 				Enabled: optional.Value(controller.UndoEnabled()),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -371,7 +371,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("redo", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon:    co.OpenImage("resources/icons/redo.png"),
+				Icon:    co.OpenImage("icons/redo.png"),
 				Enabled: optional.Value(controller.RedoEnabled()),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -385,7 +385,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("properties", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon: co.OpenImage("resources/icons/properties.png"),
+				Icon: co.OpenImage("icons/properties.png"),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
 				OnClick: onPropertiesVisibleClicked,

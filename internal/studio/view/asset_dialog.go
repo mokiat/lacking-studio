@@ -64,7 +64,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("twod_texture", co.New(mat.ToolbarButton, func() {
 					co.WithData(mat.ToolbarButtonData{
-						Icon:     co.OpenImage("resources/icons/texture.png"),
+						Icon:     co.OpenImage("icons/texture.png"),
 						Text:     "2D Texture",
 						Selected: lifecycle.SelectedKind() == data.ResourceKindTwoDTexture,
 					})
@@ -77,7 +77,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("cube_texture", co.New(mat.ToolbarButton, func() {
 					co.WithData(mat.ToolbarButtonData{
-						Icon:     co.OpenImage("resources/icons/texture.png"),
+						Icon:     co.OpenImage("icons/texture.png"),
 						Text:     "Cube Texture",
 						Selected: lifecycle.SelectedKind() == data.ResourceKindCubeTexture,
 					})
@@ -90,7 +90,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("model", co.New(mat.ToolbarButton, func() {
 					co.WithData(mat.ToolbarButtonData{
-						Icon:     co.OpenImage("resources/icons/model.png"),
+						Icon:     co.OpenImage("icons/model.png"),
 						Text:     "Model",
 						Selected: lifecycle.SelectedKind() == data.ResourceKindModel,
 					})
@@ -104,7 +104,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				co.WithChild("scene", co.New(mat.ToolbarButton, func() {
 					co.WithData(mat.ToolbarButtonData{
 						Text:     "Scene",
-						Icon:     co.OpenImage("resources/icons/scene.png"),
+						Icon:     co.OpenImage("icons/scene.png"),
 						Selected: lifecycle.SelectedKind() == data.ResourceKindScene,
 					})
 					co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -232,7 +232,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("delete", co.New(mat.Button, func() {
 					co.WithData(mat.ButtonData{
-						Icon:    co.OpenImage("resources/icons/delete.png"),
+						Icon:    co.OpenImage("icons/delete.png"),
 						Text:    "Delete",
 						Enabled: optional.Value(lifecycle.SelectedResource() != nil),
 					})
@@ -247,7 +247,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("clone", co.New(mat.Button, func() {
 					co.WithData(mat.ButtonData{
-						Icon:    co.OpenImage("resources/icons/file-copy.png"),
+						Icon:    co.OpenImage("icons/file-copy.png"),
 						Text:    "Clone",
 						Enabled: optional.Value(lifecycle.SelectedResource() != nil),
 					})
@@ -267,7 +267,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("new", co.New(mat.Button, func() {
 					co.WithData(mat.ButtonData{
-						Icon: co.OpenImage("resources/icons/file-add.png"),
+						Icon: co.OpenImage("icons/file-add.png"),
 						Text: "New",
 					})
 
@@ -543,7 +543,7 @@ func (l *assetItemLifecycle) OnUpdate(props co.Properties) {
 	if data.PreviewImage != nil {
 		l.previewImage = co.CreateImage(data.PreviewImage)
 	}
-	l.defaultPreviewImage = co.OpenImage("resources/icons/broken-image.png")
+	l.defaultPreviewImage = co.OpenImage("icons/broken-image.png")
 	l.assetID = data.ID
 	l.assetKind = data.Kind
 	l.assetName = data.Name

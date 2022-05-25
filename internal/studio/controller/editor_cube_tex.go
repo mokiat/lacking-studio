@@ -78,7 +78,7 @@ func (e *CubeTextureEditor) Name() string {
 }
 
 func (e *CubeTextureEditor) Icon() *ui.Image {
-	return co.OpenImage("resources/icons/texture.png")
+	return co.OpenImage("icons/texture.png")
 }
 
 func (e *CubeTextureEditor) Save() error {

@@ -78,7 +78,7 @@ func (e *TwoDTextureEditor) Name() string {
 }
 
 func (e *TwoDTextureEditor) Icon() *ui.Image {
-	return co.OpenImage("resources/icons/texture.png")
+	return co.OpenImage("icons/texture.png")
 }
 
 func (e *TwoDTextureEditor) Save() error {
