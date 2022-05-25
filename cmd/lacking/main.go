@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	glapp "github.com/mokiat/lacking-gl/app"
 	glgame "github.com/mokiat/lacking-gl/game"
@@ -23,32 +22,22 @@ import (
 	"github.com/mokiat/lacking/util/resource"
 )
 
-var (
-	projectDirFlag string
-)
-
-func init() {
-	flag.StringVar(&projectDirFlag, "project", ".", "project directory")
-}
-
 func main() {
 	flag.Parse()
+	projectDir := "."
+	if flag.NArg() > 0 {
+		projectDir = flag.Arg(0)
+	}
 
 	log.Info("Starting studio")
-	if err := runApplication(); err != nil {
+	if err := runApplication(projectDir); err != nil {
 		log.Error("Studio crashed: %v", err)
 		os.Exit(1)
 	}
 	log.Info("Studio closed")
 }
 
-func runApplication() error {
-	projectDir, err := evalProjectDir()
-	if err != nil {
-		return fmt.Errorf("failed to evaluate project dir: %w", err)
-	}
-	log.Debug("Using project directory %q", projectDir)
-
+func runApplication(projectDir string) error {
 	registry, err := asset.NewDirRegistry(projectDir)
 	if err != nil {
 		return fmt.Errorf("failed to initialize registry: %w", err)
@@ -78,12 +67,4 @@ func runApplication() error {
 	)
 
 	return glapp.Run(cfg, controller)
-}
-
-func evalProjectDir() (string, error) {
-	absWorkDir, err := filepath.Abs(projectDirFlag)
-	if err != nil {
-		return "", fmt.Errorf("failed to get absolute project directory: %w", err)
-	}
-	return absWorkDir, nil
 }
