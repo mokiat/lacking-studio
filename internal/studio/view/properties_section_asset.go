@@ -10,13 +10,13 @@ import (
 	"github.com/mokiat/lacking/util/optional"
 )
 
-type AssetPropContentData struct {
+type AssetPropertiesSectionData struct {
 	Model      *model.Resource
 	Controller Controller
 }
 
-var AssetPropContent = co.Define(func(props co.Properties) co.Instance {
-	data := co.GetData[AssetPropContentData](props)
+var AssetPropertiesSection = co.Define(func(props co.Properties) co.Instance {
+	data := co.GetData[AssetPropertiesSectionData](props)
 	resource := data.Model
 	controller := data.Controller
 

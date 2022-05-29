@@ -5,6 +5,8 @@ import (
 	co "github.com/mokiat/lacking/ui/component"
 )
 
+// TODO: Move to ui/mvc when stable enough.
+
 func WithBinding(target observer.Target, filter observer.Filter) {
 	lifecycle := co.UseLifecycle(func(handle co.LifecycleHandle) *bindingLifecycle {
 		return &bindingLifecycle{

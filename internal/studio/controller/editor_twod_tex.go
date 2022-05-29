@@ -94,8 +94,8 @@ func (e *TwoDTextureEditor) Save() error {
 }
 
 func (e *TwoDTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
-	return co.New(view.TwoDTexture, func() {
-		co.WithData(view.TwoDTextureData{
+	return co.New(view.TwoDTextureEditor, func() {
+		co.WithData(view.TwoDTextureEditorData{
 			ResourceModel: e.texModel.Resource(),
 			TextureModel:  e.texModel,
 			EditorModel:   e.uiModel,

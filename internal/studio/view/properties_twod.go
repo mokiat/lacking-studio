@@ -46,13 +46,12 @@ var TwoDTextureProperties = co.Define(func(props co.Properties) co.Instance {
 			co.WithLayoutData(props.LayoutData())
 			co.WithCallbackData(mat.AccordionCallbackData{
 				OnToggle: func() {
-					// TODO: Go through an action
 					properties.SetAssetAccordionExpanded(!properties.IsAssetAccordionExpanded())
 				},
 			})
 
-			co.WithChild("content", co.New(AssetPropContent, func() {
-				co.WithData(AssetPropContentData{
+			co.WithChild("content", co.New(AssetPropertiesSection, func() {
+				co.WithData(AssetPropertiesSectionData{
 					Model:      data.ResourceModel,
 					Controller: data.Controller,
 				})
@@ -67,13 +66,12 @@ var TwoDTextureProperties = co.Define(func(props co.Properties) co.Instance {
 			co.WithLayoutData(props.LayoutData())
 			co.WithCallbackData(mat.AccordionCallbackData{
 				OnToggle: func() {
-					// TODO: Go through an action
 					properties.SetConfigAccordionExpanded(!properties.IsConfigAccordionExpanded())
 				},
 			})
 
-			co.WithChild("content", co.New(TwoDTextureConfigPropContent, func() {
-				co.WithData(TwoDTextureConfigPropContentData{
+			co.WithChild("content", co.New(TwoDTextureConfigPropertiesSection, func() {
+				co.WithData(TwoDTextureConfigPropertiesSectionData{
 					Texture:    data.TextureModel,
 					Controller: data.Controller,
 				})

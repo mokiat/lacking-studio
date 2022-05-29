@@ -10,7 +10,7 @@ import (
 	"github.com/mokiat/lacking/util/optional"
 )
 
-type TwoDTextureData struct {
+type TwoDTextureEditorData struct {
 	ResourceModel *model.Resource
 	TextureModel  *model.TwoDTexture
 	EditorModel   *model.TwoDTextureEditor
@@ -18,9 +18,9 @@ type TwoDTextureData struct {
 	Controller    Controller
 }
 
-var TwoDTexture = co.Define(func(props co.Properties) co.Instance {
+var TwoDTextureEditor = co.Define(func(props co.Properties) co.Instance {
 	var (
-		data        = co.GetData[TwoDTextureData](props)
+		data        = co.GetData[TwoDTextureEditorData](props)
 		editorModel = data.EditorModel
 		viz         = data.Visualization
 		controller  = data.Controller

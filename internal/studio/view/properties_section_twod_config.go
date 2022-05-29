@@ -11,14 +11,14 @@ import (
 	"github.com/mokiat/lacking/util/optional"
 )
 
-type TwoDTextureConfigPropContentData struct {
+type TwoDTextureConfigPropertiesSectionData struct {
 	Texture    *model.TwoDTexture
 	Controller Controller
 }
 
-var TwoDTextureConfigPropContent = co.Define(func(props co.Properties) co.Instance {
+var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties) co.Instance {
 	var (
-		data       = co.GetData[TwoDTextureConfigPropContentData](props)
+		data       = co.GetData[TwoDTextureConfigPropertiesSectionData](props)
 		texture    = data.Texture
 		controller = data.Controller
 	)
