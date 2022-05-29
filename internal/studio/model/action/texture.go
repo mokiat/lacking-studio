@@ -24,3 +24,18 @@ type ChangeTwoDTextureContentFromPath struct {
 	Texture *model.TwoDTexture
 	Path    string
 }
+
+type ChangeCubeTextureFiltering struct {
+	Texture   *model.CubeTexture
+	Filtering asset.FilterMode
+}
+
+type ChangeCubeTextureFormat struct {
+	Texture *model.CubeTexture
+	Format  asset.TexelFormat
+}
+
+type ChangeCubeTextureContentFromPath struct {
+	Texture *model.CubeTexture
+	Path    string
+}

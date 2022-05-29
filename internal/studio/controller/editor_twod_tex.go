@@ -5,7 +5,6 @@ import (
 	"image"
 	"os"
 
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
@@ -19,33 +18,13 @@ import (
 	"github.com/mokiat/lacking/ui/mat"
 )
 
-var (
-	// TODO: Move these to model package so that they are usable from other packages
-	TwoDTextureEditorChange                        = observer.NewChange("twod_texture_editor")
-	TwoDTextureEditorAssetAccordionExpandedChange  = observer.ExtChange(TwoDTextureEditorChange, "asset_accordion_expanded")
-	TwoDTextureEditorConfigAccordionExpandedChange = observer.ExtChange(TwoDTextureEditorChange, "config_accordion_expanded")
-)
-
 func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) *TwoDTextureEditor {
-	target := observer.NewTarget()
-	studioSubscription := observer.WireTargets(studio.Target(), target)
-	uiModel := model.NewTwoDTextureEditor()
-
 	return &TwoDTextureEditor{
-		BaseEditor: NewBaseEditor(),
-
-		target: target,
-
-		uiModel: uiModel,
-
-		studio:             studio,
-		studioSubscription: studioSubscription,
-		texModel:           texModel,
-
-		propsAssetExpanded:  false,
-		propsConfigExpanded: true,
-
-		viz: visualization.NewTwoDTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
+		BaseEditor:  NewBaseEditor(),
+		studio:      studio,
+		texModel:    texModel,
+		editorModel: model.NewTwoDTextureEditor(),
+		viz:         visualization.NewTwoDTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
 	}
 }
 
@@ -53,19 +32,10 @@ var _ model.Editor = (*TwoDTextureEditor)(nil)
 
 type TwoDTextureEditor struct {
 	BaseEditor
-
-	target observer.Target
-
-	uiModel *model.TwoDTextureEditor
-
-	studio             *Studio
-	studioSubscription observer.Subscription
-	texModel           *model.TwoDTexture
-
-	propsAssetExpanded  bool
-	propsConfigExpanded bool
-
-	viz *visualization.TwoDTexture
+	studio      *Studio
+	texModel    *model.TwoDTexture
+	editorModel *model.TwoDTextureEditor
+	viz         *visualization.TwoDTexture
 }
 
 func (e *TwoDTextureEditor) ID() string {
@@ -98,7 +68,7 @@ func (e *TwoDTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
 		co.WithData(view.TwoDTextureEditorData{
 			ResourceModel: e.texModel.Resource(),
 			TextureModel:  e.texModel,
-			EditorModel:   e.uiModel,
+			EditorModel:   e.editorModel,
 			Visualization: e.viz,
 			Controller:    e,
 		})
@@ -108,7 +78,6 @@ func (e *TwoDTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
 
 func (e *TwoDTextureEditor) Destroy() {
 	e.viz.Destroy()
-	e.studioSubscription.Delete()
 }
 
 func (e *TwoDTextureEditor) Dispatch(act interface{}) {

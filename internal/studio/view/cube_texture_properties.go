@@ -1,21 +1,30 @@
 package view
 
 import (
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
 
+type CubeTexturePropertiesData struct {
+	Model         *model.CubeTextureEditorProperties
+	ResourceModel *model.Resource
+	TextureModel  *model.CubeTexture
+	Controller    Controller
+}
+
 var CubeTextureProperties = co.Define(func(props co.Properties) co.Instance {
-	editor := props.Data().(model.CubeTextureEditor)
+	data := co.GetData[CubeTexturePropertiesData](props)
+	properties := data.Model
 
-	// WithNotifications(editor.Target(), func(change observer.Change) bool {
-	// 	return true // TODO
-	// })
+	WithBinding(properties, func(change observer.Change) bool {
+		return true
+	})
 
-	return co.New(mat.Container, func() {
-		co.WithData(mat.ContainerData{
+	return co.New(mat.Element, func() {
+		co.WithData(mat.ElementData{
 			Padding: ui.Spacing{
 				Left:   5,
 				Right:  5,
@@ -32,28 +41,41 @@ var CubeTextureProperties = co.Define(func(props co.Properties) co.Instance {
 		co.WithChild("asset", co.New(mat.Accordion, func() {
 			co.WithData(mat.AccordionData{
 				Title:    "Asset",
-				Expanded: editor.IsAssetAccordionExpanded(),
+				Expanded: properties.IsAssetAccordionExpanded(),
 			})
 			co.WithLayoutData(props.LayoutData())
 			co.WithCallbackData(mat.AccordionCallbackData{
 				OnToggle: func() {
-					editor.SetAssetAccordionExpanded(!editor.IsAssetAccordionExpanded())
+					properties.SetAssetAccordionExpanded(!properties.IsAssetAccordionExpanded())
 				},
 			})
 
-			// co.WithChild("content", co.New(AssetPropContent, func() {
-			// 	co.WithData(AssetPropContentData{
-			// 		Model:      data.ResourceModel,
-			// 		Controller: data.Controller,
-			// 	})
-			// }))
+			co.WithChild("content", co.New(AssetPropertiesSection, func() {
+				co.WithData(AssetPropertiesSectionData{
+					Model:      data.ResourceModel,
+					Controller: data.Controller,
+				})
+			}))
 		}))
 
-		co.WithChild("config", co.New(CubeTextureConfig, func() {
-			co.WithData(editor)
-			co.WithLayoutData(mat.LayoutData{
-				GrowHorizontally: true,
+		co.WithChild("config", co.New(mat.Accordion, func() {
+			co.WithData(mat.AccordionData{
+				Title:    "Config",
+				Expanded: properties.IsConfigAccordionExpanded(),
 			})
+			co.WithLayoutData(props.LayoutData())
+			co.WithCallbackData(mat.AccordionCallbackData{
+				OnToggle: func() {
+					properties.SetConfigAccordionExpanded(!properties.IsConfigAccordionExpanded())
+				},
+			})
+
+			co.WithChild("content", co.New(CubeTextureConfigPropertiesSection, func() {
+				co.WithData(CubeTextureConfigPropertiesSectionData{
+					Texture:    data.TextureModel,
+					Controller: data.Controller,
+				})
+			}))
 		}))
 	})
 })

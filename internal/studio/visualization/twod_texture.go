@@ -206,8 +206,8 @@ func (t *TwoDTexture) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
 }
 
 func (t *TwoDTexture) Destroy() {
-	t.deleteGraphicsRepresentation()
 	t.unsubscribeFromModel()
+	t.deleteGraphicsRepresentation()
 	t.scene.Delete()
 }
 

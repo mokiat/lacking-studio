@@ -13,7 +13,7 @@ import (
 	"github.com/mokiat/lacking/util/optional"
 )
 
-var Model = co.Define(func(props co.Properties) co.Instance {
+var ModelEditor = co.Define(func(props co.Properties) co.Instance {
 	editor := props.Data().(model.ModelEditor)
 
 	return co.New(mat.Container, func() {

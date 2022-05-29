@@ -5,9 +5,9 @@ import (
 	"image"
 	"os"
 
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
+	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking-studio/internal/studio/model/change"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/visualization"
@@ -18,52 +18,24 @@ import (
 	"github.com/mokiat/lacking/ui/mat"
 )
 
-var (
-	// TODO: Move these to model package so that they are usable from other packages
-	CubeTextureEditorChange                        = observer.NewChange("cube_texture_editor")
-	CubeTextureEditorAssetAccordionExpandedChange  = observer.ExtChange(CubeTextureEditorChange, "asset_accordion_expanded")
-	CubeTextureEditorConfigAccordionExpandedChange = observer.ExtChange(CubeTextureEditorChange, "config_accordion_expanded")
-)
-
 func NewCubeTextureEditor(studio *Studio, texModel *model.CubeTexture) *CubeTextureEditor {
-	target := observer.NewTarget()
-	studioSubscription := observer.WireTargets(studio.Target(), target)
-
 	return &CubeTextureEditor{
-		BaseEditor: NewBaseEditor(),
-
-		target: target,
-
-		studio:             studio,
-		studioSubscription: studioSubscription,
-		texModel:           texModel,
-
-		propsAssetExpanded:  false,
-		propsConfigExpanded: true,
-
-		viz: visualization.NewCubeTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
+		BaseEditor:  NewBaseEditor(),
+		studio:      studio,
+		texModel:    texModel,
+		editorModel: model.NewCubeTextureEditor(),
+		viz:         visualization.NewCubeTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
 	}
 }
 
-var _ model.CubeTextureEditor = (*CubeTextureEditor)(nil)
+var _ model.Editor = (*CubeTextureEditor)(nil)
 
 type CubeTextureEditor struct {
 	BaseEditor
-
-	target observer.Target
-
-	studio             *Studio
-	studioSubscription observer.Subscription
-	texModel           *model.CubeTexture
-
-	propsAssetExpanded  bool
-	propsConfigExpanded bool
-
-	viz *visualization.CubeTexture
-}
-
-func (e *CubeTextureEditor) Target() observer.Target {
-	return e.target
+	studio      *Studio
+	texModel    *model.CubeTexture
+	editorModel *model.CubeTextureEditor
+	viz         *visualization.CubeTexture
 }
 
 func (e *CubeTextureEditor) ID() string {
@@ -92,64 +64,68 @@ func (e *CubeTextureEditor) Save() error {
 }
 
 func (e *CubeTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
-	return co.New(view.CubeTexture, func() {
-		co.WithData(e)
+	return co.New(view.CubeTextureEditor, func() {
+		co.WithData(view.CubeTextureEditorData{
+			ResourceModel: e.texModel.Resource(),
+			TextureModel:  e.texModel,
+			EditorModel:   e.editorModel,
+			Visualization: e.viz,
+			Controller:    e,
+		})
 		co.WithLayoutData(layoutData)
 	})
 }
 
 func (e *CubeTextureEditor) Destroy() {
 	e.viz.Destroy()
-	e.studioSubscription.Delete()
 }
 
-func (e *CubeTextureEditor) IsPropertiesVisible() bool {
-	// TODO: Figure out how to untie this. Either create subscription hell
-	// or maybe allow editors to create their own toolbar buttons in the studio.
-	return e.studio.IsPropertiesVisible()
+func (e *CubeTextureEditor) Dispatch(act interface{}) {
+	switch act := act.(type) {
+	case action.ChangeResourceName:
+		e.changeResourceName(act.Name)
+	case action.ChangeCubeTextureFiltering:
+		e.changeFiltering(act.Filtering)
+	case action.ChangeCubeTextureFormat:
+		e.changeFormat(act.Format)
+	case action.ChangeCubeTextureContentFromPath:
+		e.changeContentFromPath(act.Path)
+	default:
+		e.studio.Dispatch(act)
+	}
 }
 
-func (e *CubeTextureEditor) IsAssetAccordionExpanded() bool {
-	return e.propsAssetExpanded
-}
-
-func (e *CubeTextureEditor) SetAssetAccordionExpanded(expanded bool) {
-	e.propsAssetExpanded = expanded
-	e.target.SignalChange(TwoDTextureEditorAssetAccordionExpandedChange)
-}
-
-func (e *CubeTextureEditor) IsConfigAccordionExpanded() bool {
-	return e.propsConfigExpanded
-}
-
-func (e *CubeTextureEditor) SetConfigAccordionExpanded(expanded bool) {
-	e.propsConfigExpanded = expanded
-	e.target.SignalChange(TwoDTextureEditorConfigAccordionExpandedChange)
-}
-
-func (e *CubeTextureEditor) Filtering() asset.FilterMode {
-	return e.texModel.Filtering()
-}
-
-func (e *CubeTextureEditor) DataFormat() asset.TexelFormat {
-	return e.texModel.Format()
-}
-
-func (e *CubeTextureEditor) ChangeName(newName string) {
-	// e.changes.Push(change.ResourceName(e.texModel,
-	// 	change.ResourceNameState{
-	// 		Value: e.texModel.Name(),
-	// 	},
-	// 	change.ResourceNameState{
-	// 		Value: newName,
-	// 	},
-	// ))
+func (e *CubeTextureEditor) changeResourceName(name string) {
+	e.changes.Push(change.Name(e.texModel.Resource(),
+		change.NameState{
+			Value: e.texModel.Resource().Name(),
+		},
+		change.NameState{
+			Value: name,
+		},
+	))
 
 	// FIXME: Figure out how to avoid this:
 	e.studio.NotifyChanged()
 }
 
-func (e *CubeTextureEditor) ChangeContent(path string) {
+func (e *CubeTextureEditor) changeFiltering(filter asset.FilterMode) {
+	e.changes.Push(change.Filtering(
+		e.texModel,
+		change.FilteringState{
+			Value: e.texModel.Filtering(),
+		},
+		change.FilteringState{
+			Value: filter,
+		},
+	))
+}
+
+func (e *CubeTextureEditor) changeFormat(format asset.TexelFormat) {
+	// TODO
+}
+
+func (e *CubeTextureEditor) changeContentFromPath(path string) {
 	img, err := e.openImage(path)
 	if err != nil {
 		e.studio.HandleError(fmt.Errorf("failed to open source image: %w", err))
@@ -198,32 +174,15 @@ func (e *CubeTextureEditor) ChangeContent(path string) {
 	}
 }
 
-func (e *CubeTextureEditor) ChangeFiltering(filter asset.FilterMode) {
-	e.changes.Push(change.Filtering(
-		e.texModel,
-		change.FilteringState{
-			Value: e.texModel.Filtering(),
-		},
-		change.FilteringState{
-			Value: filter,
-		},
-	))
-}
-
-func (e *CubeTextureEditor) ChangeDataFormat(format asset.TexelFormat) {
-	// TODO
-}
-
-func (e *CubeTextureEditor) Visualization() model.Visualization {
-	return e.viz
-}
-
 func (e *CubeTextureEditor) openImage(path string) (image.Image, error) {
 	in, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open image resource: %w", err)
 	}
 	defer in.Close()
+
+	// TODO: Register image decoders above and ideally move this to
+	// a util package.
 
 	img, _, err := image.Decode(in)
 	if err != nil {

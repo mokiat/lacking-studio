@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/mokiat/gomath/sprec"
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/render"
@@ -36,11 +37,13 @@ func NewCubeTexture(api render.API, engine *graphics.Engine, texModel *model.Cub
 		cameraFoV:   sprec.Degrees(66),
 	}
 	result.createGraphicsRepresentation()
+	result.subscribeToModel()
 	return result
 }
 
 type CubeTexture struct {
-	texModel *model.CubeTexture
+	texModel        *model.CubeTexture
+	texSubscription observer.Subscription
 
 	api         render.API
 	engine      *graphics.Engine
@@ -190,8 +193,20 @@ func (t *CubeTexture) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
 }
 
 func (t *CubeTexture) Destroy() {
+	t.unsubscribeFromModel()
 	t.deleteGraphicsRepresentation()
 	t.scene.Delete()
+}
+
+func (t *CubeTexture) subscribeToModel() {
+	t.texSubscription = t.texModel.Subscribe(func(ch observer.Change) {
+		t.deleteGraphicsRepresentation()
+		t.createGraphicsRepresentation()
+	})
+}
+
+func (t *CubeTexture) unsubscribeFromModel() {
+	t.texSubscription.Delete()
 }
 
 func (t *CubeTexture) createGraphicsRepresentation() {

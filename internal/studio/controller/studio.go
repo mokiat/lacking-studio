@@ -214,11 +214,7 @@ func (s *Studio) OpenAsset(id string) {
 		}
 		s.OpenEditor(NewCubeTextureEditor(s, texModel))
 	case data.ResourceKindModel:
-		editor, err := NewModelEditor(s, resource)
-		if err != nil {
-			panic(err) // TODO
-		}
-		s.OpenEditor(editor)
+		log.Println("TODO")
 	case data.ResourceKindScene:
 		log.Println("TODO")
 	}

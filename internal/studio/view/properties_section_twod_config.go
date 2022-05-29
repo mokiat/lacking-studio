@@ -27,21 +27,21 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties) co.
 		return true // TODO
 	})
 
-	return co.New(mat.Container, func() {
-		co.WithLayoutData(mat.LayoutData{
-			GrowHorizontally: true,
-		})
-		co.WithData(mat.ContainerData{
-			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-				ContentAlignment: mat.AlignmentLeft,
-				ContentSpacing:   5,
-			}),
+	return co.New(mat.Element, func() {
+		co.WithData(mat.ElementData{
 			Padding: ui.Spacing{
 				Left:   5,
 				Right:  5,
 				Top:    5,
 				Bottom: 5,
 			},
+			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
+				ContentAlignment: mat.AlignmentLeft,
+				ContentSpacing:   5,
+			}),
+		})
+		co.WithLayoutData(mat.LayoutData{
+			GrowHorizontally: true,
 		})
 
 		co.WithChild("wrapping-label", co.New(mat.Label, func() {

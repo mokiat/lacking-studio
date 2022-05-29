@@ -1,22 +1,34 @@
 package view
 
 import (
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
+	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/util/optional"
 )
 
-var CubeTexture = co.Define(func(props co.Properties) co.Instance {
-	editor := props.Data().(model.CubeTextureEditor)
+type CubeTextureEditorData struct {
+	ResourceModel *model.Resource
+	TextureModel  *model.CubeTexture
+	EditorModel   *model.CubeTextureEditor
+	Visualization model.Visualization
+	Controller    Controller
+}
 
-	// WithBinding(editor.Target(), func(change observer.Change) bool {
-	// 	fmt.Println("CHANGE:", change.Description())
-	// 	return true // TODO
-	// })
+var CubeTextureEditor = co.Define(func(props co.Properties) co.Instance {
+	var (
+		data        = co.GetData[CubeTextureEditorData](props)
+		editorModel = data.EditorModel
+		viz         = data.Visualization
+		controller  = data.Controller
+	)
 
-	viz := editor.Visualization()
+	WithBinding(editorModel, func(change observer.Change) bool {
+		return true
+	})
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
@@ -28,7 +40,10 @@ var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 		co.WithChild("center", co.New(mat.DropZone, func() {
 			co.WithCallbackData(mat.DropZoneCallbackData{
 				OnDrop: func(paths []string) bool {
-					editor.ChangeContent(paths[0])
+					controller.Dispatch(action.ChangeCubeTextureContentFromPath{
+						Texture: data.TextureModel,
+						Path:    paths[0],
+					})
 					return true
 				},
 			})
@@ -47,9 +62,14 @@ var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 			}))
 		}))
 
-		if editor.IsPropertiesVisible() {
+		if editorModel.IsPropertiesVisible() {
 			co.WithChild("right", co.New(CubeTextureProperties, func() {
-				co.WithData(editor)
+				co.WithData(CubeTexturePropertiesData{
+					Model:         editorModel.Properties(),
+					ResourceModel: data.ResourceModel,
+					TextureModel:  data.TextureModel,
+					Controller:    data.Controller,
+				})
 				co.WithLayoutData(mat.LayoutData{
 					Alignment: mat.AlignmentRight,
 					Width:     optional.Value(500),
