@@ -1,55 +1,34 @@
 package view
 
 import (
-	"fmt"
-
 	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
+	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/util/optional"
 )
 
-type notifLifecycle struct {
-	co.BaseLifecycle
-	target       *observer.Target
-	filter       func(change observer.Change) bool
-	handle       co.LifecycleHandle
-	subscription *observer.Subscription
-}
-
-func (l *notifLifecycle) OnCreate(props co.Properties) {
-	l.subscription = l.target.Subscribe(func(change observer.Change) {
-		if l.filter(change) {
-			l.handle.NotifyChanged()
-		}
-	})
-}
-
-func (l *notifLifecycle) OnDestroy() {
-	l.subscription.Delete()
-}
-
-func WithNotifications(target *observer.Target, filter func(change observer.Change) bool) {
-	co.UseLifecycle(func(handle co.LifecycleHandle) *notifLifecycle {
-		return &notifLifecycle{
-			target: target,
-			filter: filter,
-			handle: handle,
-		}
-	})
+type TwoDTextureData struct {
+	ResourceModel *model.Resource
+	TextureModel  *model.TwoDTexture
+	EditorModel   *model.TwoDTextureEditor
+	Visualization model.Visualization
+	Controller    Controller
 }
 
 var TwoDTexture = co.Define(func(props co.Properties) co.Instance {
-	editor := props.Data().(model.TwoDTextureEditor)
+	var (
+		data        = co.GetData[TwoDTextureData](props)
+		editorModel = data.EditorModel
+		viz         = data.Visualization
+		controller  = data.Controller
+	)
 
-	WithNotifications(editor.Target(), func(change observer.Change) bool {
-		fmt.Println("CHANGE:", change.Description())
-		return true // TODO
+	WithBinding(editorModel, func(change observer.Change) bool {
+		return true
 	})
-
-	viz := editor.Visualization()
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
@@ -61,7 +40,10 @@ var TwoDTexture = co.Define(func(props co.Properties) co.Instance {
 		co.WithChild("center", co.New(mat.DropZone, func() {
 			co.WithCallbackData(mat.DropZoneCallbackData{
 				OnDrop: func(paths []string) bool {
-					editor.ChangeContent(paths[0])
+					controller.Dispatch(action.ChangeTwoDTextureContentFromPath{
+						Texture: data.TextureModel,
+						Path:    paths[0],
+					})
 					return true
 				},
 			})
@@ -80,9 +62,14 @@ var TwoDTexture = co.Define(func(props co.Properties) co.Instance {
 			}))
 		}))
 
-		if editor.IsPropertiesVisible() {
+		if editorModel.IsPropertiesVisible() {
 			co.WithChild("right", co.New(TwoDTextureProperties, func() {
-				co.WithData(editor)
+				co.WithData(TwoDTexturePropertiesData{
+					Model:         editorModel.Properties(),
+					ResourceModel: data.ResourceModel,
+					TextureModel:  data.TextureModel,
+					Controller:    data.Controller,
+				})
 				co.WithLayoutData(mat.LayoutData{
 					Alignment: mat.AlignmentRight,
 					Width:     optional.Value(500),

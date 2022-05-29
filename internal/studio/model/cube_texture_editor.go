@@ -8,7 +8,7 @@ import (
 type CubeTextureEditor interface {
 	Editor
 
-	Target() *observer.Target
+	Target() observer.Target
 
 	IsPropertiesVisible() bool
 	IsAssetAccordionExpanded() bool

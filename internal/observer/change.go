@@ -6,7 +6,7 @@ type Change interface {
 	Description() string
 }
 
-func StringChange(description string) Change {
+func NewChange(description string) Change {
 	return &stringChange{
 		description: description,
 	}
@@ -20,28 +20,48 @@ func (c *stringChange) Description() string {
 	return c.description
 }
 
-func ExtendChange(parent, current Change) Change {
+func ExtChange(parent Change, description string) Change {
 	return &extendedChange{
-		parent:  parent,
-		current: current,
+		parent:      parent,
+		description: description,
 	}
 }
 
 type extendedChange struct {
-	parent  Change
-	current Change
+	parent      Change
+	description string
 }
 
 func (c *extendedChange) Description() string {
-	return fmt.Sprintf("%s: %s", c.parent.Description(), c.current.Description())
+	return fmt.Sprintf("%s: %s", c.parent.Description(), c.description)
 }
 
 func (c *extendedChange) Is(target Change) bool {
-	if c == target {
-		return true
-	}
-	return IsChange(c.current, target) || IsChange(c.parent, target)
+	return (c == target) || IsChange(c.parent, target)
 }
+
+// func ExtendChange(parent, current Change) Change {
+// 	return &extendedChange{
+// 		parent:  parent,
+// 		current: current,
+// 	}
+// }
+
+// type extendedChange struct {
+// 	parent  Change
+// 	current Change
+// }
+
+// func (c *extendedChange) Description() string {
+// 	return fmt.Sprintf("%s: %s", c.parent.Description(), c.current.Description())
+// }
+
+// func (c *extendedChange) Is(target Change) bool {
+// 	if c == target {
+// 		return true
+// 	}
+// 	return IsChange(c.current, target) || IsChange(c.parent, target)
+// }
 
 type MultiChange struct {
 	Changes []Change

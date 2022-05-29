@@ -11,15 +11,14 @@ import (
 )
 
 var (
-	CubeTextureChange                = observer.StringChange("twod_texture")
-	CubeTextureNameChange            = observer.ExtendChange(CubeTextureChange, NameChange)
-	CubeTextureFilteringChange       = observer.ExtendChange(CubeTextureChange, observer.StringChange("filtering"))
-	CubeTextureDimensionChange       = observer.ExtendChange(CubeTextureChange, observer.StringChange("dimension"))
-	CubeTextureFormatChange          = observer.ExtendChange(CubeTextureChange, observer.StringChange("format"))
-	CubeTextureMipmappingChange      = observer.ExtendChange(CubeTextureChange, observer.StringChange("mipmapping"))
-	CubeTextureGammaCorrectionChange = observer.ExtendChange(CubeTextureChange, observer.StringChange("gamma_correction"))
-	CubeTextureDataChange            = observer.ExtendChange(CubeTextureChange, observer.StringChange("data"))
-	CubeTexturePreviewChange         = observer.ExtendChange(CubeTextureChange, observer.StringChange("preview"))
+	ChangeCubeTexture                = observer.NewChange("twod_texture")
+	ChangeCubeTextureFiltering       = observer.ExtChange(ChangeCubeTexture, "filtering")
+	ChangeCubeTextureDimension       = observer.ExtChange(ChangeCubeTexture, "dimension")
+	ChangeCubeTextureFormat          = observer.ExtChange(ChangeCubeTexture, "format")
+	ChangeCubeTextureMipmapping      = observer.ExtChange(ChangeCubeTexture, "mipmapping")
+	ChangeCubeTextureGammaCorrection = observer.ExtChange(ChangeCubeTexture, "gamma_correction")
+	ChangeCubeTextureData            = observer.ExtChange(ChangeCubeTexture, "data")
+	ChangeCubeTexturePreview         = observer.ExtChange(ChangeCubeTexture, "preview")
 )
 
 func CreateCubeTexture(registry *data.Registry) (*CubeTexture, error) {
@@ -59,10 +58,11 @@ func CreateCubeTexture(registry *data.Registry) (*CubeTexture, error) {
 		return nil, fmt.Errorf("error saving content: %w", err)
 	}
 	return &CubeTexture{
-		target:     observer.NewTarget(),
-		resource:   resource,
-		texAsset:   texAsset,
-		previewImg: previewImg,
+		Target:        observer.NewTarget(),
+		resource:      resource,
+		resourceModel: NewResource(resource),
+		texAsset:      texAsset,
+		previewImg:    previewImg,
 	}, nil
 }
 
@@ -80,39 +80,24 @@ func OpenCubeTexture(registry *data.Registry, id string) (*CubeTexture, error) {
 		previewImg = nil
 	}
 	return &CubeTexture{
-		target:     observer.NewTarget(),
-		resource:   resource,
-		texAsset:   texAsset,
-		previewImg: previewImg,
+		Target:        observer.NewTarget(),
+		resource:      resource,
+		resourceModel: NewResource(resource),
+		texAsset:      texAsset,
+		previewImg:    previewImg,
 	}, nil
 }
 
 type CubeTexture struct {
-	target     *observer.Target
-	resource   *data.Resource
-	texAsset   *asset.CubeTexture
-	previewImg image.Image
+	observer.Target
+	resource      *data.Resource
+	resourceModel *Resource
+	texAsset      *asset.CubeTexture
+	previewImg    image.Image
 }
 
-func (t *CubeTexture) Target() *observer.Target {
-	return t.target
-}
-
-func (t *CubeTexture) ID() string {
-	return t.resource.ID()
-}
-
-func (t *CubeTexture) Name() string {
-	return t.resource.Name()
-}
-
-func (t *CubeTexture) SetName(name string) {
-	t.resource.SetName(name)
-	t.target.SignalChange(CubeTextureNameChange)
-}
-
-func (t *CubeTexture) Kind() data.ResourceKind {
-	return t.resource.Kind()
+func (t *CubeTexture) Resource() *Resource {
+	return t.resourceModel
 }
 
 func (t *CubeTexture) Filtering() asset.FilterMode {
@@ -121,7 +106,7 @@ func (t *CubeTexture) Filtering() asset.FilterMode {
 
 func (t *CubeTexture) SetFiltering(filtering asset.FilterMode) {
 	t.texAsset.Filtering = filtering
-	t.target.SignalChange(CubeTextureFilteringChange)
+	t.SignalChange(ChangeCubeTextureFiltering)
 }
 
 func (t *CubeTexture) Dimension() int {
@@ -130,7 +115,7 @@ func (t *CubeTexture) Dimension() int {
 
 func (t *CubeTexture) SetDimension(dimesion int) {
 	t.texAsset.Dimension = uint16(dimesion)
-	t.target.SignalChange(CubeTextureDimensionChange)
+	t.SignalChange(ChangeCubeTextureDimension)
 }
 
 func (t *CubeTexture) Format() asset.TexelFormat {
@@ -139,7 +124,7 @@ func (t *CubeTexture) Format() asset.TexelFormat {
 
 func (t *CubeTexture) SetFormat(format asset.TexelFormat) {
 	t.texAsset.Format = format
-	t.target.SignalChange(CubeTextureFormatChange)
+	t.SignalChange(ChangeCubeTextureFormat)
 }
 
 func (t *CubeTexture) Mipmapping() bool {
@@ -152,7 +137,7 @@ func (t *CubeTexture) SetMipmapping(mipmapping bool) {
 	} else {
 		t.texAsset.Flags &= ^asset.TextureFlagMipmapping
 	}
-	t.target.SignalChange(CubeTextureMipmappingChange)
+	t.SignalChange(ChangeCubeTextureMipmapping)
 }
 
 func (t *CubeTexture) GammaCorrection() bool {
@@ -165,7 +150,7 @@ func (t *CubeTexture) SetGammaCorrection(correction bool) {
 	} else {
 		t.texAsset.Flags |= asset.TextureFlagLinear
 	}
-	t.target.SignalChange(CubeTextureGammaCorrectionChange)
+	t.SignalChange(ChangeCubeTextureGammaCorrection)
 }
 
 func (t *CubeTexture) FrontData() []byte {
@@ -174,7 +159,7 @@ func (t *CubeTexture) FrontData() []byte {
 
 func (t *CubeTexture) SetFrontData(data []byte) {
 	t.texAsset.FrontSide.Data = data
-	t.target.SignalChange(CubeTextureDataChange)
+	t.SignalChange(ChangeCubeTextureData)
 }
 
 func (t *CubeTexture) BackData() []byte {
@@ -183,7 +168,7 @@ func (t *CubeTexture) BackData() []byte {
 
 func (t *CubeTexture) SetBackData(data []byte) {
 	t.texAsset.BackSide.Data = data
-	t.target.SignalChange(CubeTextureDataChange)
+	t.SignalChange(ChangeCubeTextureData)
 }
 
 func (t *CubeTexture) LeftData() []byte {
@@ -192,7 +177,7 @@ func (t *CubeTexture) LeftData() []byte {
 
 func (t *CubeTexture) SetLeftData(data []byte) {
 	t.texAsset.LeftSide.Data = data
-	t.target.SignalChange(CubeTextureDataChange)
+	t.SignalChange(ChangeCubeTextureData)
 }
 
 func (t *CubeTexture) RightData() []byte {
@@ -201,7 +186,7 @@ func (t *CubeTexture) RightData() []byte {
 
 func (t *CubeTexture) SetRightData(data []byte) {
 	t.texAsset.RightSide.Data = data
-	t.target.SignalChange(CubeTextureDataChange)
+	t.SignalChange(ChangeCubeTextureData)
 }
 
 func (t *CubeTexture) TopData() []byte {
@@ -210,7 +195,7 @@ func (t *CubeTexture) TopData() []byte {
 
 func (t *CubeTexture) SetTopData(data []byte) {
 	t.texAsset.TopSide.Data = data
-	t.target.SignalChange(CubeTextureDataChange)
+	t.SignalChange(ChangeCubeTextureData)
 }
 
 func (t *CubeTexture) BottomData() []byte {
@@ -219,7 +204,7 @@ func (t *CubeTexture) BottomData() []byte {
 
 func (t *CubeTexture) SetBottomData(data []byte) {
 	t.texAsset.BottomSide.Data = data
-	t.target.SignalChange(CubeTextureDataChange)
+	t.SignalChange(ChangeCubeTextureData)
 }
 
 func (t *CubeTexture) PreviewImage() image.Image {
@@ -228,7 +213,7 @@ func (t *CubeTexture) PreviewImage() image.Image {
 
 func (t *CubeTexture) SetPreviewImage(img image.Image) {
 	t.previewImg = img
-	t.target.SignalChange(CubeTexturePreviewChange)
+	t.SignalChange(ChangeCubeTexturePreview)
 }
 
 func (t *CubeTexture) Save() error {

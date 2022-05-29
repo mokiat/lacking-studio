@@ -1,9 +1,6 @@
 package view
 
 import (
-	"fmt"
-
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
@@ -14,10 +11,10 @@ import (
 var CubeTexture = co.Define(func(props co.Properties) co.Instance {
 	editor := props.Data().(model.CubeTextureEditor)
 
-	WithNotifications(editor.Target(), func(change observer.Change) bool {
-		fmt.Println("CHANGE:", change.Description())
-		return true // TODO
-	})
+	// WithBinding(editor.Target(), func(change observer.Change) bool {
+	// 	fmt.Println("CHANGE:", change.Description())
+	// 	return true // TODO
+	// })
 
 	viz := editor.Visualization()
 

@@ -3,38 +3,38 @@ package model
 import (
 	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
-	"github.com/mokiat/lacking/game/asset"
 )
 
 var (
-	// NOTE: This allows for example the studio to subscribe for name changes only
-	// for an editor.
-	NameChange = observer.StringChange("name")
+	ChangeResource     = observer.NewChange("resource")
+	ChangeResourceName = observer.ExtChange(ChangeResource, "name")
 )
 
-type Resource interface {
-	ID() string
-	Name() string
-	SetName(name string)
-	Kind() data.ResourceKind
+func NewResource(resource *data.Resource) *Resource {
+	return &Resource{
+		Target:   observer.NewTarget(),
+		resource: resource,
+	}
 }
 
-type Wrappable interface {
-	Wrapping() asset.WrapMode
-	SetWrapping(asset.WrapMode)
+type Resource struct {
+	observer.Target
+	resource *data.Resource
 }
 
-type Filterable interface {
-	Filtering() asset.FilterMode
-	SetFiltering(asset.FilterMode)
+func (r *Resource) ID() string {
+	return r.resource.ID()
 }
 
-type Mipmappable interface {
-	Mipmapping() bool
-	SetMipmapping(bool)
+func (r *Resource) Name() string {
+	return r.resource.Name()
 }
 
-type GammaCorrectable interface {
-	GammaCorrection() bool
-	SetGammaCorrection(bool)
+func (r *Resource) SetName(name string) {
+	r.resource.SetName(name)
+	r.SignalChange(ChangeResourceName)
+}
+
+func (r *Resource) Kind() data.ResourceKind {
+	return r.resource.Kind()
 }

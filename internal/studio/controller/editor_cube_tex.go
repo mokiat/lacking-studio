@@ -20,25 +20,23 @@ import (
 
 var (
 	// TODO: Move these to model package so that they are usable from other packages
-	CubeTextureEditorChange                        = observer.StringChange("cube_texture_editor")
-	CubeTextureEditorAssetAccordionExpandedChange  = observer.ExtendChange(CubeTextureEditorChange, observer.StringChange("asset_accordion_expanded"))
-	CubeTextureEditorConfigAccordionExpandedChange = observer.ExtendChange(CubeTextureEditorChange, observer.StringChange("config_accordion_expanded"))
+	CubeTextureEditorChange                        = observer.NewChange("cube_texture_editor")
+	CubeTextureEditorAssetAccordionExpandedChange  = observer.ExtChange(CubeTextureEditorChange, "asset_accordion_expanded")
+	CubeTextureEditorConfigAccordionExpandedChange = observer.ExtChange(CubeTextureEditorChange, "config_accordion_expanded")
 )
 
 func NewCubeTextureEditor(studio *Studio, texModel *model.CubeTexture) *CubeTextureEditor {
 	target := observer.NewTarget()
 	studioSubscription := observer.WireTargets(studio.Target(), target)
-	texModelSubscription := observer.WireTargets(texModel.Target(), target)
 
 	return &CubeTextureEditor{
 		BaseEditor: NewBaseEditor(),
 
 		target: target,
 
-		studio:               studio,
-		studioSubscription:   studioSubscription,
-		texModel:             texModel,
-		texModelSubscription: texModelSubscription,
+		studio:             studio,
+		studioSubscription: studioSubscription,
+		texModel:           texModel,
 
 		propsAssetExpanded:  false,
 		propsConfigExpanded: true,
@@ -52,12 +50,11 @@ var _ model.CubeTextureEditor = (*CubeTextureEditor)(nil)
 type CubeTextureEditor struct {
 	BaseEditor
 
-	target *observer.Target
+	target observer.Target
 
-	studio               *Studio
-	studioSubscription   *observer.Subscription
-	texModel             *model.CubeTexture
-	texModelSubscription *observer.Subscription
+	studio             *Studio
+	studioSubscription observer.Subscription
+	texModel           *model.CubeTexture
 
 	propsAssetExpanded  bool
 	propsConfigExpanded bool
@@ -65,16 +62,16 @@ type CubeTextureEditor struct {
 	viz *visualization.CubeTexture
 }
 
-func (e *CubeTextureEditor) Target() *observer.Target {
+func (e *CubeTextureEditor) Target() observer.Target {
 	return e.target
 }
 
 func (e *CubeTextureEditor) ID() string {
-	return e.texModel.ID()
+	return e.texModel.Resource().ID()
 }
 
 func (e *CubeTextureEditor) Name() string {
-	return e.texModel.Name()
+	return e.texModel.Resource().Name()
 }
 
 func (e *CubeTextureEditor) Icon() *ui.Image {
@@ -103,7 +100,6 @@ func (e *CubeTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
 
 func (e *CubeTextureEditor) Destroy() {
 	e.viz.Destroy()
-	e.texModelSubscription.Delete()
 	e.studioSubscription.Delete()
 }
 
@@ -140,14 +136,14 @@ func (e *CubeTextureEditor) DataFormat() asset.TexelFormat {
 }
 
 func (e *CubeTextureEditor) ChangeName(newName string) {
-	e.changes.Push(change.ResourceName(e.texModel,
-		change.ResourceNameState{
-			Value: e.texModel.Name(),
-		},
-		change.ResourceNameState{
-			Value: newName,
-		},
-	))
+	// e.changes.Push(change.ResourceName(e.texModel,
+	// 	change.ResourceNameState{
+	// 		Value: e.texModel.Name(),
+	// 	},
+	// 	change.ResourceNameState{
+	// 		Value: newName,
+	// 	},
+	// ))
 
 	// FIXME: Figure out how to avoid this:
 	e.studio.NotifyChanged()

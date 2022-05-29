@@ -18,27 +18,38 @@ import (
 	"github.com/mokiat/lacking/ui/mat"
 )
 
+// TODO: Remove notifications from model and leave the controller to act as a
+// facade to the UI. It will report notifications. There is no one else to modify
+// the model from outside.
+// Even my idea about having a change to the model in one editor (e.g. 2d tex)
+// be visible in another (e.g. model) would occur only after a save so would
+// likely be propagated through other means and trigger a reload in the second
+// editor (e.g. model). Furthermore, a secondary editor (e.g. model) might not
+// need to maintain a complex in-memory model of the primary resource
+// (e.g. texture) and would do so only temporarily during load.
+
 var (
 	// TODO: Move these to model package so that they are usable from other packages
-	TwoDTextureEditorChange                        = observer.StringChange("twod_texture_editor")
-	TwoDTextureEditorAssetAccordionExpandedChange  = observer.ExtendChange(TwoDTextureEditorChange, observer.StringChange("asset_accordion_expanded"))
-	TwoDTextureEditorConfigAccordionExpandedChange = observer.ExtendChange(TwoDTextureEditorChange, observer.StringChange("config_accordion_expanded"))
+	TwoDTextureEditorChange                        = observer.NewChange("twod_texture_editor")
+	TwoDTextureEditorAssetAccordionExpandedChange  = observer.ExtChange(TwoDTextureEditorChange, "asset_accordion_expanded")
+	TwoDTextureEditorConfigAccordionExpandedChange = observer.ExtChange(TwoDTextureEditorChange, "config_accordion_expanded")
 )
 
 func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) *TwoDTextureEditor {
 	target := observer.NewTarget()
 	studioSubscription := observer.WireTargets(studio.Target(), target)
-	texModelSubscription := observer.WireTargets(texModel.Target(), target)
+	uiModel := model.NewTwoDTextureEditor()
 
 	return &TwoDTextureEditor{
 		BaseEditor: NewBaseEditor(),
 
 		target: target,
 
-		studio:               studio,
-		studioSubscription:   studioSubscription,
-		texModel:             texModel,
-		texModelSubscription: texModelSubscription,
+		uiModel: uiModel,
+
+		studio:             studio,
+		studioSubscription: studioSubscription,
+		texModel:           texModel,
 
 		propsAssetExpanded:  false,
 		propsConfigExpanded: true,
@@ -47,17 +58,18 @@ func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) *TwoDText
 	}
 }
 
-var _ model.TwoDTextureEditor = (*TwoDTextureEditor)(nil)
+var _ model.ITwoDTextureEditor = (*TwoDTextureEditor)(nil)
 
 type TwoDTextureEditor struct {
 	BaseEditor
 
-	target *observer.Target
+	target observer.Target
 
-	studio               *Studio
-	studioSubscription   *observer.Subscription
-	texModel             *model.TwoDTexture
-	texModelSubscription *observer.Subscription
+	uiModel *model.TwoDTextureEditor
+
+	studio             *Studio
+	studioSubscription observer.Subscription
+	texModel           *model.TwoDTexture
 
 	propsAssetExpanded  bool
 	propsConfigExpanded bool
@@ -65,16 +77,20 @@ type TwoDTextureEditor struct {
 	viz *visualization.TwoDTexture
 }
 
-func (e *TwoDTextureEditor) Target() *observer.Target {
+func (e *TwoDTextureEditor) Target() observer.Target {
 	return e.target
 }
 
+func (e *TwoDTextureEditor) Model() *model.TwoDTexture {
+	return e.texModel
+}
+
 func (e *TwoDTextureEditor) ID() string {
-	return e.texModel.ID()
+	return e.texModel.Resource().ID()
 }
 
 func (e *TwoDTextureEditor) Name() string {
-	return e.texModel.Name()
+	return e.texModel.Resource().Name()
 }
 
 func (e *TwoDTextureEditor) Icon() *ui.Image {
@@ -96,14 +112,19 @@ func (e *TwoDTextureEditor) Save() error {
 
 func (e *TwoDTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
 	return co.New(view.TwoDTexture, func() {
-		co.WithData(e)
+		co.WithData(view.TwoDTextureData{
+			ResourceModel: e.texModel.Resource(),
+			TextureModel:  e.texModel,
+			EditorModel:   e.uiModel,
+			Visualization: e.viz,
+			Controller:    e,
+		})
 		co.WithLayoutData(layoutData)
 	})
 }
 
 func (e *TwoDTextureEditor) Destroy() {
 	e.viz.Destroy()
-	e.texModelSubscription.Delete()
 	e.studioSubscription.Delete()
 }
 
@@ -143,19 +164,23 @@ func (e *TwoDTextureEditor) DataFormat() asset.TexelFormat {
 	return e.texModel.Format()
 }
 
-func (e *TwoDTextureEditor) ChangeName(newName string) {
-	e.changes.Push(change.ResourceName(e.texModel,
-		change.ResourceNameState{
-			Value: e.texModel.Name(),
-		},
-		change.ResourceNameState{
-			Value: newName,
-		},
-	))
-
-	// FIXME: Figure out how to avoid this:
-	e.studio.NotifyChanged()
+func (e *TwoDTextureEditor) Dispatch(action interface{}) {
+	fmt.Printf("TODO HANDLING: %#v\n", action)
 }
+
+// func (e *TwoDTextureEditor) ChangeName(newName string) {
+// 	e.changes.Push(change.ResourceName(e.texModel,
+// 		change.ResourceNameState{
+// 			Value: e.texModel.Name(),
+// 		},
+// 		change.ResourceNameState{
+// 			Value: newName,
+// 		},
+// 	))
+
+// 	// FIXME: Figure out how to avoid this:
+// 	e.studio.NotifyChanged()
+// }
 
 func (e *TwoDTextureEditor) ChangeContent(path string) {
 	img, err := e.openImage(path)

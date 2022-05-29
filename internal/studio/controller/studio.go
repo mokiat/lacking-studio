@@ -55,7 +55,7 @@ func NewStudio(
 type Studio struct {
 	co.Controller
 
-	target *observer.Target
+	target observer.Target
 
 	api render.API
 
@@ -70,7 +70,7 @@ type Studio struct {
 	editors           []model.Editor
 }
 
-func (s *Studio) Target() *observer.Target {
+func (s *Studio) Target() observer.Target {
 	return s.target
 }
 
