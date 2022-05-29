@@ -7,6 +7,7 @@ import (
 	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
+	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
@@ -70,8 +71,40 @@ type Studio struct {
 	editors           []model.Editor
 }
 
-func (s *Studio) Dispatch(action interface{}) {
-	panic(fmt.Errorf("unhandled action %#v", action))
+func (s *Studio) Dispatch(act interface{}) {
+	switch act := act.(type) {
+	case action.CloneResource:
+		s.cloneResource(act.Resource.ID())
+	case action.DeleteResource:
+		s.deleteResource(act.Resource.ID())
+	default:
+		panic(fmt.Errorf("unhandled action %#v", act))
+	}
+}
+
+func (s *Studio) cloneResource(id string) {
+	resource := s.registry.GetResourceByID(id)
+	newResource, err := resource.Clone()
+	if err != nil {
+		s.HandleError(err)
+		return
+	}
+	s.OpenAsset(newResource.ID())
+}
+
+func (s *Studio) deleteResource(id string) {
+	// TODO: Open confirmation dialog
+	for _, editor := range s.editors {
+		if editor.ID() == id {
+			s.CloseEditor(editor)
+			break
+		}
+	}
+	resource := s.registry.GetResourceByID(id)
+	if err := resource.Delete(); err != nil {
+		s.HandleError(err)
+		return
+	}
 }
 
 func (s *Studio) Target() observer.Target {
