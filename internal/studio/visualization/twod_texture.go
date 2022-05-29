@@ -6,6 +6,7 @@ import (
 	"image"
 
 	"github.com/mokiat/gomath/sprec"
+	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/data/buffer"
 	"github.com/mokiat/lacking/game/asset"
@@ -45,11 +46,13 @@ func NewTwoDTexture(api render.API, engine *graphics.Engine, texModel *model.Two
 		cameraFoV:   sprec.Degrees(66),
 	}
 	result.createGraphicsRepresentation()
+	result.subscribeToModel()
 	return result
 }
 
 type TwoDTexture struct {
-	texModel *model.TwoDTexture
+	texModel        *model.TwoDTexture
+	texSubscription observer.Subscription
 
 	api          render.API
 	engine       *graphics.Engine
@@ -204,7 +207,19 @@ func (t *TwoDTexture) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
 
 func (t *TwoDTexture) Destroy() {
 	t.deleteGraphicsRepresentation()
+	t.unsubscribeFromModel()
 	t.scene.Delete()
+}
+
+func (t *TwoDTexture) subscribeToModel() {
+	t.texSubscription = t.texModel.Subscribe(func(ch observer.Change) {
+		t.deleteGraphicsRepresentation()
+		t.createGraphicsRepresentation()
+	})
+}
+
+func (t *TwoDTexture) unsubscribeFromModel() {
+	t.texSubscription.Delete()
 }
 
 func (t *TwoDTexture) createGraphicsRepresentation() {

@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/mokiat/lacking-studio/internal/observer"
-	"github.com/mokiat/lacking/game/asset"
 )
 
 var (
@@ -69,32 +68,4 @@ func (p *TwoDTextureEditorProperties) IsConfigAccordionExpanded() bool {
 func (p *TwoDTextureEditorProperties) SetConfigAccordionExpanded(expanded bool) {
 	p.isConfigAccordionExpanded = expanded
 	p.SignalChange(ChangeTwoDTextureEditorConfigAccordionExpanded)
-}
-
-type AssetAccordion struct{}
-
-type TwoDTextureConfigAccordion struct{}
-
-type ITwoDTextureEditor interface {
-	Editor
-
-	Target() observer.Target
-
-	IsPropertiesVisible() bool
-	IsAssetAccordionExpanded() bool
-	SetAssetAccordionExpanded(expanded bool)
-	IsConfigAccordionExpanded() bool
-	SetConfigAccordionExpanded(expanded bool)
-
-	Wrapping() asset.WrapMode
-	Filtering() asset.FilterMode
-	DataFormat() asset.TexelFormat
-
-	// ChangeName(name string)
-	ChangeContent(path string)
-	ChangeWrapping(wrap asset.WrapMode)
-	ChangeFiltering(filter asset.FilterMode)
-	ChangeDataFormat(format asset.TexelFormat)
-
-	Visualization() Visualization
 }

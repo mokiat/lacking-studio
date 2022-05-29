@@ -15,22 +15,6 @@ type TwoDTexturePropertiesData struct {
 	Controller    Controller
 }
 
-// TODO: Move to controller
-// func (r *Resource) ChangeName(name string) {
-// 	ch := change.Name(r,
-// 		change.NameState{
-// 			Value: r.Name(),
-// 		},
-// 		change.NameState{
-// 			Value: name,
-// 		},
-// 	)
-// 	if err := r.history.Add(ch); err != nil {
-// 		// TODO: Display UI message
-// 		panic(fmt.Errorf("error applying change: %w", err))
-// 	}
-// }
-
 var TwoDTextureProperties = co.Define(func(props co.Properties) co.Instance {
 	data := co.GetData[TwoDTexturePropertiesData](props)
 	properties := data.Model

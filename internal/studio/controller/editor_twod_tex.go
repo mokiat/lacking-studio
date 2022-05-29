@@ -8,6 +8,7 @@ import (
 	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
+	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking-studio/internal/studio/model/change"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	"github.com/mokiat/lacking-studio/internal/studio/visualization"
@@ -17,16 +18,6 @@ import (
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 )
-
-// TODO: Remove notifications from model and leave the controller to act as a
-// facade to the UI. It will report notifications. There is no one else to modify
-// the model from outside.
-// Even my idea about having a change to the model in one editor (e.g. 2d tex)
-// be visible in another (e.g. model) would occur only after a save so would
-// likely be propagated through other means and trigger a reload in the second
-// editor (e.g. model). Furthermore, a secondary editor (e.g. model) might not
-// need to maintain a complex in-memory model of the primary resource
-// (e.g. texture) and would do so only temporarily during load.
 
 var (
 	// TODO: Move these to model package so that they are usable from other packages
@@ -58,7 +49,7 @@ func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) *TwoDText
 	}
 }
 
-var _ model.ITwoDTextureEditor = (*TwoDTextureEditor)(nil)
+var _ model.Editor = (*TwoDTextureEditor)(nil)
 
 type TwoDTextureEditor struct {
 	BaseEditor
@@ -75,14 +66,6 @@ type TwoDTextureEditor struct {
 	propsConfigExpanded bool
 
 	viz *visualization.TwoDTexture
-}
-
-func (e *TwoDTextureEditor) Target() observer.Target {
-	return e.target
-}
-
-func (e *TwoDTextureEditor) Model() *model.TwoDTexture {
-	return e.texModel
 }
 
 func (e *TwoDTextureEditor) ID() string {
@@ -128,61 +111,65 @@ func (e *TwoDTextureEditor) Destroy() {
 	e.studioSubscription.Delete()
 }
 
-func (e *TwoDTextureEditor) IsPropertiesVisible() bool {
-	// TODO: Figure out how to untie this. Either create subscription hell
-	// or maybe allow editors to create their own toolbar buttons in the studio.
-	return e.studio.IsPropertiesVisible()
+func (e *TwoDTextureEditor) Dispatch(act interface{}) {
+	switch act := act.(type) {
+	case action.ChangeResourceName:
+		e.changeResourceName(act.Name)
+	case action.ChangeTwoDTextureWrapping:
+		e.changeWrapping(act.Wrapping)
+	case action.ChangeTwoDTextureFiltering:
+		e.changeFiltering(act.Filtering)
+	case action.ChangeTwoDTextureFormat:
+		e.changeFormat(act.Format)
+	case action.ChangeTwoDTextureContentFromPath:
+		e.changeContentFromPath(act.Path)
+	default:
+		e.studio.Dispatch(act)
+	}
 }
 
-func (e *TwoDTextureEditor) IsAssetAccordionExpanded() bool {
-	return e.propsAssetExpanded
+func (e *TwoDTextureEditor) changeResourceName(name string) {
+	e.changes.Push(change.Name(e.texModel.Resource(),
+		change.NameState{
+			Value: e.texModel.Resource().Name(),
+		},
+		change.NameState{
+			Value: name,
+		},
+	))
+
+	// FIXME: Figure out how to avoid this:
+	e.studio.NotifyChanged()
 }
 
-func (e *TwoDTextureEditor) SetAssetAccordionExpanded(expanded bool) {
-	e.propsAssetExpanded = expanded
-	e.target.SignalChange(TwoDTextureEditorAssetAccordionExpandedChange)
+func (e *TwoDTextureEditor) changeWrapping(wrapping asset.WrapMode) {
+	e.changes.Push(change.Wrapping(e.texModel,
+		change.WrappingState{
+			Value: e.texModel.Wrapping(),
+		},
+		change.WrappingState{
+			Value: wrapping,
+		},
+	))
 }
 
-func (e *TwoDTextureEditor) IsConfigAccordionExpanded() bool {
-	return e.propsConfigExpanded
+func (e *TwoDTextureEditor) changeFiltering(filter asset.FilterMode) {
+	e.changes.Push(change.Filtering(
+		e.texModel,
+		change.FilteringState{
+			Value: e.texModel.Filtering(),
+		},
+		change.FilteringState{
+			Value: filter,
+		},
+	))
 }
 
-func (e *TwoDTextureEditor) SetConfigAccordionExpanded(expanded bool) {
-	e.propsConfigExpanded = expanded
-	e.target.SignalChange(TwoDTextureEditorConfigAccordionExpandedChange)
+func (e *TwoDTextureEditor) changeFormat(format asset.TexelFormat) {
+	// TODO
 }
 
-func (e *TwoDTextureEditor) Wrapping() asset.WrapMode {
-	return e.texModel.Wrapping()
-}
-
-func (e *TwoDTextureEditor) Filtering() asset.FilterMode {
-	return e.texModel.Filtering()
-}
-
-func (e *TwoDTextureEditor) DataFormat() asset.TexelFormat {
-	return e.texModel.Format()
-}
-
-func (e *TwoDTextureEditor) Dispatch(action interface{}) {
-	fmt.Printf("TODO HANDLING: %#v\n", action)
-}
-
-// func (e *TwoDTextureEditor) ChangeName(newName string) {
-// 	e.changes.Push(change.ResourceName(e.texModel,
-// 		change.ResourceNameState{
-// 			Value: e.texModel.Name(),
-// 		},
-// 		change.ResourceNameState{
-// 			Value: newName,
-// 		},
-// 	))
-
-// 	// FIXME: Figure out how to avoid this:
-// 	e.studio.NotifyChanged()
-// }
-
-func (e *TwoDTextureEditor) ChangeContent(path string) {
+func (e *TwoDTextureEditor) changeContentFromPath(path string) {
 	img, err := e.openImage(path)
 	if err != nil {
 		e.studio.HandleError(fmt.Errorf("failed to open source image: %w", err))
@@ -210,43 +197,15 @@ func (e *TwoDTextureEditor) ChangeContent(path string) {
 	}
 }
 
-func (e *TwoDTextureEditor) ChangeWrapping(wrap asset.WrapMode) {
-	e.changes.Push(change.Wrapping(e.texModel,
-		change.WrappingState{
-			Value: e.texModel.Wrapping(),
-		},
-		change.WrappingState{
-			Value: wrap,
-		},
-	))
-}
-
-func (e *TwoDTextureEditor) ChangeFiltering(filter asset.FilterMode) {
-	e.changes.Push(change.Filtering(
-		e.texModel,
-		change.FilteringState{
-			Value: e.texModel.Filtering(),
-		},
-		change.FilteringState{
-			Value: filter,
-		},
-	))
-}
-
-func (e *TwoDTextureEditor) ChangeDataFormat(format asset.TexelFormat) {
-	// TODO
-}
-
-func (e *TwoDTextureEditor) Visualization() model.Visualization {
-	return e.viz
-}
-
 func (e *TwoDTextureEditor) openImage(path string) (image.Image, error) {
 	in, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open image resource: %w", err)
 	}
 	defer in.Close()
+
+	// TODO: Register image decoders above and ideally move this to
+	// a util package.
 
 	img, _, err := image.Decode(in)
 	if err != nil {

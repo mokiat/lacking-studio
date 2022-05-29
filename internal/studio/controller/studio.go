@@ -70,6 +70,10 @@ type Studio struct {
 	editors           []model.Editor
 }
 
+func (s *Studio) Dispatch(action interface{}) {
+	panic(fmt.Errorf("unhandled action %#v", action))
+}
+
 func (s *Studio) Target() observer.Target {
 	return s.target
 }
