@@ -6,6 +6,10 @@ tasks:
     cmds:
       - go run './cmd/lacking' {{.CLI_ARGS}}
 
+  debug:
+    cmds:
+      - go run -tags debug './cmd/lacking' {{.CLI_ARGS}}
+
   install:
     cmds:
       - go install github.com/mokiat/lacking-studio/cmd/lacking
