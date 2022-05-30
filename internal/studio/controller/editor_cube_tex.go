@@ -46,8 +46,8 @@ func (e *CubeTextureEditor) Name() string {
 	return e.texModel.Resource().Name()
 }
 
-func (e *CubeTextureEditor) Icon() *ui.Image {
-	return co.OpenImage("icons/texture.png")
+func (e *CubeTextureEditor) Icon(scope co.Scope) *ui.Image {
+	return co.OpenImage(scope, "icons/texture.png")
 }
 
 func (e *CubeTextureEditor) Save() error {

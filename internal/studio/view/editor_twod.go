@@ -18,7 +18,7 @@ type TwoDTextureEditorData struct {
 	Controller    Controller
 }
 
-var TwoDTextureEditor = co.Define(func(props co.Properties) co.Instance {
+var TwoDTextureEditor = co.ContextScoped(co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	var (
 		data        = co.GetData[TwoDTextureEditorData](props)
 		editorModel = data.EditorModel
@@ -77,4 +77,4 @@ var TwoDTextureEditor = co.Define(func(props co.Properties) co.Instance {
 			}))
 		}
 	})
-})
+}))

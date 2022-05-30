@@ -283,7 +283,8 @@ func (s *Studio) editorIndex(editor model.Editor) int {
 	return -1
 }
 
-var StudioView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
+// TODO: Move to view package
+var StudioView = co.Controlled(co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	controller := props.Data().(*Studio)
 
 	return co.New(mat.Container, func() {
@@ -308,7 +309,7 @@ var StudioView = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 	})
 }))
 
-var StudioTopPanel = co.Controlled(co.Define(func(props co.Properties) co.Instance {
+var StudioTopPanel = co.Controlled(co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
 			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
@@ -333,7 +334,7 @@ var StudioTopPanel = co.Controlled(co.Define(func(props co.Properties) co.Instan
 	})
 }))
 
-var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
+var Toolbar = co.Controlled(co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	controller := props.Data().(*Studio)
 
 	assetsOverlay := co.UseState(func() *co.Overlay {
@@ -366,7 +367,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("assets", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon: co.OpenImage("icons/assets.png"),
+				Icon: co.OpenImage(scope, "icons/assets.png"),
 				Text: "Assets",
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -378,7 +379,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("save", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon:    co.OpenImage("icons/save.png"),
+				Icon:    co.OpenImage(scope, "icons/save.png"),
 				Enabled: optional.Value(controller.SaveEnabled()),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -392,7 +393,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("undo", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon:    co.OpenImage("icons/undo.png"),
+				Icon:    co.OpenImage(scope, "icons/undo.png"),
 				Enabled: optional.Value(controller.UndoEnabled()),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -404,7 +405,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("redo", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon:    co.OpenImage("icons/redo.png"),
+				Icon:    co.OpenImage(scope, "icons/redo.png"),
 				Enabled: optional.Value(controller.RedoEnabled()),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -418,7 +419,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 
 		co.WithChild("properties", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
-				Icon: co.OpenImage("icons/properties.png"),
+				Icon: co.OpenImage(scope, "icons/properties.png"),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
 				OnClick: onPropertiesVisibleClicked,
@@ -427,7 +428,7 @@ var Toolbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 	})
 }))
 
-var Tabbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
+var Tabbar = co.Controlled(co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	controller := props.Data().(*Studio)
 
 	return co.New(mat.Tabbar, func() {
@@ -436,7 +437,7 @@ var Tabbar = co.Controlled(co.Define(func(props co.Properties) co.Instance {
 		controller.EachEditor(func(editor model.Editor) {
 			co.WithChild(editor.ID(), co.New(mat.TabbarTab, func() {
 				co.WithData(mat.TabbarTabData{
-					Icon:     editor.Icon(),
+					Icon:     editor.Icon(scope),
 					Text:     editor.Name(),
 					Selected: editor == controller.ActiveEditor(),
 				})

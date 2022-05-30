@@ -18,7 +18,7 @@ type CubeTextureEditorData struct {
 	Controller    Controller
 }
 
-var CubeTextureEditor = co.Define(func(props co.Properties) co.Instance {
+var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	var (
 		data        = co.GetData[CubeTextureEditorData](props)
 		editorModel = data.EditorModel

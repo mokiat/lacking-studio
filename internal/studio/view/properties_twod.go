@@ -15,7 +15,7 @@ type TwoDTexturePropertiesData struct {
 	Controller    Controller
 }
 
-var TwoDTextureProperties = co.Define(func(props co.Properties) co.Instance {
+var TwoDTextureProperties = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	data := co.GetData[TwoDTexturePropertiesData](props)
 	properties := data.Model
 

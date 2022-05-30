@@ -9,7 +9,7 @@ import (
 type Editor interface {
 	ID() string
 	Name() string
-	Icon() *ui.Image
+	Icon(scope co.Scope) *ui.Image
 
 	CanUndo() bool
 	Undo()

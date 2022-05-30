@@ -15,7 +15,7 @@ type AssetPropertiesSectionData struct {
 	Controller Controller
 }
 
-var AssetPropertiesSection = co.Define(func(props co.Properties) co.Instance {
+var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	data := co.GetData[AssetPropertiesSectionData](props)
 	resource := data.Model
 	controller := data.Controller
@@ -53,7 +53,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
-					Font:      co.OpenFont("mat:///roboto-bold.ttf"),
+					Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(mat.OnSurfaceColor),
 					Text:      "ID:",
@@ -62,7 +62,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("value", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
-					Font:      co.OpenFont("mat:///roboto-regular.ttf"),
+					Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(mat.OnSurfaceColor),
 					Text:      resource.ID(),
@@ -80,7 +80,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
-					Font:      co.OpenFont("mat:///roboto-bold.ttf"),
+					Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(mat.OnSurfaceColor),
 					Text:      "Type:",
@@ -89,7 +89,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("value", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
-					Font:      co.OpenFont("mat:///roboto-regular.ttf"),
+					Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(mat.OnSurfaceColor),
 					Text:      string(resource.Kind()),
@@ -107,7 +107,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
-					Font:      co.OpenFont("mat:///roboto-bold.ttf"),
+					Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
 					FontSize:  optional.Value(float32(18)),
 					FontColor: optional.Value(mat.OnSurfaceColor),
 					Text:      "Name:",
@@ -142,7 +142,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("delete", co.New(mat.Button, func() {
 				co.WithData(mat.ButtonData{
-					Icon: co.OpenImage("icons/delete.png"),
+					Icon: co.OpenImage(scope, "icons/delete.png"),
 					Text: "Delete",
 				})
 
@@ -157,7 +157,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties) co.Instance {
 
 			co.WithChild("clone", co.New(mat.Button, func() {
 				co.WithData(mat.ButtonData{
-					Icon: co.OpenImage("icons/file-copy.png"),
+					Icon: co.OpenImage(scope, "icons/file-copy.png"),
 					Text: "Clone",
 				})
 

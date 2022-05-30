@@ -46,8 +46,8 @@ func (e *TwoDTextureEditor) Name() string {
 	return e.texModel.Resource().Name()
 }
 
-func (e *TwoDTextureEditor) Icon() *ui.Image {
-	return co.OpenImage("icons/texture.png")
+func (e *TwoDTextureEditor) Icon(scope co.Scope) *ui.Image {
+	return co.OpenImage(scope, "icons/texture.png")
 }
 
 func (e *TwoDTextureEditor) Save() error {

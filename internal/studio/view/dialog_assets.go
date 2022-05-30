@@ -26,7 +26,7 @@ var defaultAssetDialogCallbackData = AssetDialogCallbackData{
 	OnClose:         func() {},
 }
 
-var AssetDialog = co.Define(func(props co.Properties) co.Instance {
+var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	lifecycle := co.UseLifecycle(func(handle co.LifecycleHandle) *assetDialogLifecycle {
 		return &assetDialogLifecycle{
 			Lifecycle: co.NewBaseLifecycle(),
@@ -64,7 +64,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("twod_texture", co.New(mat.ToolbarButton, func() {
 					co.WithData(mat.ToolbarButtonData{
-						Icon:     co.OpenImage("icons/texture.png"),
+						Icon:     co.OpenImage(scope, "icons/texture.png"),
 						Text:     "2D Texture",
 						Selected: lifecycle.SelectedKind() == data.ResourceKindTwoDTexture,
 					})
@@ -77,7 +77,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("cube_texture", co.New(mat.ToolbarButton, func() {
 					co.WithData(mat.ToolbarButtonData{
-						Icon:     co.OpenImage("icons/texture.png"),
+						Icon:     co.OpenImage(scope, "icons/texture.png"),
 						Text:     "Cube Texture",
 						Selected: lifecycle.SelectedKind() == data.ResourceKindCubeTexture,
 					})
@@ -90,7 +90,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("model", co.New(mat.ToolbarButton, func() {
 					co.WithData(mat.ToolbarButtonData{
-						Icon:     co.OpenImage("icons/model.png"),
+						Icon:     co.OpenImage(scope, "icons/model.png"),
 						Text:     "Model",
 						Selected: lifecycle.SelectedKind() == data.ResourceKindModel,
 					})
@@ -104,7 +104,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 				co.WithChild("scene", co.New(mat.ToolbarButton, func() {
 					co.WithData(mat.ToolbarButtonData{
 						Text:     "Scene",
-						Icon:     co.OpenImage("icons/scene.png"),
+						Icon:     co.OpenImage(scope, "icons/scene.png"),
 						Selected: lifecycle.SelectedKind() == data.ResourceKindScene,
 					})
 					co.WithCallbackData(mat.ToolbarButtonCallbackData{
@@ -125,7 +125,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("label", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.OpenFont("mat:///roboto-regular.ttf"),
+						Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
 						FontSize:  optional.Value(float32(18)),
 						FontColor: optional.Value(mat.OnSurfaceColor),
 						Text:      "Search:",
@@ -232,7 +232,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("delete", co.New(mat.Button, func() {
 					co.WithData(mat.ButtonData{
-						Icon:    co.OpenImage("icons/delete.png"),
+						Icon:    co.OpenImage(scope, "icons/delete.png"),
 						Text:    "Delete",
 						Enabled: optional.Value(lifecycle.SelectedResource() != nil),
 					})
@@ -247,7 +247,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("clone", co.New(mat.Button, func() {
 					co.WithData(mat.ButtonData{
-						Icon:    co.OpenImage("icons/file-copy.png"),
+						Icon:    co.OpenImage(scope, "icons/file-copy.png"),
 						Text:    "Clone",
 						Enabled: optional.Value(lifecycle.SelectedResource() != nil),
 					})
@@ -267,7 +267,7 @@ var AssetDialog = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("new", co.New(mat.Button, func() {
 					co.WithData(mat.ButtonData{
-						Icon: co.OpenImage("icons/file-add.png"),
+						Icon: co.OpenImage(scope, "icons/file-add.png"),
 						Text: "New",
 					})
 
@@ -336,14 +336,14 @@ type assetDialogLifecycle struct {
 	selectedResource *data.Resource
 }
 
-func (l *assetDialogLifecycle) OnCreate(props co.Properties) {
-	l.OnUpdate(props)
+func (l *assetDialogLifecycle) OnCreate(props co.Properties, scope co.Scope) {
+	l.OnUpdate(props, scope)
 	l.selectedKind = data.ResourceKindTwoDTexture
 	l.selectedResource = nil
 	l.searchText = ""
 }
 
-func (l *assetDialogLifecycle) OnUpdate(props co.Properties) {
+func (l *assetDialogLifecycle) OnUpdate(props co.Properties, scope co.Scope) {
 	var (
 		data         = co.GetData[AssetDialogData](props)
 		callbackData = co.GetOptionalCallbackData(props, AssetDialogCallbackData{})
@@ -448,7 +448,7 @@ var defaultAssetItemCallbackData = AssetItemCallbackData{
 	OnSelected: func(id string) {},
 }
 
-var AssetItem = co.Define(func(props co.Properties) co.Instance {
+var AssetItem = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	lifecycle := co.UseLifecycle(func(handle co.LifecycleHandle) *assetItemLifecycle {
 		return &assetItemLifecycle{
 			Lifecycle: co.NewBaseLifecycle(),
@@ -495,7 +495,7 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("name", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.OpenFont("mat:///roboto-bold.ttf"),
+						Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
 						FontSize:  optional.Value(float32(16)),
 						FontColor: optional.Value(ui.Black()),
 						Text:      lifecycle.AssetName(),
@@ -504,7 +504,7 @@ var AssetItem = co.Define(func(props co.Properties) co.Instance {
 
 				co.WithChild("id", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
-						Font:      co.OpenFont("mat:///roboto-regular.ttf"),
+						Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
 						FontSize:  optional.Value(float32(16)),
 						FontColor: optional.Value(ui.Black()),
 						Text:      lifecycle.AssetID(),
@@ -527,11 +527,11 @@ type assetItemLifecycle struct {
 	onSelected          func(id string)
 }
 
-func (l *assetItemLifecycle) OnCreate(props co.Properties) {
-	l.OnUpdate(props)
+func (l *assetItemLifecycle) OnCreate(props co.Properties, scope co.Scope) {
+	l.OnUpdate(props, scope)
 }
 
-func (l *assetItemLifecycle) OnUpdate(props co.Properties) {
+func (l *assetItemLifecycle) OnUpdate(props co.Properties, scope co.Scope) {
 	var (
 		data         = co.GetData[AssetItemData](props)
 		callbackData = co.GetOptionalCallbackData(props, defaultAssetItemCallbackData)
@@ -541,9 +541,9 @@ func (l *assetItemLifecycle) OnUpdate(props co.Properties) {
 		l.previewImage.Destroy()
 	}
 	if data.PreviewImage != nil {
-		l.previewImage = co.CreateImage(data.PreviewImage)
+		l.previewImage = co.CreateImage(scope, data.PreviewImage)
 	}
-	l.defaultPreviewImage = co.OpenImage("icons/broken-image.png")
+	l.defaultPreviewImage = co.OpenImage(scope, "icons/broken-image.png")
 	l.assetID = data.ID
 	l.assetKind = data.Kind
 	l.assetName = data.Name
@@ -551,7 +551,7 @@ func (l *assetItemLifecycle) OnUpdate(props co.Properties) {
 	l.onSelected = callbackData.OnSelected
 }
 
-func (l *assetItemLifecycle) OnDestroy() {
+func (l *assetItemLifecycle) OnDestroy(scope co.Scope) {
 	if l.previewImage != nil {
 		l.previewImage.Destroy()
 	}

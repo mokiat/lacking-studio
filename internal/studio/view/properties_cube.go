@@ -15,7 +15,7 @@ type CubeTexturePropertiesData struct {
 	Controller    Controller
 }
 
-var CubeTextureProperties = co.Define(func(props co.Properties) co.Instance {
+var CubeTextureProperties = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	data := co.GetData[CubeTexturePropertiesData](props)
 	properties := data.Model
 

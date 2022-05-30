@@ -16,7 +16,7 @@ type TwoDTextureConfigPropertiesSectionData struct {
 	Controller Controller
 }
 
-var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties) co.Instance {
+var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	var (
 		data       = co.GetData[TwoDTextureConfigPropertiesSectionData](props)
 		texture    = data.Texture
@@ -46,7 +46,7 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties) co.
 
 		co.WithChild("wrapping-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
-				Font:      co.OpenFont("mat:///roboto-bold.ttf"),
+				Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
 				FontSize:  optional.Value(float32(18)),
 				FontColor: optional.Value(ui.Black()),
 				Text:      "Wrapping:",
@@ -77,7 +77,7 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties) co.
 
 		co.WithChild("filtering-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
-				Font:      co.OpenFont("mat:///roboto-bold.ttf"),
+				Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
 				FontSize:  optional.Value(float32(18)),
 				FontColor: optional.Value(ui.Black()),
 				Text:      "Filtering:",
@@ -108,7 +108,7 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties) co.
 
 		co.WithChild("data-format-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
-				Font:      co.OpenFont("mat:///roboto-bold.ttf"),
+				Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
 				FontSize:  optional.Value(float32(18)),
 				FontColor: optional.Value(ui.Black()),
 				Text:      "Data Format:",

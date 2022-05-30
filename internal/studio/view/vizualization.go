@@ -18,7 +18,7 @@ type VisualizationData struct {
 	Controller VisualizationController
 }
 
-var Visualization = co.Define(func(props co.Properties) co.Instance {
+var Visualization = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	ctx := co.GetContext[global.Context]()
 	data := co.GetData[VisualizationData](props)
 	controller := data.Controller
