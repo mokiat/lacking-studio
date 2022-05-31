@@ -7,18 +7,17 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/util/optional"
 )
 
 type AssetPropertiesSectionData struct {
-	Model      *model.Resource
-	Controller Controller
+	Model *model.Resource
 }
 
 var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	data := co.GetData[AssetPropertiesSectionData](props)
 	resource := data.Model
-	controller := data.Controller
 
 	WithBinding(resource, func(ch observer.Change) bool {
 		return observer.IsChange(ch, model.ChangeResourceName)
@@ -123,7 +122,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 				})
 				co.WithCallbackData(mat.EditboxCallbackData{
 					OnChanged: func(text string) {
-						controller.Dispatch(action.ChangeResourceName{
+						mvc.Dispatch(scope, action.ChangeResourceName{
 							Resource: resource,
 							Name:     text,
 						})
@@ -148,7 +147,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 
 				co.WithCallbackData(mat.ButtonCallbackData{
 					ClickListener: func() {
-						controller.Dispatch(action.DeleteResource{
+						mvc.Dispatch(scope, action.DeleteResource{
 							Resource: resource,
 						})
 					},
@@ -163,7 +162,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 
 				co.WithCallbackData(mat.ButtonCallbackData{
 					ClickListener: func() {
-						controller.Dispatch(action.CloneResource{
+						mvc.Dispatch(scope, action.CloneResource{
 							Resource: resource,
 						})
 					},

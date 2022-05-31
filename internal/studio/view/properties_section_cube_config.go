@@ -8,19 +8,18 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/util/optional"
 )
 
 type CubeTextureConfigPropertiesSectionData struct {
-	Texture    *model.CubeTexture
-	Controller Controller
+	Texture *model.CubeTexture
 }
 
 var CubeTextureConfigPropertiesSection = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	var (
-		data       = co.GetData[CubeTextureConfigPropertiesSectionData](props)
-		texture    = data.Texture
-		controller = data.Controller
+		data    = co.GetData[CubeTextureConfigPropertiesSectionData](props)
+		texture = data.Texture
 	)
 
 	WithBinding(texture, func(change observer.Change) bool {
@@ -67,7 +66,7 @@ var CubeTextureConfigPropertiesSection = co.Define(func(props co.Properties, sco
 			})
 			co.WithCallbackData(mat.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					controller.Dispatch(action.ChangeCubeTextureFiltering{
+					mvc.Dispatch(scope, action.ChangeCubeTextureFiltering{
 						Texture:   texture,
 						Filtering: key.(asset.FilterMode),
 					})
@@ -98,7 +97,7 @@ var CubeTextureConfigPropertiesSection = co.Define(func(props co.Properties, sco
 			})
 			co.WithCallbackData(mat.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					controller.Dispatch(action.ChangeCubeTextureFormat{
+					mvc.Dispatch(scope, action.ChangeCubeTextureFormat{
 						Texture: texture,
 						Format:  key.(asset.TexelFormat),
 					})

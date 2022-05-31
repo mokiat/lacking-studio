@@ -8,19 +8,18 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/util/optional"
 )
 
 type TwoDTextureConfigPropertiesSectionData struct {
-	Texture    *model.TwoDTexture
-	Controller Controller
+	Texture *model.TwoDTexture
 }
 
 var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	var (
-		data       = co.GetData[TwoDTextureConfigPropertiesSectionData](props)
-		texture    = data.Texture
-		controller = data.Controller
+		data    = co.GetData[TwoDTextureConfigPropertiesSectionData](props)
+		texture = data.Texture
 	)
 
 	WithBinding(texture, func(change observer.Change) bool {
@@ -67,7 +66,7 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties, sco
 			})
 			co.WithCallbackData(mat.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					controller.Dispatch(action.ChangeTwoDTextureWrapping{
+					mvc.Dispatch(scope, action.ChangeTwoDTextureWrapping{
 						Texture:  texture,
 						Wrapping: key.(asset.WrapMode),
 					})
@@ -98,7 +97,7 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties, sco
 			})
 			co.WithCallbackData(mat.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					controller.Dispatch(action.ChangeTwoDTextureFiltering{
+					mvc.Dispatch(scope, action.ChangeTwoDTextureFiltering{
 						Texture:   texture,
 						Filtering: key.(asset.FilterMode),
 					})
@@ -129,7 +128,7 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties, sco
 			})
 			co.WithCallbackData(mat.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					controller.Dispatch(action.ChangeTwoDTextureFormat{
+					mvc.Dispatch(scope, action.ChangeTwoDTextureFormat{
 						Texture: texture,
 						Format:  key.(asset.TexelFormat),
 					})

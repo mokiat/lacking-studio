@@ -18,7 +18,7 @@ type Editor interface {
 	CanSave() bool
 	Save() error
 
-	Render(layoutData mat.LayoutData) co.Instance
+	Render(scope co.Scope, layoutData mat.LayoutData) co.Instance
 
 	Destroy()
 }

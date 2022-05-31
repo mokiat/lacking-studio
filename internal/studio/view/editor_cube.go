@@ -7,6 +7,7 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/util/optional"
 )
 
@@ -15,7 +16,6 @@ type CubeTextureEditorData struct {
 	TextureModel  *model.CubeTexture
 	EditorModel   *model.CubeTextureEditor
 	Visualization model.Visualization
-	Controller    Controller
 }
 
 var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -23,7 +23,6 @@ var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.I
 		data        = co.GetData[CubeTextureEditorData](props)
 		editorModel = data.EditorModel
 		viz         = data.Visualization
-		controller  = data.Controller
 	)
 
 	WithBinding(editorModel, func(change observer.Change) bool {
@@ -40,7 +39,7 @@ var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.I
 		co.WithChild("center", co.New(mat.DropZone, func() {
 			co.WithCallbackData(mat.DropZoneCallbackData{
 				OnDrop: func(paths []string) bool {
-					controller.Dispatch(action.ChangeCubeTextureContentFromPath{
+					mvc.Dispatch(scope, action.ChangeCubeTextureContentFromPath{
 						Texture: data.TextureModel,
 						Path:    paths[0],
 					})
@@ -68,7 +67,6 @@ var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.I
 					Model:         editorModel.Properties(),
 					ResourceModel: data.ResourceModel,
 					TextureModel:  data.TextureModel,
-					Controller:    data.Controller,
 				})
 				co.WithLayoutData(mat.LayoutData{
 					Alignment: mat.AlignmentRight,

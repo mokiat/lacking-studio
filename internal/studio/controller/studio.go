@@ -17,6 +17,7 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/util/optional"
 )
 
@@ -71,14 +72,16 @@ type Studio struct {
 	editors           []model.Editor
 }
 
-func (s *Studio) Dispatch(act interface{}) {
+func (s *Studio) Reduce(act mvc.Action) bool {
 	switch act := act.(type) {
 	case action.CloneResource:
 		s.cloneResource(act.Resource.ID())
+		return true
 	case action.DeleteResource:
 		s.deleteResource(act.Resource.ID())
+		return true
 	default:
-		panic(fmt.Errorf("unhandled action %#v", act))
+		return false
 	}
 }
 
@@ -286,12 +289,14 @@ func (s *Studio) editorIndex(editor model.Editor) int {
 // TODO: Move to view package
 var StudioView = co.Controlled(co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	controller := props.Data().(*Studio)
+	scope = mvc.UseReducer(scope, controller)
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
 			BackgroundColor: optional.Value(mat.SurfaceColor),
 			Layout:          mat.NewFrameLayout(),
 		})
+		co.WithScope(scope)
 
 		co.WithChild("top", co.New(StudioTopPanel, func() {
 			co.WithData(props.Data())
@@ -302,7 +307,7 @@ var StudioView = co.Controlled(co.Define(func(props co.Properties, scope co.Scop
 
 		if editor := controller.ActiveEditor(); editor != nil {
 			key := fmt.Sprintf("center-%s", editor.ID())
-			co.WithChild(key, editor.Render(mat.LayoutData{
+			co.WithChild(key, editor.Render(scope, mat.LayoutData{
 				Alignment: mat.AlignmentCenter,
 			}))
 		}

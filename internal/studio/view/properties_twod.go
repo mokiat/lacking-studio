@@ -12,7 +12,6 @@ type TwoDTexturePropertiesData struct {
 	Model         *model.TwoDTextureEditorProperties
 	ResourceModel *model.Resource
 	TextureModel  *model.TwoDTexture
-	Controller    Controller
 }
 
 var TwoDTextureProperties = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -43,7 +42,9 @@ var TwoDTextureProperties = co.Define(func(props co.Properties, scope co.Scope) 
 				Title:    "Asset",
 				Expanded: properties.IsAssetAccordionExpanded(),
 			})
-			co.WithLayoutData(props.LayoutData())
+			co.WithLayoutData(mat.LayoutData{
+				GrowHorizontally: true,
+			})
 			co.WithCallbackData(mat.AccordionCallbackData{
 				OnToggle: func() {
 					properties.SetAssetAccordionExpanded(!properties.IsAssetAccordionExpanded())
@@ -52,8 +53,7 @@ var TwoDTextureProperties = co.Define(func(props co.Properties, scope co.Scope) 
 
 			co.WithChild("content", co.New(AssetPropertiesSection, func() {
 				co.WithData(AssetPropertiesSectionData{
-					Model:      data.ResourceModel,
-					Controller: data.Controller,
+					Model: data.ResourceModel,
 				})
 			}))
 		}))
@@ -63,7 +63,9 @@ var TwoDTextureProperties = co.Define(func(props co.Properties, scope co.Scope) 
 				Title:    "Config",
 				Expanded: properties.IsConfigAccordionExpanded(),
 			})
-			co.WithLayoutData(props.LayoutData())
+			co.WithLayoutData(mat.LayoutData{
+				GrowHorizontally: true,
+			})
 			co.WithCallbackData(mat.AccordionCallbackData{
 				OnToggle: func() {
 					properties.SetConfigAccordionExpanded(!properties.IsConfigAccordionExpanded())
@@ -72,8 +74,7 @@ var TwoDTextureProperties = co.Define(func(props co.Properties, scope co.Scope) 
 
 			co.WithChild("content", co.New(TwoDTextureConfigPropertiesSection, func() {
 				co.WithData(TwoDTextureConfigPropertiesSectionData{
-					Texture:    data.TextureModel,
-					Controller: data.Controller,
+					Texture: data.TextureModel,
 				})
 			}))
 		}))

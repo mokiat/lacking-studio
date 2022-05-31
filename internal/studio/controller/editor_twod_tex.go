@@ -16,6 +16,7 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) *TwoDTextureEditor {
@@ -63,16 +64,16 @@ func (e *TwoDTextureEditor) Save() error {
 	return e.BaseEditor.Save()
 }
 
-func (e *TwoDTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
+func (e *TwoDTextureEditor) Render(scope co.Scope, layoutData mat.LayoutData) co.Instance {
 	return co.New(view.TwoDTextureEditor, func() {
 		co.WithData(view.TwoDTextureEditorData{
 			ResourceModel: e.texModel.Resource(),
 			TextureModel:  e.texModel,
 			EditorModel:   e.editorModel,
 			Visualization: e.viz,
-			Controller:    e,
 		})
 		co.WithLayoutData(layoutData)
+		co.WithScope(mvc.UseReducer(scope, e))
 	})
 }
 
@@ -80,20 +81,25 @@ func (e *TwoDTextureEditor) Destroy() {
 	e.viz.Destroy()
 }
 
-func (e *TwoDTextureEditor) Dispatch(act interface{}) {
+func (e *TwoDTextureEditor) Reduce(act mvc.Action) bool {
 	switch act := act.(type) {
 	case action.ChangeResourceName:
 		e.changeResourceName(act.Name)
+		return true
 	case action.ChangeTwoDTextureWrapping:
 		e.changeWrapping(act.Wrapping)
+		return true
 	case action.ChangeTwoDTextureFiltering:
 		e.changeFiltering(act.Filtering)
+		return true
 	case action.ChangeTwoDTextureFormat:
 		e.changeFormat(act.Format)
+		return true
 	case action.ChangeTwoDTextureContentFromPath:
 		e.changeContentFromPath(act.Path)
+		return true
 	default:
-		e.studio.Dispatch(act)
+		return false
 	}
 }
 

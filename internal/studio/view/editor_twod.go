@@ -7,6 +7,7 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/util/optional"
 )
 
@@ -15,7 +16,6 @@ type TwoDTextureEditorData struct {
 	TextureModel  *model.TwoDTexture
 	EditorModel   *model.TwoDTextureEditor
 	Visualization model.Visualization
-	Controller    Controller
 }
 
 var TwoDTextureEditor = co.ContextScoped(co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -23,7 +23,6 @@ var TwoDTextureEditor = co.ContextScoped(co.Define(func(props co.Properties, sco
 		data        = co.GetData[TwoDTextureEditorData](props)
 		editorModel = data.EditorModel
 		viz         = data.Visualization
-		controller  = data.Controller
 	)
 
 	WithBinding(editorModel, func(change observer.Change) bool {
@@ -40,7 +39,7 @@ var TwoDTextureEditor = co.ContextScoped(co.Define(func(props co.Properties, sco
 		co.WithChild("center", co.New(mat.DropZone, func() {
 			co.WithCallbackData(mat.DropZoneCallbackData{
 				OnDrop: func(paths []string) bool {
-					controller.Dispatch(action.ChangeTwoDTextureContentFromPath{
+					mvc.Dispatch(scope, action.ChangeTwoDTextureContentFromPath{
 						Texture: data.TextureModel,
 						Path:    paths[0],
 					})
@@ -68,7 +67,6 @@ var TwoDTextureEditor = co.ContextScoped(co.Define(func(props co.Properties, sco
 					Model:         editorModel.Properties(),
 					ResourceModel: data.ResourceModel,
 					TextureModel:  data.TextureModel,
-					Controller:    data.Controller,
 				})
 				co.WithLayoutData(mat.LayoutData{
 					Alignment: mat.AlignmentRight,

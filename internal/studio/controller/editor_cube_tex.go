@@ -16,6 +16,7 @@ import (
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 func NewCubeTextureEditor(studio *Studio, texModel *model.CubeTexture) *CubeTextureEditor {
@@ -63,16 +64,16 @@ func (e *CubeTextureEditor) Save() error {
 	return e.BaseEditor.Save()
 }
 
-func (e *CubeTextureEditor) Render(layoutData mat.LayoutData) co.Instance {
+func (e *CubeTextureEditor) Render(scope co.Scope, layoutData mat.LayoutData) co.Instance {
 	return co.New(view.CubeTextureEditor, func() {
 		co.WithData(view.CubeTextureEditorData{
 			ResourceModel: e.texModel.Resource(),
 			TextureModel:  e.texModel,
 			EditorModel:   e.editorModel,
 			Visualization: e.viz,
-			Controller:    e,
 		})
 		co.WithLayoutData(layoutData)
+		co.WithScope(mvc.UseReducer(scope, e))
 	})
 }
 
@@ -80,18 +81,22 @@ func (e *CubeTextureEditor) Destroy() {
 	e.viz.Destroy()
 }
 
-func (e *CubeTextureEditor) Dispatch(act interface{}) {
+func (e *CubeTextureEditor) Reduce(act mvc.Action) bool {
 	switch act := act.(type) {
 	case action.ChangeResourceName:
 		e.changeResourceName(act.Name)
+		return true
 	case action.ChangeCubeTextureFiltering:
 		e.changeFiltering(act.Filtering)
+		return true
 	case action.ChangeCubeTextureFormat:
 		e.changeFormat(act.Format)
+		return true
 	case action.ChangeCubeTextureContentFromPath:
 		e.changeContentFromPath(act.Path)
+		return true
 	default:
-		e.studio.Dispatch(act)
+		return false
 	}
 }
 

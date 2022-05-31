@@ -12,7 +12,6 @@ type CubeTexturePropertiesData struct {
 	Model         *model.CubeTextureEditorProperties
 	ResourceModel *model.Resource
 	TextureModel  *model.CubeTexture
-	Controller    Controller
 }
 
 var CubeTextureProperties = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -52,8 +51,7 @@ var CubeTextureProperties = co.Define(func(props co.Properties, scope co.Scope) 
 
 			co.WithChild("content", co.New(AssetPropertiesSection, func() {
 				co.WithData(AssetPropertiesSectionData{
-					Model:      data.ResourceModel,
-					Controller: data.Controller,
+					Model: data.ResourceModel,
 				})
 			}))
 		}))
@@ -72,8 +70,7 @@ var CubeTextureProperties = co.Define(func(props co.Properties, scope co.Scope) 
 
 			co.WithChild("content", co.New(CubeTextureConfigPropertiesSection, func() {
 				co.WithData(CubeTextureConfigPropertiesSectionData{
-					Texture:    data.TextureModel,
-					Controller: data.Controller,
+					Texture: data.TextureModel,
 				})
 			}))
 		}))
