@@ -5,22 +5,22 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking/game/asset"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 var (
-	ChangeTwoDTexture                = observer.NewChange("twod_texture")
-	ChangeTwoDTextureWrapping        = observer.ExtChange(ChangeTwoDTexture, "wrapping")
-	ChangeTwoDTextureFiltering       = observer.ExtChange(ChangeTwoDTexture, "filtering")
-	ChangeTwoDTextureWidth           = observer.ExtChange(ChangeTwoDTexture, "width")
-	ChangeTwoDTextureHeight          = observer.ExtChange(ChangeTwoDTexture, "height")
-	ChangeTwoDTextureFormat          = observer.ExtChange(ChangeTwoDTexture, "format")
-	ChangeTwoDTextureMipmapping      = observer.ExtChange(ChangeTwoDTexture, "mipmapping")
-	ChangeTwoDTextureGammaCorrection = observer.ExtChange(ChangeTwoDTexture, "gamma_correction")
-	ChangeTwoDTextureData            = observer.ExtChange(ChangeTwoDTexture, "data")
-	ChangeTwoDTexturePreview         = observer.ExtChange(ChangeTwoDTexture, "preview")
+	ChangeTwoDTexture                = mvc.NewChange("twod_texture")
+	ChangeTwoDTextureWrapping        = mvc.SubChange(ChangeTwoDTexture, "wrapping")
+	ChangeTwoDTextureFiltering       = mvc.SubChange(ChangeTwoDTexture, "filtering")
+	ChangeTwoDTextureWidth           = mvc.SubChange(ChangeTwoDTexture, "width")
+	ChangeTwoDTextureHeight          = mvc.SubChange(ChangeTwoDTexture, "height")
+	ChangeTwoDTextureFormat          = mvc.SubChange(ChangeTwoDTexture, "format")
+	ChangeTwoDTextureMipmapping      = mvc.SubChange(ChangeTwoDTexture, "mipmapping")
+	ChangeTwoDTextureGammaCorrection = mvc.SubChange(ChangeTwoDTexture, "gamma_correction")
+	ChangeTwoDTextureData            = mvc.SubChange(ChangeTwoDTexture, "data")
+	ChangeTwoDTexturePreview         = mvc.SubChange(ChangeTwoDTexture, "preview")
 )
 
 func CreateTwoDTexture(registry *data.Registry) (*TwoDTexture, error) {
@@ -45,7 +45,7 @@ func CreateTwoDTexture(registry *data.Registry) (*TwoDTexture, error) {
 		return nil, fmt.Errorf("error saving content: %w", err)
 	}
 	return &TwoDTexture{
-		Target:        observer.NewTarget(),
+		Observable:    mvc.NewObservable(),
 		resource:      resource,
 		resourceModel: NewResource(resource),
 		texAsset:      texAsset,
@@ -67,7 +67,7 @@ func OpenTwoDTexture(registry *data.Registry, id string) (*TwoDTexture, error) {
 		previewImg = nil
 	}
 	return &TwoDTexture{
-		Target:        observer.NewTarget(),
+		Observable:    mvc.NewObservable(),
 		resource:      resource,
 		resourceModel: NewResource(resource),
 		texAsset:      texAsset,
@@ -76,7 +76,7 @@ func OpenTwoDTexture(registry *data.Registry, id string) (*TwoDTexture, error) {
 }
 
 type TwoDTexture struct {
-	observer.Target
+	mvc.Observable
 	resource      *data.Resource
 	resourceModel *Resource
 	texAsset      *asset.TwoDTexture

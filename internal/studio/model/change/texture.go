@@ -1,9 +1,9 @@
 package change
 
 import (
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/history"
 	"github.com/mokiat/lacking/game/asset"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 type Wrappable interface {
@@ -57,7 +57,7 @@ type GammaCorrectable interface {
 }
 
 type TwoDTexture interface {
-	observer.Target
+	mvc.Observable
 	SetWidth(int)
 	SetHeight(int)
 	SetFormat(asset.TexelFormat)
@@ -95,7 +95,7 @@ func TwoDTextureContent(target TwoDTexture, from, to TwoDTextureContentState) hi
 }
 
 type CubeTexture interface {
-	observer.Target
+	mvc.Observable
 	SetDimension(int)
 	SetFormat(asset.TexelFormat)
 	SetFrontData([]byte)

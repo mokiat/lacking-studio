@@ -3,29 +3,30 @@ package model
 import (
 	"fmt"
 
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/history"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 var (
-	ChangeHistory     = observer.NewChange("history")
-	ChangeHistoryAdd  = observer.ExtChange(ChangeHistory, "add")
-	ChangeHistoryUndo = observer.ExtChange(ChangeHistory, "undo")
-	ChangeHistoryRedo = observer.ExtChange(ChangeHistory, "redo")
-	ChangeHistorySave = observer.ExtChange(ChangeHistory, "save")
+	ChangeHistory     = mvc.NewChange("history")
+	ChangeHistoryAdd  = mvc.SubChange(ChangeHistory, "add")
+	ChangeHistoryUndo = mvc.SubChange(ChangeHistory, "undo")
+	ChangeHistoryRedo = mvc.SubChange(ChangeHistory, "redo")
+	ChangeHistorySave = mvc.SubChange(ChangeHistory, "save")
 )
 
 const maxUndoCount = 10
 
 func NewHistory() *History {
 	return &History{
+		Observable:  mvc.NewObservable(),
 		changes:     history.NewQueue(maxUndoCount),
 		savedChange: nil,
 	}
 }
 
 type History struct {
-	observer.Target
+	mvc.Observable
 	changes     *history.Queue
 	savedChange history.Change
 }

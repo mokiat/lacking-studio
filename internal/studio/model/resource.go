@@ -1,24 +1,24 @@
 package model
 
 import (
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 var (
-	ChangeResource     = observer.NewChange("resource")
-	ChangeResourceName = observer.ExtChange(ChangeResource, "name")
+	ChangeResource     = mvc.NewChange("resource")
+	ChangeResourceName = mvc.SubChange(ChangeResource, "name")
 )
 
 func NewResource(resource *data.Resource) *Resource {
 	return &Resource{
-		Target:   observer.NewTarget(),
-		resource: resource,
+		Observable: mvc.NewObservable(),
+		resource:   resource,
 	}
 }
 
 type Resource struct {
-	observer.Target
+	mvc.Observable
 	resource *data.Resource
 }
 

@@ -1,7 +1,6 @@
 package view
 
 import (
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking/ui"
@@ -19,8 +18,8 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 	data := co.GetData[AssetPropertiesSectionData](props)
 	resource := data.Model
 
-	WithBinding(resource, func(ch observer.Change) bool {
-		return observer.IsChange(ch, model.ChangeResourceName)
+	mvc.UseBinding(resource, func(ch mvc.Change) bool {
+		return mvc.IsChange(ch, model.ChangeResourceName)
 	})
 
 	return co.New(mat.Element, func() {

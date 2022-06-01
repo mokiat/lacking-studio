@@ -1,26 +1,26 @@
 package model
 
 import (
-	"github.com/mokiat/lacking-studio/internal/observer"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 var (
-	ChangeTwoDTextureEditor                        = observer.NewChange("twod_texture_editor")
-	ChangeTwoDTextureEditorPropertiesVisible       = observer.ExtChange(ChangeTwoDTextureEditor, "properties_visible")
-	ChangeTwoDTextureEditorAssetAccordionExpanded  = observer.ExtChange(ChangeTwoDTextureEditor, "asset_accordion_expanded")
-	ChangeTwoDTextureEditorConfigAccordionExpanded = observer.ExtChange(ChangeTwoDTextureEditor, "config_accordion_expanded")
+	ChangeTwoDTextureEditor                        = mvc.NewChange("twod_texture_editor")
+	ChangeTwoDTextureEditorPropertiesVisible       = mvc.SubChange(ChangeTwoDTextureEditor, "properties_visible")
+	ChangeTwoDTextureEditorAssetAccordionExpanded  = mvc.SubChange(ChangeTwoDTextureEditor, "asset_accordion_expanded")
+	ChangeTwoDTextureEditorConfigAccordionExpanded = mvc.SubChange(ChangeTwoDTextureEditor, "config_accordion_expanded")
 )
 
 func NewTwoDTextureEditor() *TwoDTextureEditor {
 	return &TwoDTextureEditor{
-		Target:              observer.NewTarget(),
+		Observable:          mvc.NewObservable(),
 		properties:          NewTwoDTextureEditorProperties(),
 		isPropertiesVisible: true,
 	}
 }
 
 type TwoDTextureEditor struct {
-	observer.Target
+	mvc.Observable
 	properties          *TwoDTextureEditorProperties
 	isPropertiesVisible bool
 }
@@ -40,14 +40,14 @@ func (e *TwoDTextureEditor) SetPropertiesVisible(visible bool) {
 
 func NewTwoDTextureEditorProperties() *TwoDTextureEditorProperties {
 	return &TwoDTextureEditorProperties{
-		Target:                    observer.NewTarget(),
+		Observable:                mvc.NewObservable(),
 		isAssetAccordionExpanded:  false,
 		isConfigAccordionExpanded: true,
 	}
 }
 
 type TwoDTextureEditorProperties struct {
-	observer.Target
+	mvc.Observable
 	isAssetAccordionExpanded  bool
 	isConfigAccordionExpanded bool
 }

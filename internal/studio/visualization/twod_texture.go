@@ -6,7 +6,6 @@ import (
 	"image"
 
 	"github.com/mokiat/gomath/sprec"
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/data/buffer"
 	"github.com/mokiat/lacking/game/asset"
@@ -14,6 +13,7 @@ import (
 	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 func NewTwoDTexture(api render.API, engine *graphics.Engine, texModel *model.TwoDTexture) *TwoDTexture {
@@ -52,7 +52,7 @@ func NewTwoDTexture(api render.API, engine *graphics.Engine, texModel *model.Two
 
 type TwoDTexture struct {
 	texModel        *model.TwoDTexture
-	texSubscription observer.Subscription
+	texSubscription mvc.Subscription
 
 	api          render.API
 	engine       *graphics.Engine
@@ -212,7 +212,7 @@ func (t *TwoDTexture) Destroy() {
 }
 
 func (t *TwoDTexture) subscribeToModel() {
-	t.texSubscription = t.texModel.Subscribe(func(ch observer.Change) {
+	t.texSubscription = t.texModel.Subscribe(func(ch mvc.Change) {
 		t.deleteGraphicsRepresentation()
 		t.createGraphicsRepresentation()
 	})

@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking/game/asset"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 var (
-	ChangeCubeTexture                = observer.NewChange("twod_texture")
-	ChangeCubeTextureFiltering       = observer.ExtChange(ChangeCubeTexture, "filtering")
-	ChangeCubeTextureDimension       = observer.ExtChange(ChangeCubeTexture, "dimension")
-	ChangeCubeTextureFormat          = observer.ExtChange(ChangeCubeTexture, "format")
-	ChangeCubeTextureMipmapping      = observer.ExtChange(ChangeCubeTexture, "mipmapping")
-	ChangeCubeTextureGammaCorrection = observer.ExtChange(ChangeCubeTexture, "gamma_correction")
-	ChangeCubeTextureData            = observer.ExtChange(ChangeCubeTexture, "data")
-	ChangeCubeTexturePreview         = observer.ExtChange(ChangeCubeTexture, "preview")
+	ChangeCubeTexture                = mvc.NewChange("twod_texture")
+	ChangeCubeTextureFiltering       = mvc.SubChange(ChangeCubeTexture, "filtering")
+	ChangeCubeTextureDimension       = mvc.SubChange(ChangeCubeTexture, "dimension")
+	ChangeCubeTextureFormat          = mvc.SubChange(ChangeCubeTexture, "format")
+	ChangeCubeTextureMipmapping      = mvc.SubChange(ChangeCubeTexture, "mipmapping")
+	ChangeCubeTextureGammaCorrection = mvc.SubChange(ChangeCubeTexture, "gamma_correction")
+	ChangeCubeTextureData            = mvc.SubChange(ChangeCubeTexture, "data")
+	ChangeCubeTexturePreview         = mvc.SubChange(ChangeCubeTexture, "preview")
 )
 
 func CreateCubeTexture(registry *data.Registry) (*CubeTexture, error) {
@@ -58,7 +58,7 @@ func CreateCubeTexture(registry *data.Registry) (*CubeTexture, error) {
 		return nil, fmt.Errorf("error saving content: %w", err)
 	}
 	return &CubeTexture{
-		Target:        observer.NewTarget(),
+		Observable:    mvc.NewObservable(),
 		resource:      resource,
 		resourceModel: NewResource(resource),
 		texAsset:      texAsset,
@@ -80,7 +80,7 @@ func OpenCubeTexture(registry *data.Registry, id string) (*CubeTexture, error) {
 		previewImg = nil
 	}
 	return &CubeTexture{
-		Target:        observer.NewTarget(),
+		Observable:    mvc.NewObservable(),
 		resource:      resource,
 		resourceModel: NewResource(resource),
 		texAsset:      texAsset,
@@ -89,7 +89,7 @@ func OpenCubeTexture(registry *data.Registry, id string) (*CubeTexture, error) {
 }
 
 type CubeTexture struct {
-	observer.Target
+	mvc.Observable
 	resource      *data.Resource
 	resourceModel *Resource
 	texAsset      *asset.CubeTexture

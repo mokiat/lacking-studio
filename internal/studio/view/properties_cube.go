@@ -1,11 +1,11 @@
 package view
 
 import (
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 type CubeTexturePropertiesData struct {
@@ -18,7 +18,7 @@ var CubeTextureProperties = co.Define(func(props co.Properties, scope co.Scope) 
 	data := co.GetData[CubeTexturePropertiesData](props)
 	properties := data.Model
 
-	WithBinding(properties, func(change observer.Change) bool {
+	mvc.UseBinding(properties, func(change mvc.Change) bool {
 		return true
 	})
 

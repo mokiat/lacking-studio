@@ -1,7 +1,6 @@
 package view
 
 import (
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking/game/asset"
@@ -22,7 +21,7 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties, sco
 		texture = data.Texture
 	)
 
-	WithBinding(texture, func(change observer.Change) bool {
+	mvc.UseBinding(texture, func(change mvc.Change) bool {
 		return true // TODO
 	})
 

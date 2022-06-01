@@ -1,26 +1,26 @@
 package model
 
 import (
-	"github.com/mokiat/lacking-studio/internal/observer"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 var (
-	ChangeCubeTextureEditor                        = observer.NewChange("cube_texture_editor")
-	ChangeCubeTextureEditorPropertiesVisible       = observer.ExtChange(ChangeCubeTextureEditor, "properties_visible")
-	ChangeCubeTextureEditorAssetAccordionExpanded  = observer.ExtChange(ChangeCubeTextureEditor, "asset_accordion_expanded")
-	ChangeCubeTextureEditorConfigAccordionExpanded = observer.ExtChange(ChangeCubeTextureEditor, "config_accordion_expanded")
+	ChangeCubeTextureEditor                        = mvc.NewChange("cube_texture_editor")
+	ChangeCubeTextureEditorPropertiesVisible       = mvc.SubChange(ChangeCubeTextureEditor, "properties_visible")
+	ChangeCubeTextureEditorAssetAccordionExpanded  = mvc.SubChange(ChangeCubeTextureEditor, "asset_accordion_expanded")
+	ChangeCubeTextureEditorConfigAccordionExpanded = mvc.SubChange(ChangeCubeTextureEditor, "config_accordion_expanded")
 )
 
 func NewCubeTextureEditor() *CubeTextureEditor {
 	return &CubeTextureEditor{
-		Target:              observer.NewTarget(),
+		Observable:          mvc.NewObservable(),
 		properties:          NewCubeTextureEditorProperties(),
 		isPropertiesVisible: true,
 	}
 }
 
 type CubeTextureEditor struct {
-	observer.Target
+	mvc.Observable
 	properties          *CubeTextureEditorProperties
 	isPropertiesVisible bool
 }
@@ -40,14 +40,14 @@ func (e *CubeTextureEditor) SetPropertiesVisible(visible bool) {
 
 func NewCubeTextureEditorProperties() *CubeTextureEditorProperties {
 	return &CubeTextureEditorProperties{
-		Target:                    observer.NewTarget(),
+		Observable:                mvc.NewObservable(),
 		isAssetAccordionExpanded:  false,
 		isConfigAccordionExpanded: true,
 	}
 }
 
 type CubeTextureEditorProperties struct {
-	observer.Target
+	mvc.Observable
 	isAssetAccordionExpanded  bool
 	isConfigAccordionExpanded bool
 }

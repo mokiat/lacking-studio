@@ -1,7 +1,6 @@
 package view
 
 import (
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
@@ -25,7 +24,7 @@ var TwoDTextureEditor = co.ContextScoped(co.Define(func(props co.Properties, sco
 		viz         = data.Visualization
 	)
 
-	WithBinding(editorModel, func(change observer.Change) bool {
+	mvc.UseBinding(editorModel, func(change mvc.Change) bool {
 		return true
 	})
 

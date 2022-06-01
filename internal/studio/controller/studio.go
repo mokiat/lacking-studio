@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mokiat/lacking-studio/internal/observer"
 	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
@@ -38,7 +37,7 @@ func NewStudio(
 	result := &Studio{
 		Controller: co.NewBaseController(),
 
-		target: observer.NewTarget(),
+		target: mvc.NewObservable(),
 
 		api: api,
 
@@ -57,7 +56,7 @@ func NewStudio(
 type Studio struct {
 	co.Controller
 
-	target observer.Target
+	target mvc.Observable
 
 	api render.API
 
@@ -110,7 +109,7 @@ func (s *Studio) deleteResource(id string) {
 	}
 }
 
-func (s *Studio) Target() observer.Target {
+func (s *Studio) Target() mvc.Observable {
 	return s.target
 }
 
@@ -342,7 +341,7 @@ var StudioTopPanel = co.Controlled(co.Define(func(props co.Properties, scope co.
 var Toolbar = co.Controlled(co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	controller := props.Data().(*Studio)
 
-	assetsOverlay := co.UseState(func() *co.Overlay {
+	assetsOverlay := co.UseState(func() co.Overlay {
 		return nil
 	})
 
