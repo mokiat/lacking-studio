@@ -21,7 +21,6 @@ import (
 )
 
 func NewStudio(
-	projectDir string,
 	window *ui.Window,
 	api render.API,
 	registry asset.Registry,
@@ -41,10 +40,9 @@ func NewStudio(
 
 		api: api,
 
-		projectDir: projectDir,
-		window:     window,
-		registry:   dataStudio,
-		gfxEngine:  gfxEngine,
+		window:    window,
+		registry:  dataStudio,
+		gfxEngine: gfxEngine,
 
 		actionsVisible:    true,
 		propertiesVisible: true,
@@ -60,10 +58,9 @@ type Studio struct {
 
 	api render.API
 
-	projectDir string
-	window     *ui.Window
-	registry   *data.Registry
-	gfxEngine  *graphics.Engine
+	window    *ui.Window
+	registry  *data.Registry
+	gfxEngine *graphics.Engine
 
 	actionsVisible    bool
 	propertiesVisible bool
@@ -117,10 +114,6 @@ func (s *Studio) HandleError(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (s *Studio) ProjectDir() string {
-	return s.projectDir
 }
 
 func (s *Studio) Window() *ui.Window {

@@ -42,29 +42,25 @@ func runApplication(projectDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize registry: %w", err)
 	}
-
 	locator := resource.NewFSLocator(resources.FS)
+
+	physicsEngine := physics.NewEngine()
+	ecsEngine := ecs.NewEngine()
+	renderAPI := glrender.NewAPI()
+	graphicsEngine := graphics.NewEngine(renderAPI, glgame.NewShaderCollection())
+
+	uiCfg := ui.NewConfig(mat.WrappedResourceLocator(locator), renderAPI, glui.NewShaderCollection())
+	controller := app.NewLayeredController(
+		studio.NewController(graphicsEngine),
+		ui.NewController(uiCfg, func(w *ui.Window) {
+			studio.BootstrapApplication(w, renderAPI, registry, graphicsEngine, physicsEngine, ecsEngine)
+		}),
+	)
 
 	cfg := glapp.NewConfig("Lacking Studio", 1024, 576)
 	cfg.SetVSync(true)
 	cfg.SetMaximized(true)
 	cfg.SetLocator(locator)
 	cfg.SetIcon("icons/favicon.png")
-
-	physicsEngine := physics.NewEngine()
-	ecsEngine := ecs.NewEngine()
-
-	renderAPI := glrender.NewAPI()
-	graphicsEngine := graphics.NewEngine(renderAPI, glgame.NewShaderCollection())
-	resourceLocator := mat.WrappedResourceLocator(locator)
-
-	uiCfg := ui.NewConfig(resourceLocator, renderAPI, glui.NewShaderCollection())
-	controller := app.NewLayeredController(
-		studio.NewController(graphicsEngine),
-		ui.NewController(uiCfg, func(w *ui.Window) {
-			studio.BootstrapApplication(projectDir, w, renderAPI, registry, graphicsEngine, physicsEngine, ecsEngine)
-		}),
-	)
-
 	return glapp.Run(cfg, controller)
 }
