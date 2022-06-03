@@ -21,8 +21,7 @@ import (
 
 func NewTwoDTextureEditor(studio *Studio, editorModel *model.Editor, texModel *model.TwoDTexture) *TwoDTextureEditor {
 	return &TwoDTextureEditor{
-		BaseEditor:  NewBaseEditor(),
-		studio:      studio,
+		histModel:   editorModel.History(),
 		texModel:    texModel,
 		editorModel: model.NewTwoDTextureEditor(),
 		viz:         visualization.NewTwoDTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
@@ -32,23 +31,10 @@ func NewTwoDTextureEditor(studio *Studio, editorModel *model.Editor, texModel *m
 var _ model.IEditor = (*TwoDTextureEditor)(nil)
 
 type TwoDTextureEditor struct {
-	BaseEditor
-	studio      *Studio
+	histModel   *model.History
 	texModel    *model.TwoDTexture
 	editorModel *model.TwoDTextureEditor
 	viz         *visualization.TwoDTexture
-}
-
-func (e *TwoDTextureEditor) ID() string {
-	return e.texModel.Resource().ID()
-}
-
-func (e *TwoDTextureEditor) Name() string {
-	return e.texModel.Resource().Name()
-}
-
-func (e *TwoDTextureEditor) Icon(scope co.Scope) *ui.Image {
-	return co.OpenImage(scope, "icons/texture.png")
 }
 
 func (e *TwoDTextureEditor) Save() error {
@@ -61,7 +47,8 @@ func (e *TwoDTextureEditor) Save() error {
 	if err := e.texModel.Save(); err != nil {
 		return fmt.Errorf("error saving texture model %w", err)
 	}
-	return e.BaseEditor.Save()
+	e.histModel.Save()
+	return nil
 }
 
 func (e *TwoDTextureEditor) Render(scope co.Scope, layoutData mat.LayoutData) co.Instance {
@@ -104,7 +91,7 @@ func (e *TwoDTextureEditor) Reduce(act mvc.Action) bool {
 }
 
 func (e *TwoDTextureEditor) changeResourceName(name string) {
-	e.changes.Push(change.Name(e.texModel.Resource(),
+	e.histModel.Add(change.Name(e.texModel.Resource(),
 		change.NameState{
 			Value: e.texModel.Resource().Name(),
 		},
@@ -112,13 +99,10 @@ func (e *TwoDTextureEditor) changeResourceName(name string) {
 			Value: name,
 		},
 	))
-
-	// FIXME: Figure out how to avoid this:
-	// e.studio.NotifyChanged()
 }
 
 func (e *TwoDTextureEditor) changeWrapping(wrapping asset.WrapMode) {
-	e.changes.Push(change.Wrapping(e.texModel,
+	e.histModel.Add(change.Wrapping(e.texModel,
 		change.WrappingState{
 			Value: e.texModel.Wrapping(),
 		},
@@ -129,7 +113,7 @@ func (e *TwoDTextureEditor) changeWrapping(wrapping asset.WrapMode) {
 }
 
 func (e *TwoDTextureEditor) changeFiltering(filter asset.FilterMode) {
-	e.changes.Push(change.Filtering(
+	e.histModel.Add(change.Filtering(
 		e.texModel,
 		change.FilteringState{
 			Value: e.texModel.Filtering(),
@@ -147,8 +131,7 @@ func (e *TwoDTextureEditor) changeFormat(format asset.TexelFormat) {
 func (e *TwoDTextureEditor) changeContentFromPath(path string) {
 	img, err := e.openImage(path)
 	if err != nil {
-		e.studio.HandleError(fmt.Errorf("failed to open source image: %w", err))
-		return
+		panic(fmt.Errorf("failed to open source image: %w", err))
 	}
 	twodImg := pack.BuildImageResource(img)
 
@@ -166,9 +149,8 @@ func (e *TwoDTextureEditor) changeContentFromPath(path string) {
 			Data:   twodImg.RGBA8Data(),
 		},
 	)
-	if err := e.changes.Push(ch); err != nil {
-		e.studio.HandleError(fmt.Errorf("failed to apply change: %w", err))
-		return
+	if err := e.histModel.Add(ch); err != nil {
+		panic(fmt.Errorf("failed to apply change: %w", err))
 	}
 }
 

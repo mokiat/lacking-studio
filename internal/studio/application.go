@@ -30,12 +30,14 @@ func BootstrapApplication(
 	}
 
 	co.RegisterContext(global.Context{
-		API:      api,
-		Registry: studioRegistry,
+		API:            api,
+		Registry:       studioRegistry,
+		GraphicsEngine: gfxEngine,
+		PhysicsEngine:  physicsEngine,
+		ECSEngine:      ecsEngine,
 	})
 
 	studio := controller.NewStudio(
-		window,
 		api,
 		studioRegistry,
 		gfxEngine,

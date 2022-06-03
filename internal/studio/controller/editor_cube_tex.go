@@ -21,8 +21,6 @@ import (
 
 func NewCubeTextureEditor(studio *Studio, editorModel *model.Editor, texModel *model.CubeTexture) *CubeTextureEditor {
 	return &CubeTextureEditor{
-		BaseEditor: NewBaseEditor(),
-		// studio:      studio,
 		histModel:   editorModel.History(),
 		texModel:    texModel,
 		editorModel: model.NewCubeTextureEditor(),
@@ -33,8 +31,6 @@ func NewCubeTextureEditor(studio *Studio, editorModel *model.Editor, texModel *m
 var _ model.IEditor = (*CubeTextureEditor)(nil)
 
 type CubeTextureEditor struct {
-	BaseEditor
-	// studio      *Studio
 	histModel   *model.History
 	texModel    *model.CubeTexture
 	editorModel *model.CubeTextureEditor
@@ -100,9 +96,6 @@ func (e *CubeTextureEditor) changeResourceName(name string) {
 			Value: name,
 		},
 	))
-
-	// FIXME: Figure out how to avoid this:
-	// e.studio.NotifyChanged()
 }
 
 func (e *CubeTextureEditor) changeFiltering(filter asset.FilterMode) {

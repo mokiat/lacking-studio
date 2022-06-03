@@ -12,7 +12,6 @@ import (
 	"github.com/mokiat/lacking/game/physics"
 	"github.com/mokiat/lacking/log"
 	"github.com/mokiat/lacking/render"
-	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
@@ -21,7 +20,6 @@ import (
 )
 
 func NewStudio(
-	window *ui.Window,
 	api render.API,
 	registry *studiodata.Registry,
 	gfxEngine *graphics.Engine,
@@ -30,7 +28,6 @@ func NewStudio(
 ) *Studio {
 	return &Studio{
 		api:       api,
-		window:    window,
 		registry:  registry,
 		gfxEngine: gfxEngine,
 
@@ -44,7 +41,6 @@ func NewStudio(
 
 type Studio struct {
 	api       render.API
-	window    *ui.Window
 	registry  *studiodata.Registry
 	gfxEngine *graphics.Engine
 
@@ -86,7 +82,6 @@ func (s *Studio) Reduce(act mvc.Action) bool {
 		s.save()
 		return true
 	default:
-		// TODO: Send to the currently selected editor
 		return false
 	}
 }
@@ -225,8 +220,10 @@ var StudioView = co.Define(func(props co.Properties, scope co.Scope) co.Instance
 		})
 		co.WithScope(scope)
 
-		co.WithChild("top", co.New(StudioTopPanel, func() {
-			co.WithData(props.Data())
+		co.WithChild("top", co.New(view.StudioHeader, func() {
+			co.WithData(view.StudioHeaderData{
+				StudioModel: studioModel,
+			})
 			co.WithLayoutData(mat.LayoutData{
 				Alignment: mat.AlignmentTop,
 			})
@@ -239,36 +236,5 @@ var StudioView = co.Define(func(props co.Properties, scope co.Scope) co.Instance
 				Alignment: mat.AlignmentCenter,
 			}))
 		}
-	})
-})
-
-var StudioTopPanel = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	controller := props.Data().(*Studio)
-
-	return co.New(mat.Container, func() {
-		co.WithData(mat.ContainerData{
-			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-				ContentAlignment: mat.AlignmentLeft,
-			}),
-		})
-		co.WithLayoutData(props.LayoutData())
-
-		co.WithChild("toolbar", co.New(view.StudioToolbar, func() {
-			co.WithData(view.StudioToolbarData{
-				StudioModel: controller.Model(),
-			})
-			co.WithLayoutData(mat.LayoutData{
-				GrowHorizontally: true,
-			})
-		}))
-
-		co.WithChild("tabbar", co.New(view.StudioTabbar, func() {
-			co.WithData(view.StudioTabbarData{
-				StudioModel: controller.Model(),
-			})
-			co.WithLayoutData(mat.LayoutData{
-				GrowHorizontally: true,
-			})
-		}))
 	})
 })

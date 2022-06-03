@@ -3,6 +3,7 @@ package model
 import (
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/mvc"
 )
 
 func NewEditor(resource *Resource) *Editor {
@@ -26,24 +27,9 @@ func (e *Editor) Resource() *Resource {
 	return e.resource
 }
 
-// // TODO: Remove
-// func (e *Editor) SetHandler(handler IEditor) {
-// 	e.handler = handler
-// }
-
-// // TODO: Remove
-// func (e *Editor) Handler() IEditor {
-// 	return e.handler
-// }
-
 type IEditor interface {
-	// ID() string
-	// Name() string
-	// Icon(scope co.Scope) *ui.Image
-
+	mvc.Reducer
 	Save() error
-
 	Render(scope co.Scope, layoutData mat.LayoutData) co.Instance
-
 	Destroy()
 }
