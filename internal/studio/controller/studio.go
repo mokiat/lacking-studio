@@ -1,41 +1,27 @@
 package controller
 
 import (
-	"fmt"
-
 	studiodata "github.com/mokiat/lacking-studio/internal/studio/data"
+	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
-	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/graphics"
-	"github.com/mokiat/lacking/game/physics"
 	"github.com/mokiat/lacking/log"
 	"github.com/mokiat/lacking/render"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/util/filter"
-	"github.com/mokiat/lacking/util/optional"
 )
 
-func NewStudio(
-	api render.API,
-	registry *studiodata.Registry,
-	gfxEngine *graphics.Engine,
-	physicsEngine *physics.Engine,
-	ecsEngine *ecs.Engine,
-) *Studio {
+func NewStudio(globalCtx global.Context, studioModel *model.Studio) *Studio {
 	return &Studio{
-		api:       api,
-		registry:  registry,
-		gfxEngine: gfxEngine,
+		api:       globalCtx.API,
+		registry:  globalCtx.Registry,
+		gfxEngine: globalCtx.GraphicsEngine,
 
-		studioModel:       model.NewStudio(),
+		studioModel:       studioModel,
 		editorControllers: make(map[*model.Editor]model.IEditor),
-
-		actionsVisible:    true,
-		propertiesVisible: true,
 	}
 }
 
@@ -46,9 +32,6 @@ type Studio struct {
 
 	studioModel       *model.Studio
 	editorControllers map[*model.Editor]model.IEditor
-
-	actionsVisible    bool
-	propertiesVisible bool
 }
 
 func (s *Studio) Model() *model.Studio {
@@ -176,12 +159,6 @@ func (s *Studio) save() {
 	// TODO
 }
 
-func (s *Studio) HandleError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func (s *Studio) GraphicsEngine() *graphics.Engine {
 	return s.gfxEngine
 }
@@ -199,42 +176,17 @@ func (s *Studio) Save() {
 	// }
 }
 
-func (s *Studio) Render() co.Instance {
-	return co.New(StudioView, func() {
-		co.WithData(s)
+func (s *Studio) Render(scope co.Scope) co.Instance {
+	return co.New(view.Studio, func() {
+		co.WithData(view.StudioData{
+			StudioModel:      s.studioModel,
+			StudioController: s,
+		})
+		co.WithScope(mvc.UseReducer(scope, s))
 	})
 }
 
-// TODO: Move to view package
-var StudioView = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	controller := props.Data().(*Studio)
-	scope = mvc.UseReducer(scope, controller)
-
-	studioModel := controller.Model()
-	mvc.UseBinding(studioModel, filter.Always[mvc.Change]()) // TODO
-
-	return co.New(mat.Container, func() {
-		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.Value(mat.SurfaceColor),
-			Layout:          mat.NewFrameLayout(),
-		})
-		co.WithScope(scope)
-
-		co.WithChild("top", co.New(view.StudioHeader, func() {
-			co.WithData(view.StudioHeaderData{
-				StudioModel: studioModel,
-			})
-			co.WithLayoutData(mat.LayoutData{
-				Alignment: mat.AlignmentTop,
-			})
-		}))
-
-		if editor := studioModel.SelectedEditor(); editor != nil {
-			editorController := controller.editorControllers[editor]
-			key := fmt.Sprintf("center-%s", editor.Resource().ID())
-			co.WithChild(key, editorController.Render(scope, mat.LayoutData{
-				Alignment: mat.AlignmentCenter,
-			}))
-		}
-	})
-})
+func (s *Studio) RenderEditor(editorModel *model.Editor, scope co.Scope, layoutData mat.LayoutData) co.Instance {
+	controller := s.editorControllers[editorModel]
+	return controller.Render(scope, layoutData)
+}
