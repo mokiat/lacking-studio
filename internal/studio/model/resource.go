@@ -38,3 +38,7 @@ func (r *Resource) SetName(name string) {
 func (r *Resource) Kind() data.ResourceKind {
 	return r.resource.Kind()
 }
+
+func (r *Resource) Raw() *data.Resource {
+	return r.resource
+}

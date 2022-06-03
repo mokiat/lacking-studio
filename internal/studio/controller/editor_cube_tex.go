@@ -19,36 +19,26 @@ import (
 	"github.com/mokiat/lacking/ui/mvc"
 )
 
-func NewCubeTextureEditor(studio *Studio, texModel *model.CubeTexture) *CubeTextureEditor {
+func NewCubeTextureEditor(studio *Studio, editorModel *model.Editor, texModel *model.CubeTexture) *CubeTextureEditor {
 	return &CubeTextureEditor{
-		BaseEditor:  NewBaseEditor(),
-		studio:      studio,
+		BaseEditor: NewBaseEditor(),
+		// studio:      studio,
+		histModel:   editorModel.History(),
 		texModel:    texModel,
 		editorModel: model.NewCubeTextureEditor(),
 		viz:         visualization.NewCubeTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
 	}
 }
 
-var _ model.Editor = (*CubeTextureEditor)(nil)
+var _ model.IEditor = (*CubeTextureEditor)(nil)
 
 type CubeTextureEditor struct {
 	BaseEditor
-	studio      *Studio
+	// studio      *Studio
+	histModel   *model.History
 	texModel    *model.CubeTexture
 	editorModel *model.CubeTextureEditor
 	viz         *visualization.CubeTexture
-}
-
-func (e *CubeTextureEditor) ID() string {
-	return e.texModel.Resource().ID()
-}
-
-func (e *CubeTextureEditor) Name() string {
-	return e.texModel.Resource().Name()
-}
-
-func (e *CubeTextureEditor) Icon(scope co.Scope) *ui.Image {
-	return co.OpenImage(scope, "icons/texture.png")
 }
 
 func (e *CubeTextureEditor) Save() error {
@@ -61,7 +51,8 @@ func (e *CubeTextureEditor) Save() error {
 	if err := e.texModel.Save(); err != nil {
 		return fmt.Errorf("error saving texture model %w", err)
 	}
-	return e.BaseEditor.Save()
+	e.histModel.Save()
+	return nil
 }
 
 func (e *CubeTextureEditor) Render(scope co.Scope, layoutData mat.LayoutData) co.Instance {
@@ -101,7 +92,7 @@ func (e *CubeTextureEditor) Reduce(act mvc.Action) bool {
 }
 
 func (e *CubeTextureEditor) changeResourceName(name string) {
-	e.changes.Push(change.Name(e.texModel.Resource(),
+	e.histModel.Add(change.Name(e.texModel.Resource(),
 		change.NameState{
 			Value: e.texModel.Resource().Name(),
 		},
@@ -111,11 +102,11 @@ func (e *CubeTextureEditor) changeResourceName(name string) {
 	))
 
 	// FIXME: Figure out how to avoid this:
-	e.studio.NotifyChanged()
+	// e.studio.NotifyChanged()
 }
 
 func (e *CubeTextureEditor) changeFiltering(filter asset.FilterMode) {
-	e.changes.Push(change.Filtering(
+	e.histModel.Add(change.Filtering(
 		e.texModel,
 		change.FilteringState{
 			Value: e.texModel.Filtering(),
@@ -133,8 +124,7 @@ func (e *CubeTextureEditor) changeFormat(format asset.TexelFormat) {
 func (e *CubeTextureEditor) changeContentFromPath(path string) {
 	img, err := e.openImage(path)
 	if err != nil {
-		e.studio.HandleError(fmt.Errorf("failed to open source image: %w", err))
-		return
+		panic(fmt.Errorf("failed to open source image: %w", err))
 	}
 
 	twodImg := pack.BuildImageResource(img)
@@ -147,8 +137,7 @@ func (e *CubeTextureEditor) changeContentFromPath(path string) {
 	bottomPackImg := pack.BuildCubeSideFromEquirectangularScaled(twodImg, pack.CubeSideBottom, dimension)
 	cubeImg, err := pack.BuildCube(frontPackImg, rearPackImg, leftPackImg, rightPackImg, topPackImg, bottomPackImg, 0)
 	if err != nil {
-		e.studio.HandleError(fmt.Errorf("failed to build cube image: %w", err))
-		return
+		panic(fmt.Errorf("failed to build cube image: %w", err))
 	}
 
 	ch := change.CubeTextureContent(e.texModel,
@@ -173,9 +162,8 @@ func (e *CubeTextureEditor) changeContentFromPath(path string) {
 			BottomData: cubeImg.RGBA32FData(pack.CubeSideBottom),
 		},
 	)
-	if err := e.changes.Push(ch); err != nil {
-		e.studio.HandleError(fmt.Errorf("failed to apply change: %w", err))
-		return
+	if err := e.histModel.Add(ch); err != nil {
+		panic(fmt.Errorf("failed to apply change: %w", err)) // TODO
 	}
 }
 

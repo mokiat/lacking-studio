@@ -66,8 +66,8 @@ func CreateCubeTexture(registry *data.Registry) (*CubeTexture, error) {
 	}, nil
 }
 
-func OpenCubeTexture(registry *data.Registry, id string) (*CubeTexture, error) {
-	resource := registry.GetResourceByID(id)
+func OpenCubeTexture(resourceModel *Resource) (*CubeTexture, error) {
+	resource := resourceModel.Raw()
 	texAsset := new(asset.CubeTexture)
 	if err := resource.LoadContent(texAsset); err != nil {
 		return nil, fmt.Errorf("error loading content: %w", err)
@@ -82,7 +82,7 @@ func OpenCubeTexture(registry *data.Registry, id string) (*CubeTexture, error) {
 	return &CubeTexture{
 		Observable:    mvc.NewObservable(),
 		resource:      resource,
-		resourceModel: NewResource(resource),
+		resourceModel: resourceModel,
 		texAsset:      texAsset,
 		previewImg:    previewImg,
 	}, nil

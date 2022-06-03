@@ -53,8 +53,8 @@ func CreateTwoDTexture(registry *data.Registry) (*TwoDTexture, error) {
 	}, nil
 }
 
-func OpenTwoDTexture(registry *data.Registry, id string) (*TwoDTexture, error) {
-	resource := registry.GetResourceByID(id)
+func OpenTwoDTexture(resourceModel *Resource) (*TwoDTexture, error) {
+	resource := resourceModel.Raw()
 	texAsset := new(asset.TwoDTexture)
 	if err := resource.LoadContent(texAsset); err != nil {
 		return nil, fmt.Errorf("error loading content: %w", err)
@@ -69,7 +69,7 @@ func OpenTwoDTexture(registry *data.Registry, id string) (*TwoDTexture, error) {
 	return &TwoDTexture{
 		Observable:    mvc.NewObservable(),
 		resource:      resource,
-		resourceModel: NewResource(resource),
+		resourceModel: resourceModel,
 		texAsset:      texAsset,
 		previewImg:    previewImg,
 	}, nil

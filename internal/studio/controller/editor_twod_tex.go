@@ -19,7 +19,7 @@ import (
 	"github.com/mokiat/lacking/ui/mvc"
 )
 
-func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) *TwoDTextureEditor {
+func NewTwoDTextureEditor(studio *Studio, editorModel *model.Editor, texModel *model.TwoDTexture) *TwoDTextureEditor {
 	return &TwoDTextureEditor{
 		BaseEditor:  NewBaseEditor(),
 		studio:      studio,
@@ -29,7 +29,7 @@ func NewTwoDTextureEditor(studio *Studio, texModel *model.TwoDTexture) *TwoDText
 	}
 }
 
-var _ model.Editor = (*TwoDTextureEditor)(nil)
+var _ model.IEditor = (*TwoDTextureEditor)(nil)
 
 type TwoDTextureEditor struct {
 	BaseEditor
@@ -114,7 +114,7 @@ func (e *TwoDTextureEditor) changeResourceName(name string) {
 	))
 
 	// FIXME: Figure out how to avoid this:
-	e.studio.NotifyChanged()
+	// e.studio.NotifyChanged()
 }
 
 func (e *TwoDTextureEditor) changeWrapping(wrapping asset.WrapMode) {

@@ -1,7 +1,10 @@
 package studio
 
 import (
+	"fmt"
+
 	"github.com/mokiat/lacking-studio/internal/studio/controller"
+	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
@@ -19,17 +22,26 @@ func BootstrapApplication(
 	gfxEngine *graphics.Engine,
 	physicsEngine *physics.Engine,
 	ecsEngine *ecs.Engine,
-) {
+) error {
+
+	studioRegistry := data.NewRegistry(registry)
+	if err := studioRegistry.Init(); err != nil {
+		return fmt.Errorf("error initializing registry: %w", err)
+	}
+
+	co.RegisterContext(global.Context{
+		API:      api,
+		Registry: studioRegistry,
+	})
+
 	studio := controller.NewStudio(
 		window,
 		api,
-		registry,
+		studioRegistry,
 		gfxEngine,
 		physicsEngine,
 		ecsEngine,
 	)
-	co.RegisterContext(global.Context{
-		API: api,
-	})
 	co.Initialize(window, studio.Render())
+	return nil
 }

@@ -53,7 +53,10 @@ func runApplication(projectDir string) error {
 	controller := app.NewLayeredController(
 		studio.NewController(graphicsEngine),
 		ui.NewController(uiCfg, func(w *ui.Window) {
-			studio.BootstrapApplication(w, renderAPI, registry, graphicsEngine, physicsEngine, ecsEngine)
+			if err := studio.BootstrapApplication(w, renderAPI, registry, graphicsEngine, physicsEngine, ecsEngine); err != nil {
+				log.Error("Error bootstrapping application: %v", err)
+				w.Close()
+			}
 		}),
 	)
 
