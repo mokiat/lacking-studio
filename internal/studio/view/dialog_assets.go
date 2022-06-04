@@ -17,13 +17,19 @@ type AssetDialogData struct {
 }
 
 type AssetDialogCallbackData struct {
-	OnAssetSelected func(id string)
-	OnClose         func()
+	OnResourceOpen   func(id string)
+	OnResourceCreate func(kind data.ResourceKind)
+	OnResourceClone  func(id string) *data.Resource
+	OnResourceDelete func(id string)
+	OnClose          func()
 }
 
 var defaultAssetDialogCallbackData = AssetDialogCallbackData{
-	OnAssetSelected: func(id string) {},
-	OnClose:         func() {},
+	OnResourceOpen:   func(string) {},
+	OnResourceCreate: func(data.ResourceKind) {},
+	OnResourceClone:  func(string) *data.Resource { return nil },
+	OnResourceDelete: func(string) {},
+	OnClose:          func() {},
 }
 
 var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -330,7 +336,10 @@ type assetDialogLifecycle struct {
 	handle           co.LifecycleHandle
 	registry         *data.Registry
 	onClose          func()
-	onAssetSelected  func(id string)
+	onResourceOpen   func(id string)
+	onResourceCreate func(kind data.ResourceKind)
+	onResourceClone  func(id string) *data.Resource
+	onResourceDelete func(id string)
 	searchText       string
 	selectedKind     data.ResourceKind
 	selectedResource *data.Resource
@@ -351,7 +360,10 @@ func (l *assetDialogLifecycle) OnUpdate(props co.Properties, scope co.Scope) {
 
 	l.registry = data.Registry
 	l.onClose = callbackData.OnClose
-	l.onAssetSelected = callbackData.OnAssetSelected
+	l.onResourceOpen = callbackData.OnResourceOpen
+	l.onResourceCreate = callbackData.OnResourceCreate
+	l.onResourceClone = callbackData.OnResourceClone
+	l.onResourceDelete = callbackData.OnResourceDelete
 }
 
 func (l *assetDialogLifecycle) OnCancel() {
@@ -359,7 +371,7 @@ func (l *assetDialogLifecycle) OnCancel() {
 }
 
 func (l *assetDialogLifecycle) OnOpen(resource *data.Resource) {
-	l.onAssetSelected(resource.ID())
+	l.onResourceOpen(resource.ID())
 	l.onClose()
 }
 
@@ -405,29 +417,27 @@ func (l *assetDialogLifecycle) EachResource(fn func(*data.Resource)) {
 }
 
 func (l *assetDialogLifecycle) OnNew() {
-	resource, err := l.registry.NewResource(l.selectedKind)
-	if err != nil {
-		panic(err)
-	}
-	l.searchText = resource.Name()
-	l.selectedResource = resource
-	l.handle.NotifyChanged()
+	l.onResourceCreate(l.selectedKind)
+	// resource, err := l.registry.NewResource(l.selectedKind)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// l.searchText = resource.Name()
+	// l.selectedResource = resource
+	// l.handle.NotifyChanged()
 }
 
 func (l *assetDialogLifecycle) OnClone() {
-	resource, err := l.selectedResource.Clone()
-	if err != nil {
-		panic(err)
+	resource := l.onResourceClone(l.selectedResource.ID())
+	if resource != nil {
+		l.searchText = resource.Name()
+		l.selectedResource = resource
+		l.handle.NotifyChanged()
 	}
-	l.searchText = resource.Name()
-	l.selectedResource = resource
-	l.handle.NotifyChanged()
 }
 
 func (l *assetDialogLifecycle) OnDelete() {
-	if err := l.selectedResource.Delete(); err != nil {
-		panic(err)
-	}
+	l.onResourceDelete(l.selectedResource.ID())
 	l.selectedResource = nil
 	l.handle.NotifyChanged()
 }

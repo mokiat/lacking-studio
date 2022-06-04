@@ -6,36 +6,24 @@ import (
 
 var (
 	ChangeCubeTextureEditor                        = mvc.NewChange("cube_texture_editor")
-	ChangeCubeTextureEditorPropertiesVisible       = mvc.SubChange(ChangeCubeTextureEditor, "properties_visible")
 	ChangeCubeTextureEditorAssetAccordionExpanded  = mvc.SubChange(ChangeCubeTextureEditor, "asset_accordion_expanded")
 	ChangeCubeTextureEditorConfigAccordionExpanded = mvc.SubChange(ChangeCubeTextureEditor, "config_accordion_expanded")
 )
 
-func NewCubeTextureEditor() *CubeTextureEditor {
+func NewCubeTextureEditor(editor *Editor) *CubeTextureEditor {
 	return &CubeTextureEditor{
-		Observable:          mvc.NewObservable(),
-		properties:          NewCubeTextureEditorProperties(),
-		isPropertiesVisible: true,
+		Editor:     editor,
+		properties: NewCubeTextureEditorProperties(),
 	}
 }
 
 type CubeTextureEditor struct {
-	mvc.Observable
-	properties          *CubeTextureEditorProperties
-	isPropertiesVisible bool
+	*Editor
+	properties *CubeTextureEditorProperties
 }
 
 func (e *CubeTextureEditor) Properties() *CubeTextureEditorProperties {
 	return e.properties
-}
-
-func (e *CubeTextureEditor) IsPropertiesVisible() bool {
-	return e.isPropertiesVisible
-}
-
-func (e *CubeTextureEditor) SetPropertiesVisible(visible bool) {
-	e.isPropertiesVisible = visible
-	e.SignalChange(ChangeCubeTextureEditorPropertiesVisible)
 }
 
 func NewCubeTextureEditorProperties() *CubeTextureEditorProperties {

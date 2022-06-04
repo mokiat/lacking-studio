@@ -3,7 +3,6 @@ package view
 import (
 	studiodata "github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
-	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -11,15 +10,17 @@ import (
 )
 
 type StudioTabData struct {
-	EditorModel *model.Editor
-	Selected    bool
+	EditorModel      *model.Editor
+	StudioController StudioController
+	Selected         bool
 }
 
 var StudioTab = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	var (
-		data     = co.GetData[StudioTabData](props)
-		editor   = data.EditorModel
-		resource = editor.Resource()
+		data       = co.GetData[StudioTabData](props)
+		editor     = data.EditorModel
+		controller = data.StudioController
+		resource   = editor.Resource()
 	)
 
 	mvc.UseBinding(resource, func(ch mvc.Change) bool {
@@ -49,14 +50,10 @@ var StudioTab = co.Define(func(props co.Properties, scope co.Scope) co.Instance 
 		})
 		co.WithCallbackData(mat.TabbarTabCallbackData{
 			OnClick: func() {
-				mvc.Dispatch(scope, action.ChangeSelectedEditor{
-					Editor: editor,
-				})
+				controller.OnSelectEditor(editor)
 			},
 			OnClose: func() {
-				mvc.Dispatch(scope, action.CloseEditor{
-					Editor: editor,
-				})
+				controller.OnCloseEditor(editor)
 			},
 		})
 	})

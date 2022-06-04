@@ -8,13 +8,15 @@ import (
 )
 
 type StudioTabbarData struct {
-	StudioModel *model.Studio
+	StudioModel      *model.Studio
+	StudioController StudioController
 }
 
 var StudioTabbar = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	var (
-		data   = co.GetData[StudioTabbarData](props)
-		studio = data.StudioModel
+		data       = co.GetData[StudioTabbarData](props)
+		studio     = data.StudioModel
+		controller = data.StudioController
 	)
 
 	mvc.UseBinding(studio, func(ch mvc.Change) bool {
@@ -30,8 +32,9 @@ var StudioTabbar = co.Define(func(props co.Properties, scope co.Scope) co.Instan
 			key := editor.Resource().ID()
 			co.WithChild(key, co.New(StudioTab, func() {
 				co.WithData(StudioTabData{
-					EditorModel: editor,
-					Selected:    editor == studio.SelectedEditor(),
+					EditorModel:      editor,
+					StudioController: controller,
+					Selected:         editor == studio.SelectedEditor(),
 				})
 			}))
 		})

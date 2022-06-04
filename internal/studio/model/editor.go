@@ -1,22 +1,37 @@
 package model
 
 import (
-	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
+)
+
+var (
+	ChangeEditor                  = mvc.NewChange("editor")
+	ChangeEditorPropertiesVisible = mvc.SubChange(ChangeEditor, "properties_visible")
 )
 
 func NewEditor(resource *Resource) *Editor {
 	return &Editor{
-		history:  NewHistory(),
-		resource: resource,
+		Observable:          mvc.NewObservable(),
+		history:             NewHistory(),
+		resource:            resource,
+		isPropertiesVisible: true,
 	}
 }
 
 type Editor struct {
-	history  *History
-	resource *Resource
-	handler  IEditor
+	mvc.Observable
+	history             *History
+	resource            *Resource
+	isPropertiesVisible bool
+}
+
+func (e *Editor) IsPropertiesVisible() bool {
+	return e.isPropertiesVisible
+}
+
+func (e *Editor) SetPropertiesVisible(visible bool) {
+	e.isPropertiesVisible = visible
+	e.SignalChange(ChangeEditorPropertiesVisible)
 }
 
 func (e *Editor) History() *History {
@@ -25,11 +40,4 @@ func (e *Editor) History() *History {
 
 func (e *Editor) Resource() *Resource {
 	return e.resource
-}
-
-type IEditor interface {
-	mvc.Reducer
-	Save() error
-	Render(scope co.Scope, layoutData mat.LayoutData) co.Instance
-	Destroy()
 }

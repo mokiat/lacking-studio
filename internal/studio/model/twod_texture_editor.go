@@ -6,36 +6,24 @@ import (
 
 var (
 	ChangeTwoDTextureEditor                        = mvc.NewChange("twod_texture_editor")
-	ChangeTwoDTextureEditorPropertiesVisible       = mvc.SubChange(ChangeTwoDTextureEditor, "properties_visible")
 	ChangeTwoDTextureEditorAssetAccordionExpanded  = mvc.SubChange(ChangeTwoDTextureEditor, "asset_accordion_expanded")
 	ChangeTwoDTextureEditorConfigAccordionExpanded = mvc.SubChange(ChangeTwoDTextureEditor, "config_accordion_expanded")
 )
 
-func NewTwoDTextureEditor() *TwoDTextureEditor {
+func NewTwoDTextureEditor(editor *Editor) *TwoDTextureEditor {
 	return &TwoDTextureEditor{
-		Observable:          mvc.NewObservable(),
-		properties:          NewTwoDTextureEditorProperties(),
-		isPropertiesVisible: true,
+		Editor:     editor,
+		properties: NewTwoDTextureEditorProperties(),
 	}
 }
 
 type TwoDTextureEditor struct {
-	mvc.Observable
-	properties          *TwoDTextureEditorProperties
-	isPropertiesVisible bool
+	*Editor
+	properties *TwoDTextureEditorProperties
 }
 
 func (e *TwoDTextureEditor) Properties() *TwoDTextureEditorProperties {
 	return e.properties
-}
-
-func (e *TwoDTextureEditor) IsPropertiesVisible() bool {
-	return e.isPropertiesVisible
-}
-
-func (e *TwoDTextureEditor) SetPropertiesVisible(visible bool) {
-	e.isPropertiesVisible = visible
-	e.SignalChange(ChangeTwoDTextureEditorPropertiesVisible)
 }
 
 func NewTwoDTextureEditorProperties() *TwoDTextureEditorProperties {

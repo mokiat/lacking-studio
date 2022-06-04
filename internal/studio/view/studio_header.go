@@ -7,13 +7,15 @@ import (
 )
 
 type StudioHeaderData struct {
-	StudioModel *model.Studio
+	StudioModel      *model.Studio
+	StudioController StudioController
 }
 
 var StudioHeader = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	var (
-		data   = co.GetData[StudioHeaderData](props)
-		studio = data.StudioModel
+		data       = co.GetData[StudioHeaderData](props)
+		studio     = data.StudioModel
+		controller = data.StudioController
 	)
 
 	return co.New(mat.Container, func() {
@@ -26,7 +28,8 @@ var StudioHeader = co.Define(func(props co.Properties, scope co.Scope) co.Instan
 
 		co.WithChild("toolbar", co.New(StudioToolbar, func() {
 			co.WithData(StudioToolbarData{
-				StudioModel: studio,
+				StudioModel:      studio,
+				StudioController: controller,
 			})
 			co.WithLayoutData(mat.LayoutData{
 				GrowHorizontally: true,
@@ -35,7 +38,8 @@ var StudioHeader = co.Define(func(props co.Properties, scope co.Scope) co.Instan
 
 		co.WithChild("tabbar", co.New(StudioTabbar, func() {
 			co.WithData(StudioTabbarData{
-				StudioModel: studio,
+				StudioModel:      studio,
+				StudioController: controller,
 			})
 			co.WithLayoutData(mat.LayoutData{
 				GrowHorizontally: true,

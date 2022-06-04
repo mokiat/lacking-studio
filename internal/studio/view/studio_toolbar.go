@@ -1,9 +1,9 @@
 package view
 
 import (
+	studiodata "github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
-	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
@@ -11,7 +11,8 @@ import (
 )
 
 type StudioToolbarData struct {
-	StudioModel *model.Studio
+	StudioModel      *model.Studio
+	StudioController StudioController
 }
 
 var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -19,6 +20,7 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 		globalCtx   = co.GetContext[global.Context]()
 		data        = co.GetData[StudioToolbarData](props)
 		studioModel = data.StudioModel
+		controller  = data.StudioController
 	)
 
 	mvc.UseBinding(studioModel, func(ch mvc.Change) bool {
@@ -40,10 +42,17 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 				Registry: globalCtx.Registry,
 			})
 			co.WithCallbackData(AssetDialogCallbackData{
-				OnAssetSelected: func(id string) {
-					mvc.Dispatch(scope, action.OpenResource{
-						ID: id,
-					})
+				OnResourceOpen: func(id string) {
+					controller.OnOpenResource(id)
+				},
+				OnResourceCreate: func(kind studiodata.ResourceKind) {
+					controller.OnCreateResource(kind)
+				},
+				OnResourceClone: func(id string) *studiodata.Resource {
+					return controller.OnCloneResource(id)
+				},
+				OnResourceDelete: func(id string) {
+					controller.OnDeleteResource(id)
 				},
 				OnClose: func() {
 					overlay := assetsOverlay.Get()
@@ -76,7 +85,7 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
 				OnClick: func() {
-					mvc.Dispatch(scope, action.Save{})
+					controller.OnSave()
 				},
 			})
 		}))
@@ -90,7 +99,7 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
 				OnClick: func() {
-					mvc.Dispatch(scope, action.Undo{})
+					controller.OnUndo()
 				},
 			})
 		}))
@@ -102,7 +111,7 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
 				OnClick: func() {
-					mvc.Dispatch(scope, action.Redo{})
+					controller.OnRedo()
 				},
 			})
 		}))
@@ -115,7 +124,7 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
 				OnClick: func() {
-					mvc.Dispatch(scope, action.ToggleProperties{})
+					controller.OnToggleProperties()
 				},
 			})
 		}))

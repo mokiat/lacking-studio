@@ -9,9 +9,11 @@ import (
 )
 
 type CubeTexturePropertiesData struct {
-	Model         *model.CubeTextureEditorProperties
-	ResourceModel *model.Resource
-	TextureModel  *model.CubeTexture
+	Model            *model.CubeTextureEditorProperties
+	ResourceModel    *model.Resource
+	TextureModel     *model.CubeTexture
+	StudioController StudioController
+	EditorController EditorController
 }
 
 var CubeTextureProperties = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -51,7 +53,9 @@ var CubeTextureProperties = co.Define(func(props co.Properties, scope co.Scope) 
 
 			co.WithChild("content", co.New(AssetPropertiesSection, func() {
 				co.WithData(AssetPropertiesSectionData{
-					Model: data.ResourceModel,
+					Model:            data.ResourceModel,
+					StudioController: data.StudioController,
+					EditorController: data.EditorController,
 				})
 			}))
 		}))

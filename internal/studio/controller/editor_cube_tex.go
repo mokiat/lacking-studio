@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/mokiat/lacking-studio/internal/studio/data"
+	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking-studio/internal/studio/model/change"
@@ -19,18 +20,26 @@ import (
 	"github.com/mokiat/lacking/ui/mvc"
 )
 
-func NewCubeTextureEditor(studio *Studio, editorModel *model.Editor, texModel *model.CubeTexture) *CubeTextureEditor {
+func NewCubeTextureEditor(globalCtx global.Context, studio *Studio, editorModel *model.Editor, texModel *model.CubeTexture) *CubeTextureEditor {
 	return &CubeTextureEditor{
-		histModel:   editorModel.History(),
-		texModel:    texModel,
-		editorModel: model.NewCubeTextureEditor(),
-		viz:         visualization.NewCubeTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
+		studio:    studio,
+		histModel: editorModel.History(),
+		texModel:  texModel,
+		editorModel: model.NewCubeTextureEditor(
+			editorModel,
+		),
+		viz: visualization.NewCubeTexture(
+			globalCtx.API,
+			globalCtx.GraphicsEngine,
+			texModel,
+		),
 	}
 }
 
-var _ model.IEditor = (*CubeTextureEditor)(nil)
+var _ Editor = (*CubeTextureEditor)(nil)
 
 type CubeTextureEditor struct {
+	studio      *Studio
 	histModel   *model.History
 	texModel    *model.CubeTexture
 	editorModel *model.CubeTextureEditor
@@ -54,10 +63,12 @@ func (e *CubeTextureEditor) Save() error {
 func (e *CubeTextureEditor) Render(scope co.Scope, layoutData mat.LayoutData) co.Instance {
 	return co.New(view.CubeTextureEditor, func() {
 		co.WithData(view.CubeTextureEditorData{
-			ResourceModel: e.texModel.Resource(),
-			TextureModel:  e.texModel,
-			EditorModel:   e.editorModel,
-			Visualization: e.viz,
+			ResourceModel:    e.texModel.Resource(),
+			TextureModel:     e.texModel,
+			EditorModel:      e.editorModel,
+			StudioController: e.studio,
+			EditorController: e,
+			Visualization:    e.viz,
 		})
 		co.WithLayoutData(layoutData)
 		co.WithScope(mvc.UseReducer(scope, e))
@@ -70,9 +81,6 @@ func (e *CubeTextureEditor) Destroy() {
 
 func (e *CubeTextureEditor) Reduce(act mvc.Action) bool {
 	switch act := act.(type) {
-	case action.ChangeResourceName:
-		e.changeResourceName(act.Name)
-		return true
 	case action.ChangeCubeTextureFiltering:
 		e.changeFiltering(act.Filtering)
 		return true
@@ -87,7 +95,7 @@ func (e *CubeTextureEditor) Reduce(act mvc.Action) bool {
 	}
 }
 
-func (e *CubeTextureEditor) changeResourceName(name string) {
+func (e *CubeTextureEditor) OnRenameResource(name string) {
 	e.histModel.Add(change.Name(e.texModel.Resource(),
 		change.NameState{
 			Value: e.texModel.Resource().Name(),

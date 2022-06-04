@@ -9,9 +9,11 @@ import (
 )
 
 type TwoDTexturePropertiesData struct {
-	Model         *model.TwoDTextureEditorProperties
-	ResourceModel *model.Resource
-	TextureModel  *model.TwoDTexture
+	Model            *model.TwoDTextureEditorProperties
+	ResourceModel    *model.Resource
+	TextureModel     *model.TwoDTexture
+	StudioController StudioController
+	EditorController EditorController
 }
 
 var TwoDTextureProperties = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -53,7 +55,9 @@ var TwoDTextureProperties = co.Define(func(props co.Properties, scope co.Scope) 
 
 			co.WithChild("content", co.New(AssetPropertiesSection, func() {
 				co.WithData(AssetPropertiesSectionData{
-					Model: data.ResourceModel,
+					Model:            data.ResourceModel,
+					StudioController: data.StudioController,
+					EditorController: data.EditorController,
 				})
 			}))
 		}))

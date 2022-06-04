@@ -11,10 +11,12 @@ import (
 )
 
 type TwoDTextureEditorData struct {
-	ResourceModel *model.Resource
-	TextureModel  *model.TwoDTexture
-	EditorModel   *model.TwoDTextureEditor
-	Visualization model.Visualization
+	ResourceModel    *model.Resource
+	TextureModel     *model.TwoDTexture
+	EditorModel      *model.TwoDTextureEditor
+	Visualization    model.Visualization
+	StudioController StudioController
+	EditorController EditorController
 }
 
 var TwoDTextureEditor = co.ContextScoped(co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -63,9 +65,11 @@ var TwoDTextureEditor = co.ContextScoped(co.Define(func(props co.Properties, sco
 		if editorModel.IsPropertiesVisible() {
 			co.WithChild("right", co.New(TwoDTextureProperties, func() {
 				co.WithData(TwoDTexturePropertiesData{
-					Model:         editorModel.Properties(),
-					ResourceModel: data.ResourceModel,
-					TextureModel:  data.TextureModel,
+					Model:            editorModel.Properties(),
+					ResourceModel:    data.ResourceModel,
+					TextureModel:     data.TextureModel,
+					StudioController: data.StudioController,
+					EditorController: data.EditorController,
 				})
 				co.WithLayoutData(mat.LayoutData{
 					Alignment: mat.AlignmentRight,

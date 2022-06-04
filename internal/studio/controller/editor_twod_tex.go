@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/mokiat/lacking-studio/internal/studio/data"
+	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking-studio/internal/studio/model/change"
@@ -19,18 +20,26 @@ import (
 	"github.com/mokiat/lacking/ui/mvc"
 )
 
-func NewTwoDTextureEditor(studio *Studio, editorModel *model.Editor, texModel *model.TwoDTexture) *TwoDTextureEditor {
+func NewTwoDTextureEditor(globalCtx global.Context, studio *Studio, editorModel *model.Editor, texModel *model.TwoDTexture) *TwoDTextureEditor {
 	return &TwoDTextureEditor{
-		histModel:   editorModel.History(),
-		texModel:    texModel,
-		editorModel: model.NewTwoDTextureEditor(),
-		viz:         visualization.NewTwoDTexture(studio.api /* FIXME */, studio.GraphicsEngine(), texModel),
+		studio:    studio,
+		histModel: editorModel.History(),
+		texModel:  texModel,
+		editorModel: model.NewTwoDTextureEditor(
+			editorModel,
+		),
+		viz: visualization.NewTwoDTexture(
+			globalCtx.API,
+			globalCtx.GraphicsEngine,
+			texModel,
+		),
 	}
 }
 
-var _ model.IEditor = (*TwoDTextureEditor)(nil)
+var _ Editor = (*TwoDTextureEditor)(nil)
 
 type TwoDTextureEditor struct {
+	studio      *Studio
 	histModel   *model.History
 	texModel    *model.TwoDTexture
 	editorModel *model.TwoDTextureEditor
@@ -54,10 +63,12 @@ func (e *TwoDTextureEditor) Save() error {
 func (e *TwoDTextureEditor) Render(scope co.Scope, layoutData mat.LayoutData) co.Instance {
 	return co.New(view.TwoDTextureEditor, func() {
 		co.WithData(view.TwoDTextureEditorData{
-			ResourceModel: e.texModel.Resource(),
-			TextureModel:  e.texModel,
-			EditorModel:   e.editorModel,
-			Visualization: e.viz,
+			ResourceModel:    e.texModel.Resource(),
+			TextureModel:     e.texModel,
+			EditorModel:      e.editorModel,
+			Visualization:    e.viz,
+			StudioController: e.studio,
+			EditorController: e,
 		})
 		co.WithLayoutData(layoutData)
 		co.WithScope(mvc.UseReducer(scope, e))
@@ -70,9 +81,6 @@ func (e *TwoDTextureEditor) Destroy() {
 
 func (e *TwoDTextureEditor) Reduce(act mvc.Action) bool {
 	switch act := act.(type) {
-	case action.ChangeResourceName:
-		e.changeResourceName(act.Name)
-		return true
 	case action.ChangeTwoDTextureWrapping:
 		e.changeWrapping(act.Wrapping)
 		return true
@@ -90,7 +98,7 @@ func (e *TwoDTextureEditor) Reduce(act mvc.Action) bool {
 	}
 }
 
-func (e *TwoDTextureEditor) changeResourceName(name string) {
+func (e *TwoDTextureEditor) OnRenameResource(name string) {
 	e.histModel.Add(change.Name(e.texModel.Resource(),
 		change.NameState{
 			Value: e.texModel.Resource().Name(),

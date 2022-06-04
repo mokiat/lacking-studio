@@ -2,7 +2,6 @@ package view
 
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
-	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -10,13 +9,23 @@ import (
 	"github.com/mokiat/lacking/util/optional"
 )
 
+type EditorController interface {
+	OnRenameResource(name string)
+}
+
 type AssetPropertiesSectionData struct {
-	Model *model.Resource
+	Model            *model.Resource
+	StudioController StudioController
+	EditorController EditorController
 }
 
 var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	data := co.GetData[AssetPropertiesSectionData](props)
-	resource := data.Model
+	var (
+		data             = co.GetData[AssetPropertiesSectionData](props)
+		resource         = data.Model
+		controller       = data.StudioController
+		editorController = data.EditorController
+	)
 
 	mvc.UseBinding(resource, func(ch mvc.Change) bool {
 		return mvc.IsChange(ch, model.ChangeResourceName)
@@ -121,10 +130,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 				})
 				co.WithCallbackData(mat.EditboxCallbackData{
 					OnChanged: func(text string) {
-						mvc.Dispatch(scope, action.ChangeResourceName{
-							Resource: resource,
-							Name:     text,
-						})
+						editorController.OnRenameResource(text)
 					},
 				})
 			}))
@@ -146,9 +152,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 
 				co.WithCallbackData(mat.ButtonCallbackData{
 					ClickListener: func() {
-						mvc.Dispatch(scope, action.DeleteResource{
-							Resource: resource,
-						})
+						controller.OnDeleteResource(resource.ID())
 					},
 				})
 			}))
@@ -161,9 +165,10 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 
 				co.WithCallbackData(mat.ButtonCallbackData{
 					ClickListener: func() {
-						mvc.Dispatch(scope, action.CloneResource{
-							Resource: resource,
-						})
+						newResource := controller.OnCloneResource(resource.ID())
+						if newResource != nil {
+							controller.OnOpenResource(newResource.ID())
+						}
 					},
 				})
 			}))

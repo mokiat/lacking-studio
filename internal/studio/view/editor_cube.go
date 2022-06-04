@@ -11,10 +11,12 @@ import (
 )
 
 type CubeTextureEditorData struct {
-	ResourceModel *model.Resource
-	TextureModel  *model.CubeTexture
-	EditorModel   *model.CubeTextureEditor
-	Visualization model.Visualization
+	ResourceModel    *model.Resource
+	TextureModel     *model.CubeTexture
+	EditorModel      *model.CubeTextureEditor
+	StudioController StudioController
+	EditorController EditorController
+	Visualization    model.Visualization
 }
 
 var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -63,9 +65,11 @@ var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.I
 		if editorModel.IsPropertiesVisible() {
 			co.WithChild("right", co.New(CubeTextureProperties, func() {
 				co.WithData(CubeTexturePropertiesData{
-					Model:         editorModel.Properties(),
-					ResourceModel: data.ResourceModel,
-					TextureModel:  data.TextureModel,
+					Model:            editorModel.Properties(),
+					ResourceModel:    data.ResourceModel,
+					TextureModel:     data.TextureModel,
+					StudioController: data.StudioController,
+					EditorController: data.EditorController,
 				})
 				co.WithLayoutData(mat.LayoutData{
 					Alignment: mat.AlignmentRight,

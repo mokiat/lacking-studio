@@ -3,6 +3,7 @@ package view
 import (
 	"fmt"
 
+	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -12,7 +13,16 @@ import (
 )
 
 type StudioController interface {
-	mvc.Reducer
+	OnSave()
+	OnUndo()
+	OnRedo()
+	OnToggleProperties()
+	OnCreateResource(kind data.ResourceKind)
+	OnOpenResource(id string)
+	OnCloneResource(id string) *data.Resource
+	OnDeleteResource(id string)
+	OnSelectEditor(editor *model.Editor)
+	OnCloseEditor(editor *model.Editor)
 	RenderEditor(editor *model.Editor, scope co.Scope, layoutData mat.LayoutData) co.Instance
 }
 
@@ -39,7 +49,8 @@ var Studio = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 
 		co.WithChild("top", co.New(StudioHeader, func() {
 			co.WithData(StudioHeaderData{
-				StudioModel: studioModel,
+				StudioModel:      studioModel,
+				StudioController: studioController,
 			})
 			co.WithLayoutData(mat.LayoutData{
 				Alignment: mat.AlignmentTop,
