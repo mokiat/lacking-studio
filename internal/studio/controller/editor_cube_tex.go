@@ -5,7 +5,6 @@ import (
 	"image"
 	"os"
 
-	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
@@ -48,10 +47,10 @@ type CubeTextureEditor struct {
 
 func (e *CubeTextureEditor) Save() error {
 	previewImg := e.viz.TakeSnapshot(ui.Size{
-		Width:  data.PreviewSize,
-		Height: data.PreviewSize,
+		Width:  model.PreviewSize,
+		Height: model.PreviewSize,
 	})
-	e.texModel.SetPreviewImage(previewImg)
+	e.texModel.Resource().SetPreviewImage(previewImg)
 
 	if err := e.texModel.Save(); err != nil {
 		return fmt.Errorf("error saving texture model %w", err)

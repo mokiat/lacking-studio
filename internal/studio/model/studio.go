@@ -13,9 +13,10 @@ var (
 	ChangeStudioEditorSelection   = mvc.SubChange(ChangeStudio, "editor_selection")
 )
 
-func NewStudio() *Studio {
+func NewStudio(registry *Registry) *Studio {
 	return &Studio{
 		Observable:   mvc.NewObservable(),
+		registry:     registry,
 		dummyHistory: NewHistory(),
 	}
 }
@@ -23,10 +24,15 @@ func NewStudio() *Studio {
 type Studio struct {
 	mvc.Observable
 
+	registry            *Registry
 	isPropertiesVisible bool
 	editors             []*Editor
 	selectedEditor      *Editor
 	dummyHistory        *History
+}
+
+func (s *Studio) Registry() *Registry {
+	return s.registry
 }
 
 func (s *Studio) IsPropertiesVisible() bool {

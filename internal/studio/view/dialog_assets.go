@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/mokiat/lacking-studio/internal/studio/data"
+	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -13,23 +13,18 @@ import (
 )
 
 type AssetDialogData struct {
-	Registry *data.Registry
+	Registry   *model.Registry
+	Controller StudioController
 }
 
 type AssetDialogCallbackData struct {
-	OnResourceOpen   func(id string)
-	OnResourceCreate func(kind data.ResourceKind)
-	OnResourceClone  func(id string) *data.Resource
-	OnResourceDelete func(id string)
-	OnClose          func()
+	OnOpen  func(id string)
+	OnClose func()
 }
 
 var defaultAssetDialogCallbackData = AssetDialogCallbackData{
-	OnResourceOpen:   func(string) {},
-	OnResourceCreate: func(data.ResourceKind) {},
-	OnResourceClone:  func(string) *data.Resource { return nil },
-	OnResourceDelete: func(string) {},
-	OnClose:          func() {},
+	OnOpen:  func(string) {},
+	OnClose: func() {},
 }
 
 var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
@@ -72,11 +67,11 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 					co.WithData(mat.ToolbarButtonData{
 						Icon:     co.OpenImage(scope, "icons/texture.png"),
 						Text:     "2D Texture",
-						Selected: lifecycle.SelectedKind() == data.ResourceKindTwoDTexture,
+						Selected: lifecycle.SelectedKind() == model.ResourceKindTwoDTexture,
 					})
 					co.WithCallbackData(mat.ToolbarButtonCallbackData{
 						OnClick: func() {
-							lifecycle.SetSelectedKind(data.ResourceKindTwoDTexture)
+							lifecycle.SetSelectedKind(model.ResourceKindTwoDTexture)
 						},
 					})
 				}))
@@ -85,11 +80,11 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 					co.WithData(mat.ToolbarButtonData{
 						Icon:     co.OpenImage(scope, "icons/texture.png"),
 						Text:     "Cube Texture",
-						Selected: lifecycle.SelectedKind() == data.ResourceKindCubeTexture,
+						Selected: lifecycle.SelectedKind() == model.ResourceKindCubeTexture,
 					})
 					co.WithCallbackData(mat.ToolbarButtonCallbackData{
 						OnClick: func() {
-							lifecycle.SetSelectedKind(data.ResourceKindCubeTexture)
+							lifecycle.SetSelectedKind(model.ResourceKindCubeTexture)
 						},
 					})
 				}))
@@ -98,11 +93,11 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 					co.WithData(mat.ToolbarButtonData{
 						Icon:     co.OpenImage(scope, "icons/model.png"),
 						Text:     "Model",
-						Selected: lifecycle.SelectedKind() == data.ResourceKindModel,
+						Selected: lifecycle.SelectedKind() == model.ResourceKindModel,
 					})
 					co.WithCallbackData(mat.ToolbarButtonCallbackData{
 						OnClick: func() {
-							lifecycle.SetSelectedKind(data.ResourceKindModel)
+							lifecycle.SetSelectedKind(model.ResourceKindModel)
 						},
 					})
 				}))
@@ -111,11 +106,11 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 					co.WithData(mat.ToolbarButtonData{
 						Text:     "Scene",
 						Icon:     co.OpenImage(scope, "icons/scene.png"),
-						Selected: lifecycle.SelectedKind() == data.ResourceKindScene,
+						Selected: lifecycle.SelectedKind() == model.ResourceKindScene,
 					})
 					co.WithCallbackData(mat.ToolbarButtonCallbackData{
 						OnClick: func() {
-							lifecycle.SetSelectedKind(data.ResourceKindScene)
+							lifecycle.SetSelectedKind(model.ResourceKindScene)
 						},
 					})
 				}))
@@ -182,11 +177,8 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 					GrowHorizontally: true,
 				})
 
-				lifecycle.EachResource(func(resource *data.Resource) {
-					previewImage, err := resource.LoadPreview()
-					if err != nil {
-						previewImage = nil
-					}
+				lifecycle.EachResource(func(resource *model.Resource) {
+					previewImage := resource.PreviewImage()
 					co.WithChild(resource.ID(), co.New(AssetItem, func() {
 						co.WithData(AssetItemData{
 							PreviewImage: previewImage,
@@ -334,20 +326,18 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 type assetDialogLifecycle struct {
 	co.Lifecycle
 	handle           co.LifecycleHandle
-	registry         *data.Registry
+	controller       StudioController
+	registry         *model.Registry
+	onOpen           func(id string)
 	onClose          func()
-	onResourceOpen   func(id string)
-	onResourceCreate func(kind data.ResourceKind)
-	onResourceClone  func(id string) *data.Resource
-	onResourceDelete func(id string)
 	searchText       string
-	selectedKind     data.ResourceKind
-	selectedResource *data.Resource
+	selectedKind     model.ResourceKind
+	selectedResource *model.Resource
 }
 
 func (l *assetDialogLifecycle) OnCreate(props co.Properties, scope co.Scope) {
 	l.OnUpdate(props, scope)
-	l.selectedKind = data.ResourceKindTwoDTexture
+	l.selectedKind = model.ResourceKindTwoDTexture
 	l.selectedResource = nil
 	l.searchText = ""
 }
@@ -359,39 +349,37 @@ func (l *assetDialogLifecycle) OnUpdate(props co.Properties, scope co.Scope) {
 	)
 
 	l.registry = data.Registry
+	l.controller = data.Controller
+	l.onOpen = callbackData.OnOpen
 	l.onClose = callbackData.OnClose
-	l.onResourceOpen = callbackData.OnResourceOpen
-	l.onResourceCreate = callbackData.OnResourceCreate
-	l.onResourceClone = callbackData.OnResourceClone
-	l.onResourceDelete = callbackData.OnResourceDelete
 }
 
 func (l *assetDialogLifecycle) OnCancel() {
 	l.onClose()
 }
 
-func (l *assetDialogLifecycle) OnOpen(resource *data.Resource) {
-	l.onResourceOpen(resource.ID())
+func (l *assetDialogLifecycle) OnOpen(resource *model.Resource) {
+	l.onOpen(resource.ID())
 	l.onClose()
 }
 
-func (l *assetDialogLifecycle) SelectedKind() data.ResourceKind {
+func (l *assetDialogLifecycle) SelectedKind() model.ResourceKind {
 	return l.selectedKind
 }
 
-func (l *assetDialogLifecycle) SetSelectedKind(kind data.ResourceKind) {
+func (l *assetDialogLifecycle) SetSelectedKind(kind model.ResourceKind) {
 	l.selectedKind = kind
 	l.selectedResource = nil
 	l.searchText = ""
 	l.handle.NotifyChanged()
 }
 
-func (l *assetDialogLifecycle) SetSelectedResource(resource *data.Resource) {
+func (l *assetDialogLifecycle) SetSelectedResource(resource *model.Resource) {
 	l.selectedResource = resource
 	l.handle.NotifyChanged()
 }
 
-func (l *assetDialogLifecycle) SelectedResource() *data.Resource {
+func (l *assetDialogLifecycle) SelectedResource() *model.Resource {
 	return l.selectedResource
 }
 
@@ -405,30 +393,22 @@ func (l *assetDialogLifecycle) SetSearchText(text string) {
 	l.handle.NotifyChanged()
 }
 
-func (l *assetDialogLifecycle) EachResource(fn func(*data.Resource)) {
-	fltr := data.FilterWithKind(l.selectedKind)
-	if l.searchText != "" {
-		fltr = filter.All(
-			fltr,
-			data.FilterWithSimilarName(l.searchText),
-		)
+func (l *assetDialogLifecycle) EachResource(fn func(*model.Resource)) {
+	fltrs := []filter.Func[*model.Resource]{
+		model.ResourcesWithKind(l.selectedKind),
 	}
-	l.registry.EachResource(fltr, fn)
+	if l.searchText != "" {
+		fltrs = append(fltrs, model.ResourcesWithSimilarName(l.searchText))
+	}
+	l.registry.IterateResources(fn, fltrs...)
 }
 
 func (l *assetDialogLifecycle) OnNew() {
-	l.onResourceCreate(l.selectedKind)
-	// resource, err := l.registry.NewResource(l.selectedKind)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// l.searchText = resource.Name()
-	// l.selectedResource = resource
-	// l.handle.NotifyChanged()
+	l.controller.OnCreateResource(l.selectedKind)
 }
 
 func (l *assetDialogLifecycle) OnClone() {
-	resource := l.onResourceClone(l.selectedResource.ID())
+	resource := l.controller.OnCloneResource(l.selectedResource.ID())
 	if resource != nil {
 		l.searchText = resource.Name()
 		l.selectedResource = resource
@@ -437,7 +417,7 @@ func (l *assetDialogLifecycle) OnClone() {
 }
 
 func (l *assetDialogLifecycle) OnDelete() {
-	l.onResourceDelete(l.selectedResource.ID())
+	l.controller.OnDeleteResource(l.selectedResource.ID())
 	l.selectedResource = nil
 	l.handle.NotifyChanged()
 }
@@ -446,7 +426,7 @@ type AssetItemData struct {
 	Selected     bool
 	PreviewImage image.Image
 	ID           string
-	Kind         data.ResourceKind
+	Kind         model.ResourceKind
 	Name         string
 }
 
@@ -531,7 +511,7 @@ type assetItemLifecycle struct {
 	previewImage        *ui.Image
 	defaultPreviewImage *ui.Image
 	assetID             string
-	assetKind           data.ResourceKind
+	assetKind           model.ResourceKind
 	assetName           string
 	selected            bool
 	onSelected          func(id string)
@@ -579,7 +559,7 @@ func (l *assetItemLifecycle) AssetID() string {
 	return l.assetID
 }
 
-func (l *assetItemLifecycle) AssetKind() data.ResourceKind {
+func (l *assetItemLifecycle) AssetKind() model.ResourceKind {
 	return l.assetKind
 }
 

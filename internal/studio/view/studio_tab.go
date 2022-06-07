@@ -1,7 +1,6 @@
 package view
 
 import (
-	studiodata "github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -27,15 +26,15 @@ var StudioTab = co.Define(func(props co.Properties, scope co.Scope) co.Instance 
 		return mvc.IsChange(ch, model.ChangeResourceName)
 	})
 
-	iconForModelKind := func(kind studiodata.ResourceKind) *ui.Image {
+	iconForModelKind := func(kind model.ResourceKind) *ui.Image {
 		switch kind {
-		case studiodata.ResourceKindTwoDTexture:
+		case model.ResourceKindTwoDTexture:
 			return co.OpenImage(scope, "icons/texture.png")
-		case studiodata.ResourceKindCubeTexture:
+		case model.ResourceKindCubeTexture:
 			return co.OpenImage(scope, "icons/texture.png")
-		case studiodata.ResourceKindModel:
+		case model.ResourceKindModel:
 			return co.OpenImage(scope, "icons/model.png")
-		case studiodata.ResourceKindScene:
+		case model.ResourceKindScene:
 			return co.OpenImage(scope, "icons/scene.png")
 		default:
 			return co.OpenImage(scope, "icons/broken-image.png")

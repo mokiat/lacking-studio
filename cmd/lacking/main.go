@@ -10,7 +10,6 @@ import (
 	glrender "github.com/mokiat/lacking-gl/render"
 	glui "github.com/mokiat/lacking-gl/ui"
 	"github.com/mokiat/lacking-studio/internal/studio"
-	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/resources"
 	"github.com/mokiat/lacking/app"
@@ -44,10 +43,6 @@ func runApplication(projectDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize registry: %w", err)
 	}
-	studioRegistry := data.NewRegistry(registry)
-	if err := studioRegistry.Init(); err != nil {
-		return fmt.Errorf("error initializing registry: %w", err)
-	}
 
 	locator := resource.NewFSLocator(resources.FS)
 
@@ -60,14 +55,18 @@ func runApplication(projectDir string) error {
 	controller := app.NewLayeredController(
 		studio.NewController(graphicsEngine),
 		ui.NewController(uiCfg, func(w *ui.Window) {
-			studio.BootstrapApplication(global.Context{
+			ctx := global.Context{
 				Window:         w,
 				API:            renderAPI,
-				Registry:       studioRegistry,
+				Registry:       registry,
 				GraphicsEngine: graphicsEngine,
 				PhysicsEngine:  physicsEngine,
 				ECSEngine:      ecsEngine,
-			})
+			}
+			if err := studio.BootstrapApplication(ctx); err != nil {
+				log.Error("Error bootstrapping application: %v", err)
+				w.Close()
+			}
 		}),
 	)
 

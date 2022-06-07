@@ -1,11 +1,9 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 	"image"
 
-	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui/mvc"
 )
@@ -20,18 +18,11 @@ var (
 	ChangeTwoDTextureMipmapping      = mvc.SubChange(ChangeTwoDTexture, "mipmapping")
 	ChangeTwoDTextureGammaCorrection = mvc.SubChange(ChangeTwoDTexture, "gamma_correction")
 	ChangeTwoDTextureData            = mvc.SubChange(ChangeTwoDTexture, "data")
-	ChangeTwoDTexturePreview         = mvc.SubChange(ChangeTwoDTexture, "preview")
 )
 
-func CreateTwoDTexture(registry *data.Registry) (*TwoDTexture, error) {
-	resource := registry.CreateResource(data.ResourceKindTwoDTexture)
-	if err := resource.Save(); err != nil {
-		return nil, fmt.Errorf("error saving resource: %w", err)
-	}
-	content := image.NewNRGBA(image.Rect(0, 0, 1, 1))
-	if err := resource.SavePreview(content); err != nil {
-		return nil, fmt.Errorf("error saving preview: %w", err)
-	}
+func CreateTwoDTexture(registry *Registry) (*TwoDTexture, error) {
+	previewImg := image.NewNRGBA(image.Rect(0, 0, 1, 1))
+	previewImg.Pix = []byte{0xFF, 0x00, 0x00, 0xFF}
 	texAsset := &asset.TwoDTexture{
 		Width:     1,
 		Height:    1,
@@ -39,48 +30,40 @@ func CreateTwoDTexture(registry *data.Registry) (*TwoDTexture, error) {
 		Filtering: asset.FilterModeNearest,
 		Flags:     asset.TextureFlagMipmapping,
 		Format:    asset.TexelFormatRGBA8,
-		Data:      content.Pix,
+		Data:      []byte{0xFF, 0x00, 0x00, 0xFF},
 	}
-	if err := resource.SaveContent(texAsset); err != nil {
+
+	resourceModel := registry.CreateResource(ResourceKindTwoDTexture, "Unnamed")
+	resourceModel.SetPreviewImage(previewImg)
+	if err := resourceModel.SaveContent(texAsset); err != nil {
 		return nil, fmt.Errorf("error saving content: %w", err)
+	}
+	if err := resourceModel.Save(); err != nil {
+		return nil, err
 	}
 	return &TwoDTexture{
 		Observable:    mvc.NewObservable(),
-		resource:      resource,
-		resourceModel: NewResource(resource),
+		resourceModel: resourceModel,
 		texAsset:      texAsset,
-		previewImg:    content,
 	}, nil
 }
 
 func OpenTwoDTexture(resourceModel *Resource) (*TwoDTexture, error) {
-	resource := resourceModel.Raw()
 	texAsset := new(asset.TwoDTexture)
-	if err := resource.LoadContent(texAsset); err != nil {
+	if err := resourceModel.LoadContent(texAsset); err != nil {
 		return nil, fmt.Errorf("error loading content: %w", err)
-	}
-	previewImg, err := resource.LoadPreview()
-	if err != nil {
-		if !errors.Is(err, asset.ErrNotFound) {
-			return nil, fmt.Errorf("error loading preview: %w", err)
-		}
-		previewImg = nil
 	}
 	return &TwoDTexture{
 		Observable:    mvc.NewObservable(),
-		resource:      resource,
 		resourceModel: resourceModel,
 		texAsset:      texAsset,
-		previewImg:    previewImg,
 	}, nil
 }
 
 type TwoDTexture struct {
 	mvc.Observable
-	resource      *data.Resource
 	resourceModel *Resource
 	texAsset      *asset.TwoDTexture
-	previewImg    image.Image
 }
 
 func (t *TwoDTexture) Resource() *Resource {
@@ -167,24 +150,9 @@ func (t *TwoDTexture) SetData(data []byte) {
 	t.SignalChange(ChangeTwoDTextureData)
 }
 
-func (t *TwoDTexture) PreviewImage() image.Image {
-	return t.previewImg
-}
-
-func (t *TwoDTexture) SetPreviewImage(img image.Image) {
-	t.previewImg = img
-	t.SignalChange(ChangeTwoDTexturePreview)
-}
-
 func (t *TwoDTexture) Save() error {
-	if err := t.resource.Save(); err != nil {
-		return fmt.Errorf("error saving resource: %w", err)
-	}
-	if err := t.resource.SavePreview(t.previewImg); err != nil {
-		return fmt.Errorf("error saving preview: %w", err)
-	}
-	if err := t.resource.SaveContent(t.texAsset); err != nil {
+	if err := t.resourceModel.SaveContent(t.texAsset); err != nil {
 		return fmt.Errorf("error saving content: %w", err)
 	}
-	return nil
+	return t.resourceModel.Save()
 }

@@ -1,12 +1,11 @@
 package view
 
 import (
-	studiodata "github.com/mokiat/lacking-studio/internal/studio/data"
-	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/util/filter"
 	"github.com/mokiat/lacking/util/optional"
 )
 
@@ -17,7 +16,6 @@ type StudioToolbarData struct {
 
 var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 	var (
-		globalCtx   = co.GetContext[global.Context]()
 		data        = co.GetData[StudioToolbarData](props)
 		studioModel = data.StudioModel
 		controller  = data.StudioController
@@ -32,6 +30,8 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 		return mvc.IsChange(ch, model.ChangeHistory)
 	})
 
+	mvc.UseBinding(studioModel.Registry(), filter.Always[mvc.Change]())
+
 	assetsOverlay := co.UseState(func() co.Overlay {
 		return nil
 	})
@@ -39,20 +39,12 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 	onAssetsClicked := func() {
 		assetsOverlay.Set(co.OpenOverlay(co.New(AssetDialog, func() {
 			co.WithData(AssetDialogData{
-				Registry: globalCtx.Registry,
+				Registry:   studioModel.Registry(),
+				Controller: controller,
 			})
 			co.WithCallbackData(AssetDialogCallbackData{
-				OnResourceOpen: func(id string) {
+				OnOpen: func(id string) {
 					controller.OnOpenResource(id)
-				},
-				OnResourceCreate: func(kind studiodata.ResourceKind) {
-					controller.OnCreateResource(kind)
-				},
-				OnResourceClone: func(id string) *studiodata.Resource {
-					return controller.OnCloneResource(id)
-				},
-				OnResourceDelete: func(id string) {
-					controller.OnDeleteResource(id)
 				},
 				OnClose: func() {
 					overlay := assetsOverlay.Get()

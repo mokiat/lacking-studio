@@ -3,7 +3,6 @@ package view
 import (
 	"fmt"
 
-	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -17,9 +16,9 @@ type StudioController interface {
 	OnUndo()
 	OnRedo()
 	OnToggleProperties()
-	OnCreateResource(kind data.ResourceKind)
+	OnCreateResource(kind model.ResourceKind)
 	OnOpenResource(id string)
-	OnCloneResource(id string) *data.Resource
+	OnCloneResource(id string) *model.Resource
 	OnDeleteResource(id string)
 	OnSelectEditor(editor *model.Editor)
 	OnCloseEditor(editor *model.Editor)

@@ -1,11 +1,9 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 	"image"
 
-	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui/mvc"
 )
@@ -18,18 +16,11 @@ var (
 	ChangeCubeTextureMipmapping      = mvc.SubChange(ChangeCubeTexture, "mipmapping")
 	ChangeCubeTextureGammaCorrection = mvc.SubChange(ChangeCubeTexture, "gamma_correction")
 	ChangeCubeTextureData            = mvc.SubChange(ChangeCubeTexture, "data")
-	ChangeCubeTexturePreview         = mvc.SubChange(ChangeCubeTexture, "preview")
 )
 
-func CreateCubeTexture(registry *data.Registry) (*CubeTexture, error) {
-	resource := registry.CreateResource(data.ResourceKindCubeTexture)
-	if err := resource.Save(); err != nil {
-		return nil, fmt.Errorf("error saving resource: %w", err)
-	}
+func CreateCubeTexture(registry *Registry) (*CubeTexture, error) {
 	previewImg := image.NewNRGBA(image.Rect(0, 0, 1, 1))
-	if err := resource.SavePreview(previewImg); err != nil {
-		return nil, fmt.Errorf("error saving preview: %w", err)
-	}
+	previewImg.Pix = []byte{0xFF, 0x00, 0x00, 0xFF}
 	texAsset := &asset.CubeTexture{
 		Dimension: 1,
 		Filtering: asset.FilterModeNearest,
@@ -54,46 +45,38 @@ func CreateCubeTexture(registry *data.Registry) (*CubeTexture, error) {
 			Data: []byte{0x00, 0xFF, 0xFF, 0xFF},
 		},
 	}
-	if err := resource.SaveContent(texAsset); err != nil {
+
+	resourceModel := registry.CreateResource(ResourceKindCubeTexture, "Unnamed")
+	resourceModel.SetPreviewImage(previewImg)
+	if err := resourceModel.SaveContent(texAsset); err != nil {
 		return nil, fmt.Errorf("error saving content: %w", err)
+	}
+	if err := resourceModel.Save(); err != nil {
+		return nil, err
 	}
 	return &CubeTexture{
 		Observable:    mvc.NewObservable(),
-		resource:      resource,
-		resourceModel: NewResource(resource),
+		resourceModel: resourceModel,
 		texAsset:      texAsset,
-		previewImg:    previewImg,
 	}, nil
 }
 
 func OpenCubeTexture(resourceModel *Resource) (*CubeTexture, error) {
-	resource := resourceModel.Raw()
 	texAsset := new(asset.CubeTexture)
-	if err := resource.LoadContent(texAsset); err != nil {
+	if err := resourceModel.LoadContent(texAsset); err != nil {
 		return nil, fmt.Errorf("error loading content: %w", err)
-	}
-	previewImg, err := resource.LoadPreview()
-	if err != nil {
-		if !errors.Is(err, asset.ErrNotFound) {
-			return nil, fmt.Errorf("error loading preview: %w", err)
-		}
-		previewImg = nil
 	}
 	return &CubeTexture{
 		Observable:    mvc.NewObservable(),
-		resource:      resource,
 		resourceModel: resourceModel,
 		texAsset:      texAsset,
-		previewImg:    previewImg,
 	}, nil
 }
 
 type CubeTexture struct {
 	mvc.Observable
-	resource      *data.Resource
 	resourceModel *Resource
 	texAsset      *asset.CubeTexture
-	previewImg    image.Image
 }
 
 func (t *CubeTexture) Resource() *Resource {
@@ -207,24 +190,9 @@ func (t *CubeTexture) SetBottomData(data []byte) {
 	t.SignalChange(ChangeCubeTextureData)
 }
 
-func (t *CubeTexture) PreviewImage() image.Image {
-	return t.previewImg
-}
-
-func (t *CubeTexture) SetPreviewImage(img image.Image) {
-	t.previewImg = img
-	t.SignalChange(ChangeCubeTexturePreview)
-}
-
 func (t *CubeTexture) Save() error {
-	if err := t.resource.Save(); err != nil {
-		return fmt.Errorf("error saving resource: %w", err)
-	}
-	if err := t.resource.SavePreview(t.previewImg); err != nil {
-		return fmt.Errorf("error saving preview: %w", err)
-	}
-	if err := t.resource.SaveContent(t.texAsset); err != nil {
+	if err := t.resourceModel.SaveContent(t.texAsset); err != nil {
 		return fmt.Errorf("error saving content: %w", err)
 	}
-	return nil
+	return t.resourceModel.Save()
 }

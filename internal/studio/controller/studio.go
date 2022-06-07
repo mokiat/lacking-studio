@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"github.com/mokiat/lacking-studio/internal/studio/data"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/change"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
+	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/log"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
@@ -15,13 +15,16 @@ func NewStudio(globalCtx global.Context, studioModel *model.Studio) *Studio {
 	return &Studio{
 		globalCtx:         globalCtx,
 		studioModel:       studioModel,
+		resourceModels:    make(map[asset.Resource]*model.Resource),
 		editorControllers: make(map[*model.Editor]Editor),
 	}
 }
 
 type Studio struct {
-	globalCtx         global.Context
-	studioModel       *model.Studio
+	globalCtx   global.Context
+	studioModel *model.Studio
+
+	resourceModels    map[asset.Resource]*model.Resource
 	editorControllers map[*model.Editor]Editor
 }
 
@@ -57,7 +60,7 @@ func (s *Studio) OnToggleProperties() {
 	editor.SetPropertiesVisible(!editor.IsPropertiesVisible())
 }
 
-func (s *Studio) OnCreateResource(kind data.ResourceKind) {
+func (s *Studio) OnCreateResource(kind model.ResourceKind) {
 	log.Warn("TODO: Create Resource")
 }
 
@@ -67,12 +70,11 @@ func (s *Studio) OnOpenResource(id string) {
 		return
 	}
 
-	resource := s.registry().GetResourceByID(id)
-	resourceModel := model.NewResource(resource)
+	resourceModel := s.registry().ResourceByID(id)
 	editorModel := model.NewEditor(resourceModel)
 
-	switch resource.Kind() {
-	case data.ResourceKindTwoDTexture:
+	switch resourceModel.Kind() {
+	case model.ResourceKindTwoDTexture:
 		texModel, err := model.OpenTwoDTexture(resourceModel)
 		if err != nil {
 			panic("TODO")
@@ -80,7 +82,7 @@ func (s *Studio) OnOpenResource(id string) {
 		controller := NewTwoDTextureEditor(s.globalCtx, s, editorModel, texModel)
 		s.editorControllers[editorModel] = controller
 
-	case data.ResourceKindCubeTexture:
+	case model.ResourceKindCubeTexture:
 		texModel, err := model.OpenCubeTexture(resourceModel)
 		if err != nil {
 			panic("TODO")
@@ -88,11 +90,11 @@ func (s *Studio) OnOpenResource(id string) {
 		controller := NewCubeTextureEditor(s.globalCtx, s, editorModel, texModel)
 		s.editorControllers[editorModel] = controller
 
-	case data.ResourceKindModel:
+	case model.ResourceKindModel:
 		log.Info("TODO: Open Model")
 		return
 
-	case data.ResourceKindScene:
+	case model.ResourceKindScene:
 		log.Info("TODO: Open Scene")
 		return
 	}
@@ -102,7 +104,7 @@ func (s *Studio) OnOpenResource(id string) {
 }
 
 func (s *Studio) OnRenameResource(id, name string) {
-	resource := s.registry().GetResourceByID(id)
+	resource := s.registry().ResourceByID(id)
 	if resource == nil {
 		log.Warn("[studio] Trying to rename missing resource")
 		return
@@ -117,8 +119,8 @@ func (s *Studio) OnRenameResource(id, name string) {
 	))
 }
 
-func (s *Studio) OnCloneResource(id string) *data.Resource {
-	resource := s.registry().GetResourceByID(id)
+func (s *Studio) OnCloneResource(id string) *model.Resource {
+	resource := s.registry().ResourceByID(id)
 	if resource == nil {
 		log.Warn("[studio] Trying to clone missing resource")
 		return nil
@@ -135,7 +137,7 @@ func (s *Studio) OnDeleteResource(id string) {
 	if editor != nil {
 		s.OnCloseEditor(editor)
 	}
-	resource := s.registry().GetResourceByID(id)
+	resource := s.registry().ResourceByID(id)
 	if resource == nil {
 		log.Warn("[studio] Trying to delete missing resource")
 	}
@@ -171,6 +173,6 @@ func (s *Studio) RenderEditor(editorModel *model.Editor, scope co.Scope, layoutD
 	return controller.Render(scope, layoutData)
 }
 
-func (s *Studio) registry() *data.Registry {
-	return s.globalCtx.Registry
+func (s *Studio) registry() *model.Registry {
+	return s.studioModel.Registry()
 }
