@@ -114,6 +114,19 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 						},
 					})
 				}))
+
+				co.WithChild("binary", co.New(mat.ToolbarButton, func() {
+					co.WithData(mat.ToolbarButtonData{
+						Text:     "Binary",
+						Icon:     co.OpenImage(scope, "icons/broken-image.png"),
+						Selected: lifecycle.SelectedKind() == model.ResourceKindBinary,
+					})
+					co.WithCallbackData(mat.ToolbarButtonCallbackData{
+						OnClick: func() {
+							lifecycle.SetSelectedKind(model.ResourceKindBinary)
+						},
+					})
+				}))
 			}))
 
 			co.WithChild("search", co.New(mat.Element, func() {
@@ -404,7 +417,12 @@ func (l *assetDialogLifecycle) EachResource(fn func(*model.Resource)) {
 }
 
 func (l *assetDialogLifecycle) OnNew() {
-	l.controller.OnCreateResource(l.selectedKind)
+	resource := l.controller.OnCreateResource(l.selectedKind)
+	if resource != nil {
+		l.searchText = resource.Name()
+		l.selectedResource = resource
+		l.handle.NotifyChanged()
+	}
 }
 
 func (l *assetDialogLifecycle) OnClone() {

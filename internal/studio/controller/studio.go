@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"fmt"
+
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/change"
@@ -60,8 +62,40 @@ func (s *Studio) OnToggleProperties() {
 	editor.SetPropertiesVisible(!editor.IsPropertiesVisible())
 }
 
-func (s *Studio) OnCreateResource(kind model.ResourceKind) {
-	log.Warn("TODO: Create Resource")
+func (s *Studio) OnCreateResource(kind model.ResourceKind) *model.Resource {
+	switch kind {
+	case model.ResourceKindTwoDTexture:
+		texModel, err := model.CreateTwoDTexture(s.registry())
+		if err != nil {
+			panic(err)
+		}
+		return texModel.Resource()
+
+	case model.ResourceKindCubeTexture:
+		texModel, err := model.CreateCubeTexture(s.registry())
+		if err != nil {
+			panic(err)
+		}
+		return texModel.Resource()
+
+	case model.ResourceKindModel:
+		log.Info("TODO: Open Model")
+		return nil
+
+	case model.ResourceKindScene:
+		log.Info("TODO: Open Scene")
+		return nil
+
+	case model.ResourceKindBinary:
+		binModel, err := model.CreateBinary(s.registry())
+		if err != nil {
+			panic(err)
+		}
+		return binModel.Resource()
+
+	default:
+		panic(fmt.Errorf("unknown kind %q", kind))
+	}
 }
 
 func (s *Studio) OnOpenResource(id string) {
@@ -77,7 +111,7 @@ func (s *Studio) OnOpenResource(id string) {
 	case model.ResourceKindTwoDTexture:
 		texModel, err := model.OpenTwoDTexture(resourceModel)
 		if err != nil {
-			panic("TODO")
+			panic(err)
 		}
 		controller := NewTwoDTextureEditor(s.globalCtx, s, editorModel, texModel)
 		s.editorControllers[editorModel] = controller
@@ -85,7 +119,7 @@ func (s *Studio) OnOpenResource(id string) {
 	case model.ResourceKindCubeTexture:
 		texModel, err := model.OpenCubeTexture(resourceModel)
 		if err != nil {
-			panic("TODO")
+			panic(err)
 		}
 		controller := NewCubeTextureEditor(s.globalCtx, s, editorModel, texModel)
 		s.editorControllers[editorModel] = controller
@@ -97,6 +131,17 @@ func (s *Studio) OnOpenResource(id string) {
 	case model.ResourceKindScene:
 		log.Info("TODO: Open Scene")
 		return
+
+	case model.ResourceKindBinary:
+		binModel, err := model.OpenBinary(resourceModel)
+		if err != nil {
+			panic(err)
+		}
+		controller := NewBinaryEditor(s.globalCtx, s, editorModel, binModel)
+		s.editorControllers[editorModel] = controller
+
+	default:
+		panic(fmt.Errorf("unknown kind %q", resourceModel.Kind()))
 	}
 
 	s.studioModel.AddEditor(editorModel)

@@ -16,7 +16,7 @@ type StudioController interface {
 	OnUndo()
 	OnRedo()
 	OnToggleProperties()
-	OnCreateResource(kind model.ResourceKind)
+	OnCreateResource(kind model.ResourceKind) *model.Resource
 	OnOpenResource(id string)
 	OnCloneResource(id string) *model.Resource
 	OnDeleteResource(id string)
