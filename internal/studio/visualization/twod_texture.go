@@ -14,6 +14,7 @@ import (
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/x448/float16"
 )
 
 func NewTwoDTexture(api render.API, engine *graphics.Engine, texModel *model.TwoDTexture) *TwoDTexture {
@@ -24,11 +25,10 @@ func NewTwoDTexture(api render.API, engine *graphics.Engine, texModel *model.Two
 
 	light := scene.CreateDirectionalLight()
 	light.SetIntensity(sprec.NewVec3(1.0, 1.0, 1.0))
-	light.SetRotation(sprec.IdentityQuat())
+	light.SetMatrix(sprec.IdentityMat4())
 
 	camera := scene.CreateCamera()
-	camera.SetPosition(sprec.NewVec3(0.0, 0.0, 3.0))
-	camera.SetRotation(sprec.IdentityQuat())
+	camera.SetMatrix(sprec.TranslationMat4(0.0, 0.0, 3.0))
 	camera.SetFoVMode(graphics.FoVModeHorizontalPlus)
 	camera.SetFoV(sprec.Degrees(66))
 	camera.SetAutoExposure(false)
@@ -153,13 +153,11 @@ func (t *TwoDTexture) TakeSnapshot(size ui.Size) image.Image {
 }
 
 func (t *TwoDTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.Size) {
-	transform := sprec.Mat4MultiProd(
+	t.camera.SetMatrix(sprec.Mat4MultiProd(
 		sprec.RotationMat4(-t.cameraYaw, 0.0, 1.0, 0.0),
 		sprec.RotationMat4(-t.cameraPitch, 1.0, 0.0, 0.0),
 		sprec.TranslationMat4(0.0, 0.0, 3.0),
-	)
-	t.camera.SetPosition(transform.Translation())
-	t.camera.SetRotation(transform.RotationQuat())
+	))
 	t.camera.SetFoV(t.cameraFoV)
 
 	t.scene.RenderFramebuffer(framebuffer, graphics.Viewport{
@@ -231,14 +229,14 @@ func (t *TwoDTexture) createGraphicsRepresentation() {
 		BackfaceCulling: false,
 		AlphaBlending:   false,
 		AlphaTesting:    false,
-		Metalness:       0.0,
+		Metallic:        0.0,
 		Roughness:       0.5,
 		AlbedoColor:     sprec.NewVec4(1.0, 1.0, 1.0, 1.0),
 		AlbedoTexture:   t.texture,
 	})
 
 	quadCount := 5
-	vertexSize := 3*4 + 3*4 + 2*4
+	vertexSize := 3*4 + 3*2 + 2*2
 	vertexData := make([]byte, 4*vertexSize*quadCount)
 	vertexPlotter := buffer.NewPlotter(vertexData, binary.LittleEndian)
 
@@ -289,7 +287,7 @@ func (t *TwoDTexture) createGraphicsRepresentation() {
 			NormalOffsetBytes:   3 * 4,
 			NormalStrideBytes:   vertexSize,
 			HasTexCoord:         true,
-			TexCoordOffsetBytes: 3*4 + 3*4,
+			TexCoordOffsetBytes: 3*4 + 3*2,
 			TexCoordStrideBytes: vertexSize,
 		},
 		IndexData:   indexData,
@@ -389,9 +387,9 @@ func (v twoDTextureVertex) Serialize(plotter *buffer.Plotter) {
 	plotter.PlotFloat32(v.Coord.X)
 	plotter.PlotFloat32(v.Coord.Y)
 	plotter.PlotFloat32(v.Coord.Z)
-	plotter.PlotFloat32(0.0)
-	plotter.PlotFloat32(0.0)
-	plotter.PlotFloat32(1.0)
-	plotter.PlotFloat32(v.TexCoord.X)
-	plotter.PlotFloat32(v.TexCoord.Y)
+	plotter.PlotFloat16(float16.Fromfloat32(0.0))
+	plotter.PlotFloat16(float16.Fromfloat32(0.0))
+	plotter.PlotFloat16(float16.Fromfloat32(1.0))
+	plotter.PlotFloat16(float16.Fromfloat32(v.TexCoord.X))
+	plotter.PlotFloat16(float16.Fromfloat32(v.TexCoord.Y))
 }

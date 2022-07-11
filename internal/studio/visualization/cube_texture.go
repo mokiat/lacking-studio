@@ -19,7 +19,7 @@ func NewCubeTexture(api render.API, engine *graphics.Engine, texModel *model.Cub
 	sky.SetBackgroundColor(sprec.NewVec3(0.2, 0.2, 0.2))
 
 	camera := scene.CreateCamera()
-	camera.SetPosition(sprec.NewVec3(0.0, 0.0, 0.0))
+	camera.SetMatrix(sprec.IdentityMat4())
 	camera.SetFoVMode(graphics.FoVModeHorizontalPlus)
 	camera.SetFoV(sprec.Degrees(66))
 	camera.SetAutoExposure(true)
@@ -141,12 +141,10 @@ func (t *CubeTexture) TakeSnapshot(size ui.Size) image.Image {
 }
 
 func (t *CubeTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.Size) {
-	transform := sprec.Mat4MultiProd(
+	t.camera.SetMatrix(sprec.Mat4MultiProd(
 		sprec.RotationMat4(t.cameraYaw, 0.0, 1.0, 0.0),
 		sprec.RotationMat4(t.cameraPitch, 1.0, 0.0, 0.0),
-	)
-	t.camera.SetPosition(transform.Translation())
-	t.camera.SetRotation(transform.RotationQuat())
+	))
 	t.camera.SetFoV(t.cameraFoV)
 
 	t.scene.RenderFramebuffer(framebuffer, graphics.Viewport{
