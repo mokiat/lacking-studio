@@ -3,6 +3,7 @@ package visualization
 import (
 	"image"
 
+	"github.com/mokiat/gomath/dprec"
 	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/game/graphics"
@@ -19,7 +20,7 @@ func NewCubeTexture(api render.API, engine *graphics.Engine, texModel *model.Cub
 	sky.SetBackgroundColor(sprec.NewVec3(0.2, 0.2, 0.2))
 
 	camera := scene.CreateCamera()
-	camera.SetMatrix(sprec.IdentityMat4())
+	camera.SetMatrix(dprec.IdentityMat4())
 	camera.SetFoVMode(graphics.FoVModeHorizontalPlus)
 	camera.SetFoV(sprec.Degrees(66))
 	camera.SetAutoExposure(true)
@@ -32,8 +33,8 @@ func NewCubeTexture(api render.API, engine *graphics.Engine, texModel *model.Cub
 		engine:      engine,
 		scene:       scene,
 		camera:      camera,
-		cameraPitch: sprec.Degrees(0),
-		cameraYaw:   sprec.Degrees(0),
+		cameraPitch: dprec.Degrees(0),
+		cameraYaw:   dprec.Degrees(0),
 		cameraFoV:   sprec.Degrees(66),
 	}
 	result.createGraphicsRepresentation()
@@ -49,8 +50,8 @@ type CubeTexture struct {
 	engine      *graphics.Engine
 	scene       *graphics.Scene
 	camera      *graphics.Camera
-	cameraPitch sprec.Angle
-	cameraYaw   sprec.Angle
+	cameraPitch dprec.Angle
+	cameraYaw   dprec.Angle
 	cameraFoV   sprec.Angle
 	texture     *graphics.CubeTexture
 
@@ -108,7 +109,7 @@ func (t *CubeTexture) TakeSnapshot(size ui.Size) image.Image {
 		Y:      0,
 		Width:  size.Width,
 		Height: size.Height,
-	}, t.camera)
+	})
 
 	commands := t.api.CreateCommandQueue()
 	defer commands.Release()
@@ -141,9 +142,9 @@ func (t *CubeTexture) TakeSnapshot(size ui.Size) image.Image {
 }
 
 func (t *CubeTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.Size) {
-	t.camera.SetMatrix(sprec.Mat4MultiProd(
-		sprec.RotationMat4(t.cameraYaw, 0.0, 1.0, 0.0),
-		sprec.RotationMat4(t.cameraPitch, 1.0, 0.0, 0.0),
+	t.camera.SetMatrix(dprec.Mat4MultiProd(
+		dprec.RotationMat4(t.cameraYaw, 0.0, 1.0, 0.0),
+		dprec.RotationMat4(t.cameraPitch, 1.0, 0.0, 0.0),
 	))
 	t.camera.SetFoV(t.cameraFoV)
 
@@ -152,7 +153,7 @@ func (t *CubeTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.S
 		Y:      0,
 		Width:  size.Width,
 		Height: size.Height,
-	}, t.camera)
+	})
 }
 
 func (t *CubeTexture) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
@@ -166,8 +167,8 @@ func (t *CubeTexture) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
 		}
 	case ui.MouseEventTypeMove:
 		if t.rotatingCamera {
-			t.cameraPitch += sprec.Degrees(float32(event.Position.Y-t.oldMouseY) / 5)
-			t.cameraYaw += sprec.Degrees(float32(event.Position.X-t.oldMouseX) / 5)
+			t.cameraPitch += dprec.Degrees(float64(event.Position.Y-t.oldMouseY) / 5)
+			t.cameraYaw += dprec.Degrees(float64(event.Position.X-t.oldMouseX) / 5)
 			t.oldMouseX = event.Position.X
 			t.oldMouseY = event.Position.Y
 			return true

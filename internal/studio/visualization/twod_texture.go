@@ -1,19 +1,19 @@
 package visualization
 
 import (
-	"encoding/binary"
 	"fmt"
 	"image"
 
+	"github.com/mokiat/gomath/dprec"
 	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
-	"github.com/mokiat/lacking/data/buffer"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/util/blob"
 	"github.com/x448/float16"
 )
 
@@ -25,10 +25,10 @@ func NewTwoDTexture(api render.API, engine *graphics.Engine, texModel *model.Two
 
 	light := scene.CreateDirectionalLight()
 	light.SetIntensity(sprec.NewVec3(1.0, 1.0, 1.0))
-	light.SetMatrix(sprec.IdentityMat4())
+	light.SetMatrix(dprec.IdentityMat4())
 
 	camera := scene.CreateCamera()
-	camera.SetMatrix(sprec.TranslationMat4(0.0, 0.0, 3.0))
+	camera.SetMatrix(dprec.TranslationMat4(0.0, 0.0, 3.0))
 	camera.SetFoVMode(graphics.FoVModeHorizontalPlus)
 	camera.SetFoV(sprec.Degrees(66))
 	camera.SetAutoExposure(false)
@@ -41,8 +41,8 @@ func NewTwoDTexture(api render.API, engine *graphics.Engine, texModel *model.Two
 		engine:      engine,
 		scene:       scene,
 		camera:      camera,
-		cameraPitch: sprec.Degrees(0),
-		cameraYaw:   sprec.Degrees(0),
+		cameraPitch: dprec.Degrees(0),
+		cameraYaw:   dprec.Degrees(0),
 		cameraFoV:   sprec.Degrees(66),
 	}
 	result.createGraphicsRepresentation()
@@ -58,12 +58,12 @@ type TwoDTexture struct {
 	engine       *graphics.Engine
 	scene        *graphics.Scene
 	camera       *graphics.Camera
-	cameraPitch  sprec.Angle
-	cameraYaw    sprec.Angle
+	cameraPitch  dprec.Angle
+	cameraYaw    dprec.Angle
 	cameraFoV    sprec.Angle
 	mesh         *graphics.Mesh
-	meshTemplate *graphics.MeshTemplate
-	material     *graphics.Material
+	meshTemplate *graphics.MeshDefinition
+	material     *graphics.MaterialDefinition
 	texture      *graphics.TwoDTexture
 
 	rotatingCamera bool
@@ -120,7 +120,7 @@ func (t *TwoDTexture) TakeSnapshot(size ui.Size) image.Image {
 		Y:      0,
 		Width:  size.Width,
 		Height: size.Height,
-	}, t.camera)
+	})
 
 	commands := t.api.CreateCommandQueue()
 	defer commands.Release()
@@ -153,10 +153,10 @@ func (t *TwoDTexture) TakeSnapshot(size ui.Size) image.Image {
 }
 
 func (t *TwoDTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.Size) {
-	t.camera.SetMatrix(sprec.Mat4MultiProd(
-		sprec.RotationMat4(-t.cameraYaw, 0.0, 1.0, 0.0),
-		sprec.RotationMat4(-t.cameraPitch, 1.0, 0.0, 0.0),
-		sprec.TranslationMat4(0.0, 0.0, 3.0),
+	t.camera.SetMatrix(dprec.Mat4MultiProd(
+		dprec.RotationMat4(-t.cameraYaw, 0.0, 1.0, 0.0),
+		dprec.RotationMat4(-t.cameraPitch, 1.0, 0.0, 0.0),
+		dprec.TranslationMat4(0.0, 0.0, 3.0),
 	))
 	t.camera.SetFoV(t.cameraFoV)
 
@@ -165,7 +165,7 @@ func (t *TwoDTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.S
 		Y:      0,
 		Width:  size.Width,
 		Height: size.Height,
-	}, t.camera)
+	})
 }
 
 func (t *TwoDTexture) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
@@ -179,8 +179,8 @@ func (t *TwoDTexture) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
 		}
 	case ui.MouseEventTypeMove:
 		if t.rotatingCamera {
-			t.cameraPitch += sprec.Degrees(float32(event.Position.Y-t.oldMouseY) / 5)
-			t.cameraYaw += sprec.Degrees(float32(event.Position.X-t.oldMouseX) / 5)
+			t.cameraPitch += dprec.Degrees(float64(event.Position.Y-t.oldMouseY) / 5)
+			t.cameraYaw += dprec.Degrees(float64(event.Position.X-t.oldMouseX) / 5)
 			t.oldMouseX = event.Position.X
 			t.oldMouseY = event.Position.Y
 			return true
@@ -225,7 +225,7 @@ func (t *TwoDTexture) createGraphicsRepresentation() {
 
 	t.texture = t.engine.CreateTwoDTexture(definition)
 
-	t.material = t.engine.CreatePBRMaterial(graphics.PBRMaterialDefinition{
+	t.material = t.engine.CreatePBRMaterialDefinition(graphics.PBRMaterialInfo{
 		BackfaceCulling: false,
 		AlphaBlending:   false,
 		AlphaTesting:    false,
@@ -238,9 +238,9 @@ func (t *TwoDTexture) createGraphicsRepresentation() {
 	quadCount := 5
 	vertexSize := 3*4 + 3*2 + 2*2
 	vertexData := make([]byte, 4*vertexSize*quadCount)
-	vertexPlotter := buffer.NewPlotter(vertexData, binary.LittleEndian)
+	vertexPlotter := blob.NewPlotter(vertexData)
 
-	renderQuad := func(vertexPlotter *buffer.Plotter, offset sprec.Vec3, texOffset sprec.Vec2) {
+	renderQuad := func(vertexPlotter *blob.Plotter, offset sprec.Vec3, texOffset sprec.Vec2) {
 		twoDTextureVertex{
 			Coord:    sprec.Vec3Sum(sprec.NewVec3(-0.5, 0.5, 0.0), offset),
 			TexCoord: sprec.Vec2Sum(sprec.NewVec2(0.0, 1.0), texOffset),
@@ -266,7 +266,7 @@ func (t *TwoDTexture) createGraphicsRepresentation() {
 	renderQuad(vertexPlotter, sprec.NewVec3(1.01, 0.0, 0.0), sprec.NewVec2(1.0, 0.0))
 
 	indexData := make([]byte, 6*2*quadCount)
-	indexPlotter := buffer.NewPlotter(indexData, binary.LittleEndian)
+	indexPlotter := blob.NewPlotter(indexData)
 	for i := uint16(0); i < uint16(quadCount); i++ {
 		indexPlotter.PlotUint16(0 + i*4)
 		indexPlotter.PlotUint16(1 + i*4)
@@ -277,7 +277,7 @@ func (t *TwoDTexture) createGraphicsRepresentation() {
 		indexPlotter.PlotUint16(3 + i*4)
 	}
 
-	t.meshTemplate = t.engine.CreateMeshTemplate(graphics.MeshTemplateDefinition{
+	t.meshTemplate = t.engine.CreateMeshDefinition(graphics.MeshDefinitionInfo{
 		VertexData: vertexData,
 		VertexFormat: graphics.VertexFormat{
 			HasCoord:            true,
@@ -292,7 +292,7 @@ func (t *TwoDTexture) createGraphicsRepresentation() {
 		},
 		IndexData:   indexData,
 		IndexFormat: graphics.IndexFormatU16,
-		SubMeshes: []graphics.SubMeshTemplateDefinition{
+		Fragments: []graphics.MeshFragmentDefinitionInfo{
 			{
 				Primitive:   graphics.PrimitiveTriangles,
 				IndexOffset: 0,
@@ -302,13 +302,14 @@ func (t *TwoDTexture) createGraphicsRepresentation() {
 		},
 	})
 
-	t.mesh = t.scene.CreateMesh(t.meshTemplate)
+	t.mesh = t.scene.CreateMesh(graphics.MeshInfo{
+		Definition: t.meshTemplate,
+	})
 }
 
 func (t *TwoDTexture) deleteGraphicsRepresentation() {
 	t.mesh.Delete()
 	t.meshTemplate.Delete()
-	t.material.Delete()
 	t.texture.Delete()
 }
 
@@ -383,7 +384,7 @@ type twoDTextureVertex struct {
 	TexCoord sprec.Vec2
 }
 
-func (v twoDTextureVertex) Serialize(plotter *buffer.Plotter) {
+func (v twoDTextureVertex) Serialize(plotter *blob.Plotter) {
 	plotter.PlotFloat32(v.Coord.X)
 	plotter.PlotFloat32(v.Coord.Y)
 	plotter.PlotFloat32(v.Coord.Z)
