@@ -1,12 +1,12 @@
 package view
 
 import (
+	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/util/optional"
 )
 
 type EditorController interface {
@@ -61,8 +61,8 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 			co.WithChild("label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-					FontSize:  optional.Value(float32(18)),
-					FontColor: optional.Value(mat.OnSurfaceColor),
+					FontSize:  opt.V(float32(18)),
+					FontColor: opt.V(mat.OnSurfaceColor),
 					Text:      "ID:",
 				})
 			}))
@@ -70,8 +70,8 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 			co.WithChild("value", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
-					FontSize:  optional.Value(float32(18)),
-					FontColor: optional.Value(mat.OnSurfaceColor),
+					FontSize:  opt.V(float32(18)),
+					FontColor: opt.V(mat.OnSurfaceColor),
 					Text:      resource.ID(),
 				})
 			}))
@@ -88,8 +88,8 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 			co.WithChild("label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-					FontSize:  optional.Value(float32(18)),
-					FontColor: optional.Value(mat.OnSurfaceColor),
+					FontSize:  opt.V(float32(18)),
+					FontColor: opt.V(mat.OnSurfaceColor),
 					Text:      "Type:",
 				})
 			}))
@@ -97,8 +97,8 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 			co.WithChild("value", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
-					FontSize:  optional.Value(float32(18)),
-					FontColor: optional.Value(mat.OnSurfaceColor),
+					FontSize:  opt.V(float32(18)),
+					FontColor: opt.V(mat.OnSurfaceColor),
 					Text:      string(resource.Kind()),
 				})
 			}))
@@ -115,8 +115,8 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 			co.WithChild("label", co.New(mat.Label, func() {
 				co.WithData(mat.LabelData{
 					Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-					FontSize:  optional.Value(float32(18)),
-					FontColor: optional.Value(mat.OnSurfaceColor),
+					FontSize:  opt.V(float32(18)),
+					FontColor: opt.V(mat.OnSurfaceColor),
 					Text:      "Name:",
 				})
 			}))
@@ -126,7 +126,7 @@ var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope)
 					Text: resource.Name(),
 				})
 				co.WithLayoutData(mat.LayoutData{
-					Width: optional.Value(300),
+					Width: opt.V(300),
 				})
 				co.WithCallbackData(mat.EditboxCallbackData{
 					OnChanged: func(text string) {

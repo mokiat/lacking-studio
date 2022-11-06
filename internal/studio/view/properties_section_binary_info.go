@@ -3,12 +3,12 @@ package view
 import (
 	"fmt"
 
+	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/util/optional"
 )
 
 type BinaryInfoPropertiesSectionData struct {
@@ -45,8 +45,8 @@ var BinaryInfoPropertiesSection = co.Define(func(props co.Properties, scope co.S
 		co.WithChild("size-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
 				Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-				FontSize:  optional.Value(float32(18)),
-				FontColor: optional.Value(ui.Black()),
+				FontSize:  opt.V(float32(18)),
+				FontColor: opt.V(ui.Black()),
 				Text:      "Size:",
 			})
 		}))
@@ -54,8 +54,8 @@ var BinaryInfoPropertiesSection = co.Define(func(props co.Properties, scope co.S
 		co.WithChild("size-value-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
 				Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
-				FontSize:  optional.Value(float32(18)),
-				FontColor: optional.Value(ui.Black()),
+				FontSize:  opt.V(float32(18)),
+				FontColor: opt.V(ui.Black()),
 				Text:      fmt.Sprintf("%d bytes", binary.Size()),
 			})
 		}))
@@ -63,8 +63,8 @@ var BinaryInfoPropertiesSection = co.Define(func(props co.Properties, scope co.S
 		co.WithChild("sha-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
 				Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-				FontSize:  optional.Value(float32(18)),
-				FontColor: optional.Value(ui.Black()),
+				FontSize:  opt.V(float32(18)),
+				FontColor: opt.V(ui.Black()),
 				Text:      "Digest:",
 			})
 		}))
@@ -72,8 +72,8 @@ var BinaryInfoPropertiesSection = co.Define(func(props co.Properties, scope co.S
 		co.WithChild("sha-value-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
 				Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
-				FontSize:  optional.Value(float32(18)),
-				FontColor: optional.Value(ui.Black()),
+				FontSize:  opt.V(float32(18)),
+				FontColor: opt.V(ui.Black()),
 				Text:      binary.Digest(),
 			})
 		}))

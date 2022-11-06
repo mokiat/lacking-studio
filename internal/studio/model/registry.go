@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mokiat/gog/filter"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/util/filter"
 )
 
 func NewRegistry(delegate asset.Registry) (*Registry, error) {
@@ -56,7 +56,7 @@ func (r *Registry) ResourceByID(id string) *Resource {
 }
 
 func (r *Registry) IterateResources(cb func(*Resource), fltrs ...filter.Func[*Resource]) {
-	fltr := filter.All(fltrs...)
+	fltr := filter.And(fltrs...)
 	for _, resource := range r.delegate.Resources() {
 		resourceModel := r.modelsCache[resource]
 		if fltr(resourceModel) {
@@ -73,7 +73,7 @@ func ResourcesWithKind(kind ResourceKind) filter.Func[*Resource] {
 
 func ResourcesWithSimilarName(name string) filter.Func[*Resource] {
 	if name == "" {
-		return filter.Always[*Resource]()
+		return filter.True[*Resource]()
 	}
 	name = strings.ToLower(name)
 	return func(resource *Resource) bool {

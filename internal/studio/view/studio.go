@@ -3,12 +3,12 @@ package view
 import (
 	"fmt"
 
+	"github.com/mokiat/gog/filter"
+	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/util/filter"
-	"github.com/mokiat/lacking/util/optional"
 )
 
 type StudioController interface {
@@ -37,11 +37,11 @@ var Studio = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
 		studioController = data.StudioController
 	)
 
-	mvc.UseBinding(studioModel, filter.Always[mvc.Change]()) // TODO
+	mvc.UseBinding(studioModel, filter.True[mvc.Change]()) // TODO
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.Value(mat.SurfaceColor),
+			BackgroundColor: opt.V(mat.SurfaceColor),
 			Layout:          mat.NewFrameLayout(),
 		})
 		co.WithScope(scope)

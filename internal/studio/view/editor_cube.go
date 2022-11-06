@@ -1,13 +1,13 @@
 package view
 
 import (
+	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/util/optional"
 )
 
 type CubeTextureEditorData struct {
@@ -32,7 +32,7 @@ var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.I
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.Value(mat.SurfaceColor),
+			BackgroundColor: opt.V(mat.SurfaceColor),
 			Layout:          mat.NewFrameLayout(),
 		})
 		co.WithLayoutData(props.LayoutData())
@@ -73,7 +73,7 @@ var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.I
 				})
 				co.WithLayoutData(mat.LayoutData{
 					Alignment: mat.AlignmentRight,
-					Width:     optional.Value(500),
+					Width:     opt.V(500),
 				})
 			}))
 		}

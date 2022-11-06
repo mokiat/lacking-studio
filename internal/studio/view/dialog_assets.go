@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"image"
 
+	"github.com/mokiat/gog/filter"
+	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
-	"github.com/mokiat/lacking/util/filter"
-	"github.com/mokiat/lacking/util/optional"
 )
 
 type AssetDialogData struct {
@@ -37,10 +37,10 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 
 	return co.New(mat.Modal, func() {
 		co.WithLayoutData(mat.LayoutData{
-			Width:            optional.Value(600),
-			Height:           optional.Value(600),
-			HorizontalCenter: optional.Value(0),
-			VerticalCenter:   optional.Value(0),
+			Width:            opt.V(600),
+			Height:           opt.V(600),
+			HorizontalCenter: opt.V(0),
+			VerticalCenter:   opt.V(0),
 		})
 
 		co.WithChild("header", co.New(mat.Element, func() {
@@ -140,8 +140,8 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 				co.WithChild("label", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
-						FontSize:  optional.Value(float32(18)),
-						FontColor: optional.Value(mat.OnSurfaceColor),
+						FontSize:  opt.V(float32(18)),
+						FontColor: opt.V(mat.OnSurfaceColor),
 						Text:      "Search:",
 					})
 				}))
@@ -152,7 +152,7 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 					})
 
 					co.WithLayoutData(mat.LayoutData{
-						Width: optional.Value(200),
+						Width: opt.V(200),
 					})
 
 					co.WithCallbackData(mat.EditboxCallbackData{
@@ -245,7 +245,7 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 					co.WithData(mat.ButtonData{
 						Icon:    co.OpenImage(scope, "icons/delete.png"),
 						Text:    "Delete",
-						Enabled: optional.Value(lifecycle.SelectedResource() != nil),
+						Enabled: opt.V(lifecycle.SelectedResource() != nil),
 					})
 
 					co.WithCallbackData(mat.ButtonCallbackData{
@@ -260,7 +260,7 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 					co.WithData(mat.ButtonData{
 						Icon:    co.OpenImage(scope, "icons/file-copy.png"),
 						Text:    "Clone",
-						Enabled: optional.Value(lifecycle.SelectedResource() != nil),
+						Enabled: opt.V(lifecycle.SelectedResource() != nil),
 					})
 
 					co.WithCallbackData(mat.ButtonCallbackData{
@@ -306,7 +306,7 @@ var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instanc
 				co.WithChild("open", co.New(mat.ToolbarButton, func() {
 					co.WithData(mat.ToolbarButtonData{
 						Text:    "Open",
-						Enabled: optional.Value(lifecycle.SelectedResource() != nil),
+						Enabled: opt.V(lifecycle.SelectedResource() != nil),
 					})
 					co.WithLayoutData(mat.LayoutData{
 						Alignment: mat.AlignmentRight,
@@ -483,13 +483,13 @@ var AssetItem = co.Define(func(props co.Properties, scope co.Scope) co.Instance 
 			co.WithChild("preview", co.New(mat.Picture, func() {
 				co.WithData(mat.PictureData{
 					Image:           lifecycle.PreviewImage(),
-					BackgroundColor: optional.Value(ui.Black()),
-					ImageColor:      optional.Value(ui.White()),
+					BackgroundColor: opt.V(ui.Black()),
+					ImageColor:      opt.V(ui.White()),
 					Mode:            mat.ImageModeFit,
 				})
 				co.WithLayoutData(mat.LayoutData{
-					Width:  optional.Value(64),
-					Height: optional.Value(64),
+					Width:  opt.V(64),
+					Height: opt.V(64),
 				})
 			}))
 
@@ -504,8 +504,8 @@ var AssetItem = co.Define(func(props co.Properties, scope co.Scope) co.Instance 
 				co.WithChild("name", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-						FontSize:  optional.Value(float32(16)),
-						FontColor: optional.Value(ui.Black()),
+						FontSize:  opt.V(float32(16)),
+						FontColor: opt.V(ui.Black()),
 						Text:      lifecycle.AssetName(),
 					})
 				}))
@@ -513,8 +513,8 @@ var AssetItem = co.Define(func(props co.Properties, scope co.Scope) co.Instance 
 				co.WithChild("id", co.New(mat.Label, func() {
 					co.WithData(mat.LabelData{
 						Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
-						FontSize:  optional.Value(float32(16)),
-						FontColor: optional.Value(ui.Black()),
+						FontSize:  opt.V(float32(16)),
+						FontColor: opt.V(ui.Black()),
 						Text:      lifecycle.AssetID(),
 					})
 				}))

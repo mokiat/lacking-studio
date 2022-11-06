@@ -1,11 +1,11 @@
 package view
 
 import (
+	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/util/optional"
 )
 
 type BinaryEditorController interface {
@@ -34,7 +34,7 @@ var BinaryEditor = co.ContextScoped(co.Define(func(props co.Properties, scope co
 
 	return co.New(mat.Container, func() {
 		co.WithData(mat.ContainerData{
-			BackgroundColor: optional.Value(mat.SurfaceColor),
+			BackgroundColor: opt.V(mat.SurfaceColor),
 			Layout:          mat.NewFrameLayout(),
 		})
 		co.WithLayoutData(props.LayoutData())
@@ -52,21 +52,21 @@ var BinaryEditor = co.ContextScoped(co.Define(func(props co.Properties, scope co
 
 			co.WithChild("panel", co.New(mat.Container, func() {
 				co.WithData(mat.ContainerData{
-					BackgroundColor: optional.Value(mat.BackgroundColor),
+					BackgroundColor: opt.V(mat.BackgroundColor),
 					Layout:          mat.NewAnchorLayout(mat.AnchorLayoutSettings{}),
 				})
 
 				co.WithChild("icon", co.New(mat.Picture, func() {
 					co.WithData(mat.PictureData{
 						Image:      co.OpenImage(scope, "icons/upload.png"),
-						ImageColor: optional.Value(mat.SurfaceColor),
+						ImageColor: opt.V(mat.SurfaceColor),
 						Mode:       mat.ImageModeStretch,
 					})
 					co.WithLayoutData(mat.LayoutData{
-						Width:            optional.Value(48),
-						Height:           optional.Value(48),
-						HorizontalCenter: optional.Value(48),
-						VerticalCenter:   optional.Value(48),
+						Width:            opt.V(48),
+						Height:           opt.V(48),
+						HorizontalCenter: opt.V(48),
+						VerticalCenter:   opt.V(48),
 					})
 				}))
 			}))
@@ -83,7 +83,7 @@ var BinaryEditor = co.ContextScoped(co.Define(func(props co.Properties, scope co
 				})
 				co.WithLayoutData(mat.LayoutData{
 					Alignment: mat.AlignmentRight,
-					Width:     optional.Value(500),
+					Width:     opt.V(500),
 				})
 			}))
 		}

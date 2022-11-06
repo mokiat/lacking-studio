@@ -1,12 +1,12 @@
 package view
 
 import (
+	"github.com/mokiat/gog/filter"
+	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/util/filter"
-	"github.com/mokiat/lacking/util/optional"
 )
 
 type StudioToolbarData struct {
@@ -30,7 +30,7 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 		return mvc.IsChange(ch, model.ChangeHistory)
 	})
 
-	mvc.UseBinding(studioModel.Registry(), filter.Always[mvc.Change]())
+	mvc.UseBinding(studioModel.Registry(), filter.True[mvc.Change]())
 
 	assetsOverlay := co.UseState(func() co.Overlay {
 		return nil
@@ -73,7 +73,7 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 		co.WithChild("save", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
 				Icon:    co.OpenImage(scope, "icons/save.png"),
-				Enabled: optional.Value(history.CanSave()),
+				Enabled: opt.V(history.CanSave()),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
 				OnClick: func() {
@@ -87,7 +87,7 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 		co.WithChild("undo", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
 				Icon:    co.OpenImage(scope, "icons/undo.png"),
-				Enabled: optional.Value(history.CanUndo()),
+				Enabled: opt.V(history.CanUndo()),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
 				OnClick: func() {
@@ -99,7 +99,7 @@ var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Insta
 		co.WithChild("redo", co.New(mat.ToolbarButton, func() {
 			co.WithData(mat.ToolbarButtonData{
 				Icon:    co.OpenImage(scope, "icons/redo.png"),
-				Enabled: optional.Value(history.CanRedo()),
+				Enabled: opt.V(history.CanRedo()),
 			})
 			co.WithCallbackData(mat.ToolbarButtonCallbackData{
 				OnClick: func() {

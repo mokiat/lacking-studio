@@ -1,6 +1,7 @@
 package view
 
 import (
+	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
 	"github.com/mokiat/lacking/game/asset"
@@ -8,7 +9,6 @@ import (
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/util/optional"
 )
 
 type TwoDTextureConfigPropertiesSectionData struct {
@@ -45,8 +45,8 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties, sco
 		co.WithChild("wrapping-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
 				Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-				FontSize:  optional.Value(float32(18)),
-				FontColor: optional.Value(ui.Black()),
+				FontSize:  opt.V(float32(18)),
+				FontColor: opt.V(ui.Black()),
 				Text:      "Wrapping:",
 			})
 		}))
@@ -76,8 +76,8 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties, sco
 		co.WithChild("filtering-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
 				Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-				FontSize:  optional.Value(float32(18)),
-				FontColor: optional.Value(ui.Black()),
+				FontSize:  opt.V(float32(18)),
+				FontColor: opt.V(ui.Black()),
 				Text:      "Filtering:",
 			})
 		}))
@@ -107,8 +107,8 @@ var TwoDTextureConfigPropertiesSection = co.Define(func(props co.Properties, sco
 		co.WithChild("data-format-label", co.New(mat.Label, func() {
 			co.WithData(mat.LabelData{
 				Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-				FontSize:  optional.Value(float32(18)),
-				FontColor: optional.Value(ui.Black()),
+				FontSize:  opt.V(float32(18)),
+				FontColor: opt.V(ui.Black()),
 				Text:      "Data Format:",
 			})
 		}))
