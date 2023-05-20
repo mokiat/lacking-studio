@@ -9,7 +9,6 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/model/change"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
 )
 
 func NewBinaryEditor(globalCtx global.Context, studio *Studio, editorModel *model.Editor, binModel *model.Binary) *BinaryEditor {
@@ -40,7 +39,7 @@ func (e *BinaryEditor) Save() error {
 	return nil
 }
 
-func (e *BinaryEditor) Render(scope co.Scope, layoutData mat.LayoutData) co.Instance {
+func (e *BinaryEditor) Render(scope co.Scope, layoutData any) co.Instance {
 	return co.New(view.BinaryEditor, func() {
 		co.WithData(view.BinaryEditorData{
 			ResourceModel:    e.binModel.Resource(),

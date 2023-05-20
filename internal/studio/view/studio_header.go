@@ -3,7 +3,8 @@ package view
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/layout"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type StudioHeaderData struct {
@@ -11,39 +12,48 @@ type StudioHeaderData struct {
 	StudioController StudioController
 }
 
-var StudioHeader = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	var (
-		data       = co.GetData[StudioHeaderData](props)
-		studio     = data.StudioModel
-		controller = data.StudioController
-	)
+var StudioHeader = co.Define(&studioHeaderComponent{})
 
-	return co.New(mat.Container, func() {
-		co.WithData(mat.ContainerData{
-			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-				ContentAlignment: mat.AlignmentLeft,
+type studioHeaderComponent struct {
+	Properties co.Properties `co:"properties"`
+
+	studio     *model.Studio
+	controller StudioController
+}
+
+func (c *studioHeaderComponent) OnUpsert() {
+	data := co.GetData[StudioHeaderData](c.Properties)
+	c.studio = data.StudioModel
+	c.controller = data.StudioController
+}
+
+func (c *studioHeaderComponent) Render() co.Instance {
+	return co.New(std.Element, func() {
+		co.WithData(std.ElementData{
+			Layout: layout.Vertical(layout.VerticalSettings{
+				ContentAlignment: layout.HorizontalAlignmentLeft,
 			}),
 		})
-		co.WithLayoutData(props.LayoutData())
+		co.WithLayoutData(c.Properties.LayoutData())
 
 		co.WithChild("toolbar", co.New(StudioToolbar, func() {
 			co.WithData(StudioToolbarData{
-				StudioModel:      studio,
-				StudioController: controller,
+				StudioModel:      c.studio,
+				StudioController: c.controller,
 			})
-			co.WithLayoutData(mat.LayoutData{
+			co.WithLayoutData(layout.Data{
 				GrowHorizontally: true,
 			})
 		}))
 
 		co.WithChild("tabbar", co.New(StudioTabbar, func() {
 			co.WithData(StudioTabbarData{
-				StudioModel:      studio,
-				StudioController: controller,
+				StudioModel:      c.studio,
+				StudioController: c.controller,
 			})
-			co.WithLayoutData(mat.LayoutData{
+			co.WithLayoutData(layout.Data{
 				GrowHorizontally: true,
 			})
 		}))
 	})
-})
+}

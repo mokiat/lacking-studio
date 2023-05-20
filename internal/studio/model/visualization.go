@@ -3,10 +3,10 @@ package model
 import (
 	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
-	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type Visualization interface {
 	OnViewportRender(framebuffer render.Framebuffer, size ui.Size)
-	OnViewportMouseEvent(event mat.ViewportMouseEvent) bool
+	OnViewportMouseEvent(event std.ViewportMouseEvent) bool
 }

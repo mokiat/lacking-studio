@@ -9,8 +9,8 @@ import (
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
-	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 func NewCubeTexture(api render.API, engine *graphics.Engine, texModel *model.CubeTexture) *CubeTexture {
@@ -156,7 +156,7 @@ func (t *CubeTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.S
 	})
 }
 
-func (t *CubeTexture) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
+func (t *CubeTexture) OnViewportMouseEvent(event std.ViewportMouseEvent) bool {
 	switch event.Type {
 	case ui.MouseEventTypeDown:
 		if event.Button == ui.MouseButtonMiddle {

@@ -5,12 +5,12 @@ import (
 	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type VisualizationController interface {
 	OnViewportKeyboardEvent(event ui.KeyboardEvent) bool
-	OnViewportMouseEvent(event mat.ViewportMouseEvent) bool
+	OnViewportMouseEvent(event std.ViewportMouseEvent) bool
 	OnViewportRender(framebuffer render.Framebuffer, size ui.Size)
 }
 
@@ -18,19 +18,33 @@ type VisualizationData struct {
 	Controller VisualizationController
 }
 
-var Visualization = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	ctx := co.GetContext[global.Context]()
-	data := co.GetData[VisualizationData](props)
-	controller := data.Controller
+var Visualization = co.Define(&visualizationComponent{})
 
-	return co.New(mat.Viewport, func() {
-		co.WithData(mat.ViewportData{
-			API: ctx.API,
+type visualizationComponent struct {
+	Scope      co.Scope      `co:"scope"`
+	Properties co.Properties `co:"properties"`
+
+	api        render.API
+	controller VisualizationController
+}
+
+func (c *visualizationComponent) OnUpsert() {
+	context := co.TypedValue[global.Context](c.Scope)
+	c.api = context.API
+
+	data := co.GetData[VisualizationData](c.Properties)
+	c.controller = data.Controller
+}
+
+func (c *visualizationComponent) Render() co.Instance {
+	return co.New(std.Viewport, func() {
+		co.WithData(std.ViewportData{
+			API: c.api,
 		})
-		co.WithCallbackData(mat.ViewportCallbackData{
-			OnMouseEvent:    controller.OnViewportMouseEvent,
-			OnKeyboardEvent: controller.OnViewportKeyboardEvent,
-			OnRender:        controller.OnViewportRender,
+		co.WithCallbackData(std.ViewportCallbackData{
+			OnMouseEvent:    c.controller.OnViewportMouseEvent,
+			OnKeyboardEvent: c.controller.OnViewportKeyboardEvent,
+			OnRender:        c.controller.OnViewportRender,
 		})
 	})
-})
+}

@@ -14,24 +14,30 @@ func BootstrapApplication(globalCtx global.Context) error {
 	if err != nil {
 		return fmt.Errorf("error creating registry model: %w", err)
 	}
-
-	co.RegisterContext(globalCtx)
-	co.Initialize(globalCtx.Window, co.New(Bootstrap, func() {
+	scope := co.RootScope(globalCtx.Window)
+	scope = co.TypedValueScope(scope, globalCtx)
+	co.Initialize(scope, co.New(Bootstrap, func() {
 		co.WithData(registryModel)
 	}))
 	return nil
 }
 
-var Bootstrap = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	var (
-		globalCtx     = co.GetContext[global.Context]()
-		registryModel = co.GetData[*model.Registry](props)
-	)
-	studioModel := co.UseState(func() *model.Studio {
-		return model.NewStudio(registryModel)
-	})
-	studioController := co.UseState(func() *controller.Studio {
-		return controller.NewStudio(globalCtx, studioModel.Get())
-	})
-	return studioController.Get().Render(scope)
-})
+var Bootstrap = co.Define(&bootstrapComponent{})
+
+type bootstrapComponent struct {
+	Scope      co.Scope      `co:"scope"`
+	Properties co.Properties `co:"properties"`
+
+	studioController *controller.Studio
+}
+
+func (c *bootstrapComponent) OnCreate() {
+	globalCtx := co.TypedValue[global.Context](c.Scope)
+	registryModel := co.GetData[*model.Registry](c.Properties)
+	studioModel := model.NewStudio(registryModel)
+	c.studioController = controller.NewStudio(globalCtx, studioModel)
+}
+
+func (c *bootstrapComponent) Render() co.Instance {
+	return c.studioController.Render(c.Scope)
+}

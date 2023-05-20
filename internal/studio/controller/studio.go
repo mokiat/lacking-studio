@@ -10,7 +10,6 @@ import (
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/log"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
 )
 
 func NewStudio(globalCtx global.Context, studioModel *model.Studio) *Studio {
@@ -213,7 +212,7 @@ func (s *Studio) Render(scope co.Scope) co.Instance {
 	})
 }
 
-func (s *Studio) RenderEditor(editorModel *model.Editor, scope co.Scope, layoutData mat.LayoutData) co.Instance {
+func (s *Studio) RenderEditor(editorModel *model.Editor, scope co.Scope, layoutData any) co.Instance {
 	controller := s.editorControllers[editorModel]
 	return controller.Render(scope, layoutData)
 }

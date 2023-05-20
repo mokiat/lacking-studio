@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	glapp "github.com/mokiat/lacking-gl/app"
 	glgame "github.com/mokiat/lacking-gl/game"
@@ -19,7 +20,6 @@ import (
 	"github.com/mokiat/lacking/game/physics"
 	"github.com/mokiat/lacking/log"
 	"github.com/mokiat/lacking/ui"
-	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/util/resource"
 )
 
@@ -46,12 +46,12 @@ func runApplication(projectDir string) error {
 
 	locator := resource.NewFSLocator(resources.FS)
 
-	physicsEngine := physics.NewEngine()
+	physicsEngine := physics.NewEngine(16 * time.Millisecond)
 	ecsEngine := ecs.NewEngine()
 	renderAPI := glrender.NewAPI()
 	graphicsEngine := graphics.NewEngine(renderAPI, glgame.NewShaderCollection())
 
-	uiCfg := ui.NewConfig(mat.WrappedResourceLocator(locator), renderAPI, glui.NewShaderCollection())
+	uiCfg := ui.NewConfig(ui.WrappedLocator(locator), renderAPI, glui.NewShaderCollection())
 	controller := app.NewLayeredController(
 		studio.NewController(graphicsEngine),
 		ui.NewController(uiCfg, func(w *ui.Window) {

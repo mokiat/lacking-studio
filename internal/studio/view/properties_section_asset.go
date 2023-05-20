@@ -5,8 +5,9 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type EditorController interface {
@@ -19,159 +20,170 @@ type AssetPropertiesSectionData struct {
 	EditorController EditorController
 }
 
-var AssetPropertiesSection = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	var (
-		data             = co.GetData[AssetPropertiesSectionData](props)
-		resource         = data.Model
-		controller       = data.StudioController
-		editorController = data.EditorController
-	)
+var AssetPropertiesSection = co.Define(&assetPropertiesSectionComponent{})
 
-	mvc.UseBinding(resource, func(ch mvc.Change) bool {
+type assetPropertiesSectionComponent struct {
+	Scope      co.Scope      `co:"scope"`
+	Properties co.Properties `co:"properties"`
+
+	resource         *model.Resource
+	controller       StudioController
+	editorController EditorController
+}
+
+func (c *assetPropertiesSectionComponent) OnUpsert() {
+	data := co.GetData[AssetPropertiesSectionData](c.Properties)
+	c.resource = data.Model
+	c.controller = data.StudioController
+	c.editorController = data.EditorController
+
+	mvc.UseBinding(c.resource, func(ch mvc.Change) bool {
 		return mvc.IsChange(ch, model.ChangeResourceName)
 	})
+}
 
-	return co.New(mat.Element, func() {
-		co.WithLayoutData(mat.LayoutData{
+func (c *assetPropertiesSectionComponent) Render() co.Instance {
+	return co.New(std.Element, func() {
+		co.WithLayoutData(layout.Data{
 			GrowHorizontally: true,
 		})
-		co.WithData(mat.ElementData{
+		co.WithData(std.ElementData{
 			Padding: ui.Spacing{
 				Left:   5,
 				Right:  5,
 				Top:    5,
 				Bottom: 5,
 			},
-			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-				ContentAlignment: mat.AlignmentLeft,
+			Layout: layout.Vertical(layout.VerticalSettings{
+				ContentAlignment: layout.HorizontalAlignmentLeft,
 				ContentSpacing:   5,
 			}),
 		})
 
 		// TODO: Use GridLayout (2 columns)
 
-		co.WithChild("id", co.New(mat.Element, func() {
-			co.WithData(mat.ElementData{
-				Layout: mat.NewHorizontalLayout(mat.HorizontalLayoutSettings{
-					ContentAlignment: mat.AlignmentCenter,
+		co.WithChild("id", co.New(std.Element, func() {
+			co.WithData(std.ElementData{
+				Layout: layout.Horizontal(layout.HorizontalSettings{
+					ContentAlignment: layout.VerticalAlignmentCenter,
 					ContentSpacing:   10,
 				}),
 			})
 
-			co.WithChild("label", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
+			co.WithChild("label", co.New(std.Label, func() {
+				co.WithData(std.LabelData{
+					Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
 					FontSize:  opt.V(float32(18)),
-					FontColor: opt.V(mat.OnSurfaceColor),
+					FontColor: opt.V(std.OnSurfaceColor),
 					Text:      "ID:",
 				})
 			}))
 
-			co.WithChild("value", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
+			co.WithChild("value", co.New(std.Label, func() {
+				co.WithData(std.LabelData{
+					Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
 					FontSize:  opt.V(float32(18)),
-					FontColor: opt.V(mat.OnSurfaceColor),
-					Text:      resource.ID(),
+					FontColor: opt.V(std.OnSurfaceColor),
+					Text:      c.resource.ID(),
 				})
 			}))
 		}))
 
-		co.WithChild("type", co.New(mat.Element, func() {
-			co.WithData(mat.ElementData{
-				Layout: mat.NewHorizontalLayout(mat.HorizontalLayoutSettings{
-					ContentAlignment: mat.AlignmentCenter,
+		co.WithChild("type", co.New(std.Element, func() {
+			co.WithData(std.ElementData{
+				Layout: layout.Horizontal(layout.HorizontalSettings{
+					ContentAlignment: layout.VerticalAlignmentCenter,
 					ContentSpacing:   10,
 				}),
 			})
 
-			co.WithChild("label", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
+			co.WithChild("label", co.New(std.Label, func() {
+				co.WithData(std.LabelData{
+					Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
 					FontSize:  opt.V(float32(18)),
-					FontColor: opt.V(mat.OnSurfaceColor),
+					FontColor: opt.V(std.OnSurfaceColor),
 					Text:      "Type:",
 				})
 			}))
 
-			co.WithChild("value", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
+			co.WithChild("value", co.New(std.Label, func() {
+				co.WithData(std.LabelData{
+					Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
 					FontSize:  opt.V(float32(18)),
-					FontColor: opt.V(mat.OnSurfaceColor),
-					Text:      string(resource.Kind()),
+					FontColor: opt.V(std.OnSurfaceColor),
+					Text:      string(c.resource.Kind()),
 				})
 			}))
 		}))
 
-		co.WithChild("name", co.New(mat.Element, func() {
-			co.WithData(mat.ElementData{
-				Layout: mat.NewHorizontalLayout(mat.HorizontalLayoutSettings{
-					ContentAlignment: mat.AlignmentCenter,
+		co.WithChild("name", co.New(std.Element, func() {
+			co.WithData(std.ElementData{
+				Layout: layout.Horizontal(layout.HorizontalSettings{
+					ContentAlignment: layout.VerticalAlignmentCenter,
 					ContentSpacing:   10,
 				}),
 			})
 
-			co.WithChild("label", co.New(mat.Label, func() {
-				co.WithData(mat.LabelData{
-					Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
+			co.WithChild("label", co.New(std.Label, func() {
+				co.WithData(std.LabelData{
+					Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
 					FontSize:  opt.V(float32(18)),
-					FontColor: opt.V(mat.OnSurfaceColor),
+					FontColor: opt.V(std.OnSurfaceColor),
 					Text:      "Name:",
 				})
 			}))
 
-			co.WithChild("value", co.New(mat.Editbox, func() {
-				co.WithData(mat.EditboxData{
-					Text: resource.Name(),
+			co.WithChild("value", co.New(std.Editbox, func() {
+				co.WithData(std.EditboxData{
+					Text: c.resource.Name(),
 				})
-				co.WithLayoutData(mat.LayoutData{
+				co.WithLayoutData(layout.Data{
 					Width: opt.V(300),
 				})
-				co.WithCallbackData(mat.EditboxCallbackData{
+				co.WithCallbackData(std.EditboxCallbackData{
 					OnChanged: func(text string) {
-						editorController.OnRenameResource(text)
+						c.editorController.OnRenameResource(text)
 					},
 				})
 			}))
 		}))
 
-		co.WithChild("actions", co.New(mat.Element, func() {
-			co.WithData(mat.ElementData{
-				Layout: mat.NewHorizontalLayout(mat.HorizontalLayoutSettings{
-					ContentAlignment: mat.AlignmentCenter,
+		co.WithChild("actions", co.New(std.Element, func() {
+			co.WithData(std.ElementData{
+				Layout: layout.Horizontal(layout.HorizontalSettings{
+					ContentAlignment: layout.VerticalAlignmentCenter,
 					ContentSpacing:   10,
 				}),
 			})
 
-			co.WithChild("delete", co.New(mat.Button, func() {
-				co.WithData(mat.ButtonData{
-					Icon: co.OpenImage(scope, "icons/delete.png"),
+			co.WithChild("delete", co.New(std.Button, func() {
+				co.WithData(std.ButtonData{
+					Icon: co.OpenImage(c.Scope, "icons/delete.png"),
 					Text: "Delete",
 				})
 
-				co.WithCallbackData(mat.ButtonCallbackData{
-					ClickListener: func() {
-						controller.OnDeleteResource(resource.ID())
+				co.WithCallbackData(std.ButtonCallbackData{
+					OnClick: func() {
+						c.controller.OnDeleteResource(c.resource.ID())
 					},
 				})
 			}))
 
-			co.WithChild("clone", co.New(mat.Button, func() {
-				co.WithData(mat.ButtonData{
-					Icon: co.OpenImage(scope, "icons/file-copy.png"),
+			co.WithChild("clone", co.New(std.Button, func() {
+				co.WithData(std.ButtonData{
+					Icon: co.OpenImage(c.Scope, "icons/file-copy.png"),
 					Text: "Clone",
 				})
 
-				co.WithCallbackData(mat.ButtonCallbackData{
-					ClickListener: func() {
-						newResource := controller.OnCloneResource(resource.ID())
+				co.WithCallbackData(std.ButtonCallbackData{
+					OnClick: func() {
+						newResource := c.controller.OnCloneResource(c.resource.ID())
 						if newResource != nil {
-							controller.OnOpenResource(newResource.ID())
+							c.controller.OnOpenResource(newResource.ID())
 						}
 					},
 				})
 			}))
 		}))
 	})
-})
+}

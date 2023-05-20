@@ -4,8 +4,9 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type CubeTexturePropertiesData struct {
@@ -16,67 +17,90 @@ type CubeTexturePropertiesData struct {
 	EditorController EditorController
 }
 
-var CubeTextureProperties = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	data := co.GetData[CubeTexturePropertiesData](props)
-	properties := data.Model
+var CubeTextureProperties = co.Define(&cubeTexturePropertiesComponent{})
 
-	mvc.UseBinding(properties, func(change mvc.Change) bool {
+type cubeTexturePropertiesComponent struct {
+	Scope      co.Scope      `co:"scope"`
+	Properties co.Properties `co:"properties"`
+
+	properties       *model.CubeTextureEditorProperties
+	resourceModel    *model.Resource
+	textureModel     *model.CubeTexture
+	studioController StudioController
+	editorController EditorController
+}
+
+func (c *cubeTexturePropertiesComponent) OnUpsert() {
+	data := co.GetData[CubeTexturePropertiesData](c.Properties)
+	c.properties = data.Model
+	c.resourceModel = data.ResourceModel
+	c.textureModel = data.TextureModel
+	c.studioController = data.StudioController
+	c.editorController = data.EditorController
+
+	mvc.UseBinding(c.properties, func(change mvc.Change) bool {
 		return true
 	})
+}
 
-	return co.New(mat.Element, func() {
-		co.WithData(mat.ElementData{
+func (c *cubeTexturePropertiesComponent) Render() co.Instance {
+	return co.New(std.Element, func() {
+		co.WithData(std.ElementData{
 			Padding: ui.Spacing{
 				Left:   5,
 				Right:  5,
 				Top:    5,
 				Bottom: 5,
 			},
-			Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-				ContentAlignment: mat.AlignmentLeft,
+			Layout: layout.Vertical(layout.VerticalSettings{
+				ContentAlignment: layout.HorizontalAlignmentLeft,
 				ContentSpacing:   5,
 			}),
 		})
-		co.WithLayoutData(props.LayoutData())
+		co.WithLayoutData(c.Properties.LayoutData())
 
-		co.WithChild("asset", co.New(mat.Accordion, func() {
-			co.WithData(mat.AccordionData{
-				Title:    "Asset",
-				Expanded: properties.IsAssetAccordionExpanded(),
+		co.WithChild("asset", co.New(std.Accordion, func() {
+			co.WithLayoutData(layout.Data{
+				GrowHorizontally: true,
 			})
-			co.WithLayoutData(props.LayoutData())
-			co.WithCallbackData(mat.AccordionCallbackData{
+			co.WithData(std.AccordionData{
+				Title:    "Asset",
+				Expanded: c.properties.IsAssetAccordionExpanded(),
+			})
+			co.WithCallbackData(std.AccordionCallbackData{
 				OnToggle: func() {
-					properties.SetAssetAccordionExpanded(!properties.IsAssetAccordionExpanded())
+					c.properties.SetAssetAccordionExpanded(!c.properties.IsAssetAccordionExpanded())
 				},
 			})
 
 			co.WithChild("content", co.New(AssetPropertiesSection, func() {
 				co.WithData(AssetPropertiesSectionData{
-					Model:            data.ResourceModel,
-					StudioController: data.StudioController,
-					EditorController: data.EditorController,
+					Model:            c.resourceModel,
+					StudioController: c.studioController,
+					EditorController: c.editorController,
 				})
 			}))
 		}))
 
-		co.WithChild("config", co.New(mat.Accordion, func() {
-			co.WithData(mat.AccordionData{
-				Title:    "Config",
-				Expanded: properties.IsConfigAccordionExpanded(),
+		co.WithChild("config", co.New(std.Accordion, func() {
+			co.WithLayoutData(layout.Data{
+				GrowHorizontally: true,
 			})
-			co.WithLayoutData(props.LayoutData())
-			co.WithCallbackData(mat.AccordionCallbackData{
+			co.WithData(std.AccordionData{
+				Title:    "Config",
+				Expanded: c.properties.IsConfigAccordionExpanded(),
+			})
+			co.WithCallbackData(std.AccordionCallbackData{
 				OnToggle: func() {
-					properties.SetConfigAccordionExpanded(!properties.IsConfigAccordionExpanded())
+					c.properties.SetConfigAccordionExpanded(!c.properties.IsConfigAccordionExpanded())
 				},
 			})
 
 			co.WithChild("content", co.New(CubeTextureConfigPropertiesSection, func() {
 				co.WithData(CubeTextureConfigPropertiesSectionData{
-					Texture: data.TextureModel,
+					Texture: c.textureModel,
 				})
 			}))
 		}))
 	})
-})
+}

@@ -5,8 +5,8 @@ import (
 	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type StudioToolbarData struct {
@@ -14,111 +14,118 @@ type StudioToolbarData struct {
 	StudioController StudioController
 }
 
-var StudioToolbar = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	var (
-		data        = co.GetData[StudioToolbarData](props)
-		studioModel = data.StudioModel
-		controller  = data.StudioController
-	)
+var StudioToolbar = co.Define(&studioToolbarComponent{})
 
-	mvc.UseBinding(studioModel, func(ch mvc.Change) bool {
+type studioToolbarComponent struct {
+	Scope      co.Scope      `co:"scope"`
+	Properties co.Properties `co:"properties"`
+
+	studioModel   *model.Studio
+	history       *model.History
+	controller    StudioController
+	assetsOverlay co.Overlay
+}
+
+func (c *studioToolbarComponent) OnUpsert() {
+	data := co.GetData[StudioToolbarData](c.Properties)
+	c.studioModel = data.StudioModel
+	c.controller = data.StudioController
+
+	mvc.UseBinding(c.studioModel, func(ch mvc.Change) bool {
 		return mvc.IsChange(ch, model.ChangeStudioEditorSelection)
 	})
 
-	history := studioModel.SelectedHistory()
-	mvc.UseBinding(history, func(ch mvc.Change) bool {
+	c.history = c.studioModel.SelectedHistory()
+	mvc.UseBinding(c.history, func(ch mvc.Change) bool {
 		return mvc.IsChange(ch, model.ChangeHistory)
 	})
 
-	mvc.UseBinding(studioModel.Registry(), filter.True[mvc.Change]())
+	mvc.UseBinding(c.studioModel.Registry(), filter.True[mvc.Change]())
+}
 
-	assetsOverlay := co.UseState(func() co.Overlay {
-		return nil
-	})
+func (c *studioToolbarComponent) Render() co.Instance {
+	return co.New(std.Toolbar, func() {
+		co.WithLayoutData(c.Properties.LayoutData())
 
-	onAssetsClicked := func() {
-		assetsOverlay.Set(co.OpenOverlay(co.New(AssetDialog, func() {
-			co.WithData(AssetDialogData{
-				Registry:   studioModel.Registry(),
-				Controller: controller,
-			})
-			co.WithCallbackData(AssetDialogCallbackData{
-				OnOpen: func(id string) {
-					controller.OnOpenResource(id)
-				},
-				OnClose: func() {
-					overlay := assetsOverlay.Get()
-					overlay.Close()
-					assetsOverlay.Set(nil)
-				},
-			})
-		})))
-	}
-
-	return co.New(mat.Toolbar, func() {
-		co.WithLayoutData(props.LayoutData())
-
-		co.WithChild("assets", co.New(mat.ToolbarButton, func() {
-			co.WithData(mat.ToolbarButtonData{
-				Icon: co.OpenImage(scope, "icons/assets.png"),
+		co.WithChild("assets", co.New(std.ToolbarButton, func() {
+			co.WithData(std.ToolbarButtonData{
+				Icon: co.OpenImage(c.Scope, "icons/assets.png"),
 				Text: "Assets",
 			})
-			co.WithCallbackData(mat.ToolbarButtonCallbackData{
-				OnClick: onAssetsClicked,
+			co.WithCallbackData(std.ToolbarButtonCallbackData{
+				OnClick: c.onAssetsClicked,
 			})
 		}))
 
-		co.WithChild("separator1", co.New(mat.ToolbarSeparator, nil))
+		co.WithChild("separator1", co.New(std.ToolbarSeparator, nil))
 
-		co.WithChild("save", co.New(mat.ToolbarButton, func() {
-			co.WithData(mat.ToolbarButtonData{
-				Icon:    co.OpenImage(scope, "icons/save.png"),
-				Enabled: opt.V(history.CanSave()),
+		co.WithChild("save", co.New(std.ToolbarButton, func() {
+			co.WithData(std.ToolbarButtonData{
+				Icon:    co.OpenImage(c.Scope, "icons/save.png"),
+				Enabled: opt.V(c.history.CanSave()),
 			})
-			co.WithCallbackData(mat.ToolbarButtonCallbackData{
+			co.WithCallbackData(std.ToolbarButtonCallbackData{
 				OnClick: func() {
-					controller.OnSave()
+					c.controller.OnSave()
 				},
 			})
 		}))
 
-		co.WithChild("separator2", co.New(mat.ToolbarSeparator, nil))
+		co.WithChild("separator2", co.New(std.ToolbarSeparator, nil))
 
-		co.WithChild("undo", co.New(mat.ToolbarButton, func() {
-			co.WithData(mat.ToolbarButtonData{
-				Icon:    co.OpenImage(scope, "icons/undo.png"),
-				Enabled: opt.V(history.CanUndo()),
+		co.WithChild("undo", co.New(std.ToolbarButton, func() {
+			co.WithData(std.ToolbarButtonData{
+				Icon:    co.OpenImage(c.Scope, "icons/undo.png"),
+				Enabled: opt.V(c.history.CanUndo()),
 			})
-			co.WithCallbackData(mat.ToolbarButtonCallbackData{
+			co.WithCallbackData(std.ToolbarButtonCallbackData{
 				OnClick: func() {
-					controller.OnUndo()
+					c.controller.OnUndo()
 				},
 			})
 		}))
 
-		co.WithChild("redo", co.New(mat.ToolbarButton, func() {
-			co.WithData(mat.ToolbarButtonData{
-				Icon:    co.OpenImage(scope, "icons/redo.png"),
-				Enabled: opt.V(history.CanRedo()),
+		co.WithChild("redo", co.New(std.ToolbarButton, func() {
+			co.WithData(std.ToolbarButtonData{
+				Icon:    co.OpenImage(c.Scope, "icons/redo.png"),
+				Enabled: opt.V(c.history.CanRedo()),
 			})
-			co.WithCallbackData(mat.ToolbarButtonCallbackData{
+			co.WithCallbackData(std.ToolbarButtonCallbackData{
 				OnClick: func() {
-					controller.OnRedo()
+					c.controller.OnRedo()
 				},
 			})
 		}))
 
-		co.WithChild("separator3", co.New(mat.ToolbarSeparator, nil))
+		co.WithChild("separator3", co.New(std.ToolbarSeparator, nil))
 
-		co.WithChild("properties", co.New(mat.ToolbarButton, func() {
-			co.WithData(mat.ToolbarButtonData{
-				Icon: co.OpenImage(scope, "icons/properties.png"),
+		co.WithChild("properties", co.New(std.ToolbarButton, func() {
+			co.WithData(std.ToolbarButtonData{
+				Icon: co.OpenImage(c.Scope, "icons/properties.png"),
 			})
-			co.WithCallbackData(mat.ToolbarButtonCallbackData{
+			co.WithCallbackData(std.ToolbarButtonCallbackData{
 				OnClick: func() {
-					controller.OnToggleProperties()
+					c.controller.OnToggleProperties()
 				},
 			})
 		}))
 	})
-})
+}
+
+func (c *studioToolbarComponent) onAssetsClicked() {
+	c.assetsOverlay = co.OpenOverlay(c.Scope, co.New(AssetDialog, func() {
+		co.WithData(AssetDialogData{
+			Registry:   c.studioModel.Registry(),
+			Controller: c.controller,
+		})
+		co.WithCallbackData(AssetDialogCallbackData{
+			OnOpen: func(id string) {
+				c.controller.OnOpenResource(id)
+			},
+			OnClose: func() {
+				overlay := c.assetsOverlay
+				overlay.Close()
+			},
+		})
+	}))
+}

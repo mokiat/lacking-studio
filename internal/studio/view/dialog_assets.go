@@ -9,7 +9,8 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/layout"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type AssetDialogData struct {
@@ -27,318 +28,13 @@ var defaultAssetDialogCallbackData = AssetDialogCallbackData{
 	OnClose: func() {},
 }
 
-var AssetDialog = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	lifecycle := co.UseLifecycle(func(handle co.LifecycleHandle) *assetDialogLifecycle {
-		return &assetDialogLifecycle{
-			Lifecycle: co.NewBaseLifecycle(),
-			handle:    handle,
-		}
-	})
+var AssetDialog = co.Define(&assetDialogComponent{})
 
-	return co.New(mat.Modal, func() {
-		co.WithLayoutData(mat.LayoutData{
-			Width:            opt.V(600),
-			Height:           opt.V(600),
-			HorizontalCenter: opt.V(0),
-			VerticalCenter:   opt.V(0),
-		})
+type assetDialogComponent struct {
+	Scope      co.Scope      `co:"scope"`
+	Properties co.Properties `co:"properties"`
+	Invalidate func()        `co:"invalidate"`
 
-		co.WithChild("header", co.New(mat.Element, func() {
-			co.WithData(mat.ElementData{
-				Padding: ui.Spacing{
-					Bottom: 10,
-				},
-				Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-					ContentSpacing:   10,
-					ContentAlignment: mat.AlignmentLeft,
-				}),
-			})
-
-			co.WithLayoutData(mat.LayoutData{
-				Alignment: mat.AlignmentTop,
-			})
-
-			co.WithChild("toolbar", co.New(mat.Toolbar, func() {
-				co.WithLayoutData(mat.LayoutData{
-					GrowHorizontally: true,
-				})
-
-				co.WithChild("twod_texture", co.New(mat.ToolbarButton, func() {
-					co.WithData(mat.ToolbarButtonData{
-						Icon:     co.OpenImage(scope, "icons/texture.png"),
-						Text:     "2D Texture",
-						Selected: lifecycle.SelectedKind() == model.ResourceKindTwoDTexture,
-					})
-					co.WithCallbackData(mat.ToolbarButtonCallbackData{
-						OnClick: func() {
-							lifecycle.SetSelectedKind(model.ResourceKindTwoDTexture)
-						},
-					})
-				}))
-
-				co.WithChild("cube_texture", co.New(mat.ToolbarButton, func() {
-					co.WithData(mat.ToolbarButtonData{
-						Icon:     co.OpenImage(scope, "icons/texture.png"),
-						Text:     "Cube Texture",
-						Selected: lifecycle.SelectedKind() == model.ResourceKindCubeTexture,
-					})
-					co.WithCallbackData(mat.ToolbarButtonCallbackData{
-						OnClick: func() {
-							lifecycle.SetSelectedKind(model.ResourceKindCubeTexture)
-						},
-					})
-				}))
-
-				co.WithChild("model", co.New(mat.ToolbarButton, func() {
-					co.WithData(mat.ToolbarButtonData{
-						Icon:     co.OpenImage(scope, "icons/model.png"),
-						Text:     "Model",
-						Selected: lifecycle.SelectedKind() == model.ResourceKindModel,
-					})
-					co.WithCallbackData(mat.ToolbarButtonCallbackData{
-						OnClick: func() {
-							lifecycle.SetSelectedKind(model.ResourceKindModel)
-						},
-					})
-				}))
-
-				co.WithChild("scene", co.New(mat.ToolbarButton, func() {
-					co.WithData(mat.ToolbarButtonData{
-						Text:     "Scene",
-						Icon:     co.OpenImage(scope, "icons/scene.png"),
-						Selected: lifecycle.SelectedKind() == model.ResourceKindScene,
-					})
-					co.WithCallbackData(mat.ToolbarButtonCallbackData{
-						OnClick: func() {
-							lifecycle.SetSelectedKind(model.ResourceKindScene)
-						},
-					})
-				}))
-
-				co.WithChild("binary", co.New(mat.ToolbarButton, func() {
-					co.WithData(mat.ToolbarButtonData{
-						Text:     "Binary",
-						Icon:     co.OpenImage(scope, "icons/broken-image.png"),
-						Selected: lifecycle.SelectedKind() == model.ResourceKindBinary,
-					})
-					co.WithCallbackData(mat.ToolbarButtonCallbackData{
-						OnClick: func() {
-							lifecycle.SetSelectedKind(model.ResourceKindBinary)
-						},
-					})
-				}))
-			}))
-
-			co.WithChild("search", co.New(mat.Element, func() {
-				co.WithData(mat.ElementData{
-					Layout: mat.NewHorizontalLayout(mat.HorizontalLayoutSettings{
-						ContentAlignment: mat.AlignmentCenter,
-						ContentSpacing:   5,
-					}),
-				})
-
-				co.WithChild("label", co.New(mat.Label, func() {
-					co.WithData(mat.LabelData{
-						Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
-						FontSize:  opt.V(float32(18)),
-						FontColor: opt.V(mat.OnSurfaceColor),
-						Text:      "Search:",
-					})
-				}))
-
-				co.WithChild("editbox", co.New(mat.Editbox, func() {
-					co.WithData(mat.EditboxData{
-						Text: lifecycle.SearchText(),
-					})
-
-					co.WithLayoutData(mat.LayoutData{
-						Width: opt.V(200),
-					})
-
-					co.WithCallbackData(mat.EditboxCallbackData{
-						OnChanged: func(text string) {
-							lifecycle.SetSearchText(text)
-						},
-					})
-				}))
-
-				co.WithChild("clear", co.New(mat.Button, func() {
-					co.WithData(mat.ButtonData{
-						Text: "Clear",
-					})
-
-					co.WithCallbackData(mat.ButtonCallbackData{
-						ClickListener: func() {
-							lifecycle.SetSearchText("")
-						},
-					})
-				}))
-			}))
-		}))
-
-		co.WithChild(fmt.Sprintf("content-%s", lifecycle.SelectedKind()), co.New(mat.ScrollPane, func() {
-			co.WithData(mat.ScrollPaneData{
-				DisableHorizontal: true,
-			})
-
-			co.WithLayoutData(mat.LayoutData{
-				Alignment: mat.AlignmentCenter,
-			})
-
-			co.WithChild("content", co.New(mat.List, func() {
-				co.WithLayoutData(mat.LayoutData{
-					GrowHorizontally: true,
-				})
-
-				lifecycle.EachResource(func(resource *model.Resource) {
-					previewImage := resource.PreviewImage()
-					co.WithChild(resource.ID(), co.New(AssetItem, func() {
-						co.WithData(AssetItemData{
-							PreviewImage: previewImage,
-							ID:           resource.ID(),
-							Kind:         resource.Kind(),
-							Name:         resource.Name(),
-							Selected:     resource == lifecycle.SelectedResource(),
-						})
-						co.WithLayoutData(mat.LayoutData{
-							GrowHorizontally: true,
-						})
-						co.WithCallbackData(AssetItemCallbackData{
-							OnSelected: func(id string) {
-								lifecycle.SetSelectedResource(resource)
-							},
-						})
-					}))
-				})
-			}))
-		}))
-
-		co.WithChild("footer", co.New(mat.Element, func() {
-			co.WithData(mat.ElementData{
-				Padding: ui.Spacing{
-					Top: 10,
-				},
-				Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-					ContentSpacing:   10,
-					ContentAlignment: mat.AlignmentLeft,
-				}),
-			})
-
-			co.WithLayoutData(mat.LayoutData{
-				Alignment:        mat.AlignmentBottom,
-				GrowHorizontally: true,
-			})
-
-			co.WithChild("actions", co.New(mat.Element, func() {
-				co.WithData(mat.ElementData{
-					Layout: mat.NewHorizontalLayout(mat.HorizontalLayoutSettings{
-						ContentSpacing:   5,
-						ContentAlignment: mat.AlignmentCenter,
-					}),
-				})
-
-				co.WithLayoutData(mat.LayoutData{
-					GrowHorizontally: true,
-				})
-
-				co.WithChild("delete", co.New(mat.Button, func() {
-					co.WithData(mat.ButtonData{
-						Icon:    co.OpenImage(scope, "icons/delete.png"),
-						Text:    "Delete",
-						Enabled: opt.V(lifecycle.SelectedResource() != nil),
-					})
-
-					co.WithCallbackData(mat.ButtonCallbackData{
-						ClickListener: func() {
-							// TODO: Open confirm dialog
-							lifecycle.OnDelete()
-						},
-					})
-				}))
-
-				co.WithChild("clone", co.New(mat.Button, func() {
-					co.WithData(mat.ButtonData{
-						Icon:    co.OpenImage(scope, "icons/file-copy.png"),
-						Text:    "Clone",
-						Enabled: opt.V(lifecycle.SelectedResource() != nil),
-					})
-
-					co.WithCallbackData(mat.ButtonCallbackData{
-						ClickListener: func() {
-							lifecycle.OnClone()
-						},
-					})
-				}))
-
-				co.WithChild("spacing", co.New(mat.Spacing, func() {
-					co.WithData(mat.SpacingData{
-						Width: 20,
-					})
-				}))
-
-				co.WithChild("new", co.New(mat.Button, func() {
-					co.WithData(mat.ButtonData{
-						Icon: co.OpenImage(scope, "icons/file-add.png"),
-						Text: "New",
-					})
-
-					co.WithLayoutData(mat.LayoutData{
-						Alignment: mat.AlignmentRight,
-					})
-
-					co.WithCallbackData(mat.ButtonCallbackData{
-						ClickListener: func() {
-							lifecycle.OnNew()
-						},
-					})
-				}))
-			}))
-
-			co.WithChild("toolbar", co.New(mat.Toolbar, func() {
-				co.WithData(mat.ToolbarData{
-					Orientation: mat.ToolbarOrientationRightToLeft,
-					Positioning: mat.ToolbarPositioningBottom,
-				})
-				co.WithLayoutData(mat.LayoutData{
-					GrowHorizontally: true,
-				})
-
-				co.WithChild("open", co.New(mat.ToolbarButton, func() {
-					co.WithData(mat.ToolbarButtonData{
-						Text:    "Open",
-						Enabled: opt.V(lifecycle.SelectedResource() != nil),
-					})
-					co.WithLayoutData(mat.LayoutData{
-						Alignment: mat.AlignmentRight,
-					})
-					co.WithCallbackData(mat.ToolbarButtonCallbackData{
-						OnClick: func() {
-							lifecycle.OnOpen(lifecycle.SelectedResource())
-						},
-					})
-				}))
-
-				co.WithChild("cancel", co.New(mat.ToolbarButton, func() {
-					co.WithData(mat.ToolbarButtonData{
-						Text: "Cancel",
-					})
-					co.WithLayoutData(mat.LayoutData{
-						Alignment: mat.AlignmentRight,
-					})
-					co.WithCallbackData(mat.ToolbarButtonCallbackData{
-						OnClick: func() {
-							lifecycle.OnCancel()
-						},
-					})
-				}))
-			}))
-		}))
-	})
-})
-
-type assetDialogLifecycle struct {
-	co.Lifecycle
-	handle           co.LifecycleHandle
 	controller       StudioController
 	registry         *model.Registry
 	onOpen           func(id string)
@@ -348,96 +44,374 @@ type assetDialogLifecycle struct {
 	selectedResource *model.Resource
 }
 
-func (l *assetDialogLifecycle) OnCreate(props co.Properties, scope co.Scope) {
-	l.OnUpdate(props, scope)
-	l.selectedKind = model.ResourceKindTwoDTexture
-	l.selectedResource = nil
-	l.searchText = ""
+func (c *assetDialogComponent) OnCreate() {
+	c.selectedKind = model.ResourceKindTwoDTexture
+	c.selectedResource = nil
+	c.searchText = ""
 }
 
-func (l *assetDialogLifecycle) OnUpdate(props co.Properties, scope co.Scope) {
-	var (
-		data         = co.GetData[AssetDialogData](props)
-		callbackData = co.GetOptionalCallbackData(props, AssetDialogCallbackData{})
-	)
+func (c *assetDialogComponent) OnUpsert() {
+	data := co.GetData[AssetDialogData](c.Properties)
+	c.registry = data.Registry
+	c.controller = data.Controller
 
-	l.registry = data.Registry
-	l.controller = data.Controller
-	l.onOpen = callbackData.OnOpen
-	l.onClose = callbackData.OnClose
+	callbackData := co.GetOptionalCallbackData(c.Properties, defaultAssetDialogCallbackData)
+	c.onOpen = callbackData.OnOpen
+	c.onClose = callbackData.OnClose
 }
 
-func (l *assetDialogLifecycle) OnCancel() {
-	l.onClose()
+func (c *assetDialogComponent) Render() co.Instance {
+	return co.New(std.Modal, func() {
+		co.WithLayoutData(layout.Data{
+			Width:            opt.V(600),
+			Height:           opt.V(600),
+			HorizontalCenter: opt.V(0),
+			VerticalCenter:   opt.V(0),
+		})
+
+		co.WithChild("header", co.New(std.Element, func() {
+			co.WithLayoutData(layout.Data{
+				VerticalAlignment: layout.VerticalAlignmentTop,
+			})
+			co.WithData(std.ElementData{
+				Padding: ui.Spacing{
+					Bottom: 10,
+				},
+				Layout: layout.Vertical(layout.VerticalSettings{
+					ContentSpacing:   10,
+					ContentAlignment: layout.HorizontalAlignmentLeft,
+				}),
+			})
+
+			co.WithChild("toolbar", co.New(std.Toolbar, func() {
+				co.WithLayoutData(layout.Data{
+					GrowHorizontally: true,
+				})
+
+				co.WithChild("twod_texture", co.New(std.ToolbarButton, func() {
+					co.WithData(std.ToolbarButtonData{
+						Icon:     co.OpenImage(c.Scope, "icons/texture.png"),
+						Text:     "2D Texture",
+						Selected: c.selectedKind == model.ResourceKindTwoDTexture,
+					})
+					co.WithCallbackData(std.ToolbarButtonCallbackData{
+						OnClick: func() {
+							c.setSelectedKind(model.ResourceKindTwoDTexture)
+						},
+					})
+				}))
+
+				co.WithChild("cube_texture", co.New(std.ToolbarButton, func() {
+					co.WithData(std.ToolbarButtonData{
+						Icon:     co.OpenImage(c.Scope, "icons/texture.png"),
+						Text:     "Cube Texture",
+						Selected: c.selectedKind == model.ResourceKindCubeTexture,
+					})
+					co.WithCallbackData(std.ToolbarButtonCallbackData{
+						OnClick: func() {
+							c.setSelectedKind(model.ResourceKindCubeTexture)
+						},
+					})
+				}))
+
+				co.WithChild("model", co.New(std.ToolbarButton, func() {
+					co.WithData(std.ToolbarButtonData{
+						Icon:     co.OpenImage(c.Scope, "icons/model.png"),
+						Text:     "Model",
+						Selected: c.selectedKind == model.ResourceKindModel,
+					})
+					co.WithCallbackData(std.ToolbarButtonCallbackData{
+						OnClick: func() {
+							c.setSelectedKind(model.ResourceKindModel)
+						},
+					})
+				}))
+
+				co.WithChild("scene", co.New(std.ToolbarButton, func() {
+					co.WithData(std.ToolbarButtonData{
+						Text:     "Scene",
+						Icon:     co.OpenImage(c.Scope, "icons/scene.png"),
+						Selected: c.selectedKind == model.ResourceKindScene,
+					})
+					co.WithCallbackData(std.ToolbarButtonCallbackData{
+						OnClick: func() {
+							c.setSelectedKind(model.ResourceKindScene)
+						},
+					})
+				}))
+
+				co.WithChild("binary", co.New(std.ToolbarButton, func() {
+					co.WithData(std.ToolbarButtonData{
+						Text:     "Binary",
+						Icon:     co.OpenImage(c.Scope, "icons/broken-image.png"),
+						Selected: c.selectedKind == model.ResourceKindBinary,
+					})
+					co.WithCallbackData(std.ToolbarButtonCallbackData{
+						OnClick: func() {
+							c.setSelectedKind(model.ResourceKindBinary)
+						},
+					})
+				}))
+			}))
+
+			co.WithChild("search", co.New(std.Element, func() {
+				co.WithData(std.ElementData{
+					Layout: layout.Horizontal(layout.HorizontalSettings{
+						ContentAlignment: layout.VerticalAlignmentCenter,
+						ContentSpacing:   5,
+					}),
+				})
+
+				co.WithChild("label", co.New(std.Label, func() {
+					co.WithData(std.LabelData{
+						Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
+						FontSize:  opt.V(float32(18)),
+						FontColor: opt.V(std.OnSurfaceColor),
+						Text:      "Search:",
+					})
+				}))
+
+				co.WithChild("editbox", co.New(std.Editbox, func() {
+					co.WithData(std.EditboxData{
+						Text: c.searchText,
+					})
+
+					co.WithLayoutData(layout.Data{
+						Width: opt.V(200),
+					})
+
+					co.WithCallbackData(std.EditboxCallbackData{
+						OnChanged: func(text string) {
+							c.setSearchText(text)
+						},
+					})
+				}))
+
+				co.WithChild("clear", co.New(std.Button, func() {
+					co.WithData(std.ButtonData{
+						Text: "Clear",
+					})
+
+					co.WithCallbackData(std.ButtonCallbackData{
+						OnClick: func() {
+							c.setSearchText("")
+						},
+					})
+				}))
+			}))
+		}))
+
+		co.WithChild(fmt.Sprintf("content-%s", c.selectedKind), co.New(std.ScrollPane, func() {
+			co.WithLayoutData(layout.Data{
+				VerticalAlignment: layout.VerticalAlignmentCenter,
+			})
+			co.WithData(std.ScrollPaneData{
+				DisableHorizontal: true,
+			})
+
+			co.WithChild("content", co.New(std.List, func() {
+				co.WithLayoutData(layout.Data{
+					GrowHorizontally: true,
+				})
+
+				c.eachResource(func(resource *model.Resource) {
+					previewImage := resource.PreviewImage()
+					co.WithChild(resource.ID(), co.New(AssetItem, func() {
+						co.WithData(AssetItemData{
+							PreviewImage: previewImage,
+							ID:           resource.ID(),
+							Kind:         resource.Kind(),
+							Name:         resource.Name(),
+							Selected:     resource == c.selectedResource,
+						})
+						co.WithLayoutData(layout.Data{
+							GrowHorizontally: true,
+						})
+						co.WithCallbackData(AssetItemCallbackData{
+							OnSelected: func(id string) {
+								c.setSelectedResource(resource)
+							},
+						})
+					}))
+				})
+			}))
+		}))
+
+		co.WithChild("footer", co.New(std.Element, func() {
+			co.WithLayoutData(layout.Data{
+				VerticalAlignment: layout.VerticalAlignmentBottom,
+			})
+			co.WithData(std.ElementData{
+				Padding: ui.Spacing{
+					Top: 10,
+				},
+				Layout: layout.Vertical(layout.VerticalSettings{
+					ContentSpacing:   10,
+					ContentAlignment: layout.HorizontalAlignmentLeft,
+				}),
+			})
+
+			co.WithChild("actions", co.New(std.Element, func() {
+				co.WithData(std.ElementData{
+					Layout: layout.Horizontal(layout.HorizontalSettings{
+						ContentSpacing:   5,
+						ContentAlignment: layout.VerticalAlignmentCenter,
+					}),
+				})
+
+				co.WithLayoutData(layout.Data{
+					GrowHorizontally: true,
+				})
+
+				co.WithChild("delete", co.New(std.Button, func() {
+					co.WithData(std.ButtonData{
+						Icon:    co.OpenImage(c.Scope, "icons/delete.png"),
+						Text:    "Delete",
+						Enabled: opt.V(c.selectedResource != nil),
+					})
+
+					co.WithCallbackData(std.ButtonCallbackData{
+						OnClick: func() {
+							// TODO: Open confirm dialog
+							c.handleDelete()
+						},
+					})
+				}))
+
+				co.WithChild("clone", co.New(std.Button, func() {
+					co.WithData(std.ButtonData{
+						Icon:    co.OpenImage(c.Scope, "icons/file-copy.png"),
+						Text:    "Clone",
+						Enabled: opt.V(c.selectedResource != nil),
+					})
+
+					co.WithCallbackData(std.ButtonCallbackData{
+						OnClick: func() {
+							c.handleClone()
+						},
+					})
+				}))
+
+				co.WithChild("spacing", co.New(std.Spacing, func() {
+					co.WithData(std.SpacingData{
+						Size: ui.NewSize(20, 0),
+					})
+				}))
+
+				co.WithChild("new", co.New(std.Button, func() {
+					co.WithLayoutData(layout.Data{
+						HorizontalAlignment: layout.HorizontalAlignmentRight,
+					})
+					co.WithData(std.ButtonData{
+						Icon: co.OpenImage(c.Scope, "icons/file-add.png"),
+						Text: "New",
+					})
+					co.WithCallbackData(std.ButtonCallbackData{
+						OnClick: func() {
+							c.handleNew()
+						},
+					})
+				}))
+			}))
+
+			co.WithChild("toolbar", co.New(std.Toolbar, func() {
+				co.WithData(std.ToolbarData{
+					Positioning: std.ToolbarPositioningBottom,
+				})
+				co.WithLayoutData(layout.Data{
+					GrowHorizontally: true,
+				})
+
+				co.WithChild("open", co.New(std.ToolbarButton, func() {
+					co.WithData(std.ToolbarButtonData{
+						Text:    "Open",
+						Enabled: opt.V(c.selectedResource != nil),
+					})
+					co.WithLayoutData(layout.Data{
+						HorizontalAlignment: layout.HorizontalAlignmentRight,
+					})
+					co.WithCallbackData(std.ToolbarButtonCallbackData{
+						OnClick: func() {
+							c.handleOpen(c.selectedResource)
+						},
+					})
+				}))
+
+				co.WithChild("cancel", co.New(std.ToolbarButton, func() {
+					co.WithData(std.ToolbarButtonData{
+						Text: "Cancel",
+					})
+					co.WithLayoutData(layout.Data{
+						HorizontalAlignment: layout.HorizontalAlignmentRight,
+					})
+					co.WithCallbackData(std.ToolbarButtonCallbackData{
+						OnClick: c.handleCancel,
+					})
+				}))
+			}))
+		}))
+	})
 }
 
-func (l *assetDialogLifecycle) OnOpen(resource *model.Resource) {
-	l.onOpen(resource.ID())
-	l.onClose()
+func (c *assetDialogComponent) handleCancel() {
+	c.onClose()
 }
 
-func (l *assetDialogLifecycle) SelectedKind() model.ResourceKind {
-	return l.selectedKind
+func (c *assetDialogComponent) handleOpen(resource *model.Resource) {
+	c.onOpen(resource.ID())
+	c.onClose()
 }
 
-func (l *assetDialogLifecycle) SetSelectedKind(kind model.ResourceKind) {
-	l.selectedKind = kind
-	l.selectedResource = nil
-	l.searchText = ""
-	l.handle.NotifyChanged()
+func (c *assetDialogComponent) handleNew() {
+	resource := c.controller.OnCreateResource(c.selectedKind)
+	if resource != nil {
+		c.searchText = resource.Name()
+		c.selectedResource = resource
+		c.Invalidate()
+	}
 }
 
-func (l *assetDialogLifecycle) SetSelectedResource(resource *model.Resource) {
-	l.selectedResource = resource
-	l.handle.NotifyChanged()
+func (c *assetDialogComponent) handleClone() {
+	resource := c.controller.OnCloneResource(c.selectedResource.ID())
+	if resource != nil {
+		c.searchText = resource.Name()
+		c.selectedResource = resource
+		c.Invalidate()
+	}
 }
 
-func (l *assetDialogLifecycle) SelectedResource() *model.Resource {
-	return l.selectedResource
+func (c *assetDialogComponent) handleDelete() {
+	c.controller.OnDeleteResource(c.selectedResource.ID())
+	c.selectedResource = nil
+	c.Invalidate()
 }
 
-func (l *assetDialogLifecycle) SearchText() string {
-	return l.searchText
+func (c *assetDialogComponent) setSelectedKind(kind model.ResourceKind) {
+	c.selectedKind = kind
+	c.selectedResource = nil
+	c.searchText = ""
+	c.Invalidate()
 }
 
-func (l *assetDialogLifecycle) SetSearchText(text string) {
-	l.searchText = text
-	l.selectedResource = nil
-	l.handle.NotifyChanged()
+func (c *assetDialogComponent) setSearchText(text string) {
+	c.searchText = text
+	c.selectedResource = nil
+	c.Invalidate()
 }
 
-func (l *assetDialogLifecycle) EachResource(fn func(*model.Resource)) {
+func (c *assetDialogComponent) setSelectedResource(resource *model.Resource) {
+	c.selectedResource = resource
+	c.Invalidate()
+}
+
+func (c *assetDialogComponent) eachResource(fn func(*model.Resource)) {
 	fltrs := []filter.Func[*model.Resource]{
-		model.ResourcesWithKind(l.selectedKind),
+		model.ResourcesWithKind(c.selectedKind),
 	}
-	if l.searchText != "" {
-		fltrs = append(fltrs, model.ResourcesWithSimilarName(l.searchText))
+	if c.searchText != "" {
+		fltrs = append(fltrs, model.ResourcesWithSimilarName(c.searchText))
 	}
-	l.registry.IterateResources(fn, fltrs...)
-}
-
-func (l *assetDialogLifecycle) OnNew() {
-	resource := l.controller.OnCreateResource(l.selectedKind)
-	if resource != nil {
-		l.searchText = resource.Name()
-		l.selectedResource = resource
-		l.handle.NotifyChanged()
-	}
-}
-
-func (l *assetDialogLifecycle) OnClone() {
-	resource := l.controller.OnCloneResource(l.selectedResource.ID())
-	if resource != nil {
-		l.searchText = resource.Name()
-		l.selectedResource = resource
-		l.handle.NotifyChanged()
-	}
-}
-
-func (l *assetDialogLifecycle) OnDelete() {
-	l.controller.OnDeleteResource(l.selectedResource.ID())
-	l.selectedResource = nil
-	l.handle.NotifyChanged()
+	c.registry.IterateResources(fn, fltrs...)
 }
 
 type AssetItemData struct {
@@ -456,75 +430,12 @@ var defaultAssetItemCallbackData = AssetItemCallbackData{
 	OnSelected: func(id string) {},
 }
 
-var AssetItem = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	lifecycle := co.UseLifecycle(func(handle co.LifecycleHandle) *assetItemLifecycle {
-		return &assetItemLifecycle{
-			Lifecycle: co.NewBaseLifecycle(),
-		}
-	})
+var AssetItem = co.Define(&assetItemComponent{})
 
-	return co.New(mat.ListItem, func() {
-		co.WithData(mat.ListItemData{
-			Selected: lifecycle.IsSelected(),
-		})
-		co.WithCallbackData(mat.ListItemCallbackData{
-			OnSelected: lifecycle.OnSelected,
-		})
-		co.WithLayoutData(props.LayoutData())
-
-		co.WithChild("item", co.New(mat.Element, func() {
-			co.WithData(mat.ElementData{
-				Layout: mat.NewHorizontalLayout(mat.HorizontalLayoutSettings{
-					ContentAlignment: mat.AlignmentLeft,
-					ContentSpacing:   10,
-				}),
-			})
-
-			co.WithChild("preview", co.New(mat.Picture, func() {
-				co.WithData(mat.PictureData{
-					Image:           lifecycle.PreviewImage(),
-					BackgroundColor: opt.V(ui.Black()),
-					ImageColor:      opt.V(ui.White()),
-					Mode:            mat.ImageModeFit,
-				})
-				co.WithLayoutData(mat.LayoutData{
-					Width:  opt.V(64),
-					Height: opt.V(64),
-				})
-			}))
-
-			co.WithChild("info", co.New(mat.Element, func() {
-				co.WithData(mat.ElementData{
-					Layout: mat.NewVerticalLayout(mat.VerticalLayoutSettings{
-						ContentAlignment: mat.AlignmentLeft,
-						ContentSpacing:   5,
-					}),
-				})
-
-				co.WithChild("name", co.New(mat.Label, func() {
-					co.WithData(mat.LabelData{
-						Font:      co.OpenFont(scope, "mat:///roboto-bold.ttf"),
-						FontSize:  opt.V(float32(16)),
-						FontColor: opt.V(ui.Black()),
-						Text:      lifecycle.AssetName(),
-					})
-				}))
-
-				co.WithChild("id", co.New(mat.Label, func() {
-					co.WithData(mat.LabelData{
-						Font:      co.OpenFont(scope, "mat:///roboto-regular.ttf"),
-						FontSize:  opt.V(float32(16)),
-						FontColor: opt.V(ui.Black()),
-						Text:      lifecycle.AssetID(),
-					})
-				}))
-			}))
-		}))
-	})
-})
-
-type assetItemLifecycle struct {
-	co.Lifecycle
+type assetItemComponent struct {
+	Scope      co.Scope      `co:"scope"`
+	Properties co.Properties `co:"properties"`
+	Invalidate func()        `co:"invalidate"`
 
 	previewImage        *ui.Image
 	defaultPreviewImage *ui.Image
@@ -535,60 +446,95 @@ type assetItemLifecycle struct {
 	onSelected          func(id string)
 }
 
-func (l *assetItemLifecycle) OnCreate(props co.Properties, scope co.Scope) {
-	l.OnUpdate(props, scope)
-}
+func (c *assetItemComponent) OnUpsert() {
+	data := co.GetData[AssetItemData](c.Properties)
+	callbackData := co.GetOptionalCallbackData(c.Properties, defaultAssetItemCallbackData)
 
-func (l *assetItemLifecycle) OnUpdate(props co.Properties, scope co.Scope) {
-	var (
-		data         = co.GetData[AssetItemData](props)
-		callbackData = co.GetOptionalCallbackData(props, defaultAssetItemCallbackData)
-	)
-
-	if l.previewImage != nil {
-		l.previewImage.Destroy()
+	if c.previewImage != nil {
+		c.previewImage.Destroy()
 	}
 	if data.PreviewImage != nil {
-		l.previewImage = co.CreateImage(scope, data.PreviewImage)
+		c.previewImage = co.CreateImage(c.Scope, data.PreviewImage)
 	}
-	l.defaultPreviewImage = co.OpenImage(scope, "icons/broken-image.png")
-	l.assetID = data.ID
-	l.assetKind = data.Kind
-	l.assetName = data.Name
-	l.selected = data.Selected
-	l.onSelected = callbackData.OnSelected
+	c.defaultPreviewImage = co.OpenImage(c.Scope, "icons/broken-image.png")
+	c.assetID = data.ID
+	c.assetKind = data.Kind
+	c.assetName = data.Name
+	c.selected = data.Selected
+	c.onSelected = callbackData.OnSelected
 }
 
-func (l *assetItemLifecycle) OnDestroy(scope co.Scope) {
-	if l.previewImage != nil {
-		l.previewImage.Destroy()
+func (c *assetItemComponent) OnDelete() {
+	if c.previewImage != nil {
+		c.previewImage.Destroy()
 	}
-	l.previewImage = nil
+	c.previewImage = nil
 }
 
-func (l *assetItemLifecycle) PreviewImage() *ui.Image {
-	if l.previewImage == nil {
-		return l.defaultPreviewImage
+func (c *assetItemComponent) Render() co.Instance {
+	previewImage := c.previewImage
+	if previewImage == nil {
+		previewImage = c.defaultPreviewImage
 	}
-	return l.previewImage
-}
 
-func (l *assetItemLifecycle) AssetID() string {
-	return l.assetID
-}
+	return co.New(std.ListItem, func() {
+		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithData(std.ListItemData{
+			Selected: c.selected,
+		})
+		co.WithCallbackData(std.ListItemCallbackData{
+			OnSelected: func() {
+				c.onSelected(c.assetID)
+			},
+		})
 
-func (l *assetItemLifecycle) AssetKind() model.ResourceKind {
-	return l.assetKind
-}
+		co.WithChild("item", co.New(std.Element, func() {
+			co.WithData(std.ElementData{
+				Layout: layout.Horizontal(layout.HorizontalSettings{
+					ContentAlignment: layout.VerticalAlignmentCenter,
+					ContentSpacing:   10,
+				}),
+			})
 
-func (l *assetItemLifecycle) AssetName() string {
-	return l.assetName
-}
+			co.WithChild("preview", co.New(std.Picture, func() {
+				co.WithData(std.PictureData{
+					Image:           previewImage,
+					BackgroundColor: opt.V(ui.Black()),
+					ImageColor:      opt.V(ui.White()),
+					Mode:            std.ImageModeFit,
+				})
+				co.WithLayoutData(layout.Data{
+					Width:  opt.V(64),
+					Height: opt.V(64),
+				})
+			}))
 
-func (l *assetItemLifecycle) IsSelected() bool {
-	return l.selected
-}
+			co.WithChild("info", co.New(std.Element, func() {
+				co.WithData(std.ElementData{
+					Layout: layout.Vertical(layout.VerticalSettings{
+						ContentAlignment: layout.HorizontalAlignmentLeft,
+						ContentSpacing:   5,
+					}),
+				})
 
-func (l *assetItemLifecycle) OnSelected() {
-	l.onSelected(l.assetID)
+				co.WithChild("name", co.New(std.Label, func() {
+					co.WithData(std.LabelData{
+						Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+						FontSize:  opt.V(float32(16)),
+						FontColor: opt.V(ui.Black()),
+						Text:      c.assetName,
+					})
+				}))
+
+				co.WithChild("id", co.New(std.Label, func() {
+					co.WithData(std.LabelData{
+						Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
+						FontSize:  opt.V(float32(16)),
+						FontColor: opt.V(ui.Black()),
+						Text:      c.assetID,
+					})
+				}))
+			}))
+		}))
+	})
 }

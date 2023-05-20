@@ -15,7 +15,6 @@ import (
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
 )
 
@@ -59,7 +58,7 @@ func (e *CubeTextureEditor) Save() error {
 	return nil
 }
 
-func (e *CubeTextureEditor) Render(scope co.Scope, layoutData mat.LayoutData) co.Instance {
+func (e *CubeTextureEditor) Render(scope co.Scope, layoutData any) co.Instance {
 	return co.New(view.CubeTextureEditor, func() {
 		co.WithData(view.CubeTextureEditorData{
 			ResourceModel:    e.texModel.Resource(),

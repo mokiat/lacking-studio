@@ -7,8 +7,9 @@ import (
 	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type StudioController interface {
@@ -22,7 +23,7 @@ type StudioController interface {
 	OnDeleteResource(id string)
 	OnSelectEditor(editor *model.Editor)
 	OnCloseEditor(editor *model.Editor)
-	RenderEditor(editor *model.Editor, scope co.Scope, layoutData mat.LayoutData) co.Instance
+	RenderEditor(editor *model.Editor, scope co.Scope, layoutData any) co.Instance
 }
 
 type StudioData struct {
@@ -30,38 +31,48 @@ type StudioData struct {
 	StudioController StudioController
 }
 
-var Studio = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	var (
-		data             = co.GetData[StudioData](props)
-		studioModel      = data.StudioModel
-		studioController = data.StudioController
-	)
+var Studio = co.Define(&studioComponent{})
 
-	mvc.UseBinding(studioModel, filter.True[mvc.Change]()) // TODO
+type studioComponent struct {
+	Scope      co.Scope      `co:"scope"`
+	Properties co.Properties `co:"properties"`
 
-	return co.New(mat.Container, func() {
-		co.WithData(mat.ContainerData{
-			BackgroundColor: opt.V(mat.SurfaceColor),
-			Layout:          mat.NewFrameLayout(),
+	studioModel      *model.Studio
+	studioController StudioController
+}
+
+func (c *studioComponent) OnUpsert() {
+	data := co.GetData[StudioData](c.Properties)
+	c.studioModel = data.StudioModel
+	c.studioController = data.StudioController
+	mvc.UseBinding(c.studioModel, filter.True[mvc.Change]()) // TODO
+}
+
+func (c *studioComponent) Render() co.Instance {
+	return co.New(std.Container, func() {
+		co.WithData(std.ContainerData{
+			BackgroundColor: opt.V(std.SurfaceColor),
+			Layout:          layout.Frame(),
 		})
-		co.WithScope(scope)
+		co.WithScope(c.Scope)
 
 		co.WithChild("top", co.New(StudioHeader, func() {
-			co.WithData(StudioHeaderData{
-				StudioModel:      studioModel,
-				StudioController: studioController,
+			co.WithLayoutData(layout.Data{
+				VerticalAlignment: layout.VerticalAlignmentTop,
 			})
-			co.WithLayoutData(mat.LayoutData{
-				Alignment: mat.AlignmentTop,
+			co.WithData(StudioHeaderData{
+				StudioModel:      c.studioModel,
+				StudioController: c.studioController,
 			})
 		}))
 
-		if editor := studioModel.SelectedEditor(); editor != nil {
+		if editor := c.studioModel.SelectedEditor(); editor != nil {
 			key := fmt.Sprintf("center-%s", editor.Resource().ID())
-			instance := studioController.RenderEditor(editor, scope, mat.LayoutData{
-				Alignment: mat.AlignmentCenter,
+			instance := c.studioController.RenderEditor(editor, c.Scope, layout.Data{
+				VerticalAlignment:   layout.VerticalAlignmentCenter,
+				HorizontalAlignment: layout.HorizontalAlignmentCenter,
 			})
 			co.WithChild(key, instance)
 		}
 	})
-})
+}

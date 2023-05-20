@@ -2,25 +2,18 @@ package studio
 
 import (
 	"github.com/mokiat/lacking/app"
-	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/graphics"
-	"github.com/mokiat/lacking/game/physics"
 )
 
 func NewController(gfxEngine *graphics.Engine) *Controller {
 	return &Controller{
-		gfxEngine:     gfxEngine,
-		physicsEngine: physics.NewEngine(),
-		ecsEngine:     ecs.NewEngine(),
+		gfxEngine: gfxEngine,
 	}
 }
 
 type Controller struct {
 	app.NopController
-
-	gfxEngine     *graphics.Engine
-	physicsEngine *physics.Engine
-	ecsEngine     *ecs.Engine
+	gfxEngine *graphics.Engine
 }
 
 func (c *Controller) OnCreate(window app.Window) {

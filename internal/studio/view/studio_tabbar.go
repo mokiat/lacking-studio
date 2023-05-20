@@ -3,8 +3,8 @@ package view
 import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type StudioTabbarData struct {
@@ -12,31 +12,40 @@ type StudioTabbarData struct {
 	StudioController StudioController
 }
 
-var StudioTabbar = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	var (
-		data       = co.GetData[StudioTabbarData](props)
-		studio     = data.StudioModel
-		controller = data.StudioController
-	)
+var StudioTabbar = co.Define(&studioTabbarComponent{})
 
-	mvc.UseBinding(studio, func(ch mvc.Change) bool {
+type studioTabbarComponent struct {
+	Properties co.Properties `co:"properties"`
+
+	studio     *model.Studio
+	controller StudioController
+}
+
+func (c *studioTabbarComponent) OnUpsert() {
+	data := co.GetData[StudioTabbarData](c.Properties)
+	c.studio = data.StudioModel
+	c.controller = data.StudioController
+
+	mvc.UseBinding(c.studio, func(ch mvc.Change) bool {
 		return mvc.IsChange(ch, model.ChangeStudioEditorAdded) ||
 			mvc.IsChange(ch, model.ChangeStudioEditorRemoved) ||
 			mvc.IsChange(ch, model.ChangeStudioEditorSelection)
 	})
+}
 
-	return co.New(mat.Tabbar, func() {
-		co.WithLayoutData(props.LayoutData())
+func (c *studioTabbarComponent) Render() co.Instance {
+	return co.New(std.Tabbar, func() {
+		co.WithLayoutData(c.Properties.LayoutData())
 
-		studio.IterateEditors(func(editor *model.Editor) {
+		c.studio.IterateEditors(func(editor *model.Editor) {
 			key := editor.Resource().ID()
 			co.WithChild(key, co.New(StudioTab, func() {
 				co.WithData(StudioTabData{
 					EditorModel:      editor,
-					StudioController: controller,
-					Selected:         editor == studio.SelectedEditor(),
+					StudioController: c.controller,
+					Selected:         editor == c.studio.SelectedEditor(),
 				})
 			}))
 		})
 	})
-})
+}

@@ -11,8 +11,8 @@ import (
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
-	"github.com/mokiat/lacking/ui/mat"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/ui/std"
 	"github.com/mokiat/lacking/util/blob"
 	"github.com/x448/float16"
 )
@@ -23,9 +23,12 @@ func NewTwoDTexture(api render.API, engine *graphics.Engine, texModel *model.Two
 	sky := scene.Sky()
 	sky.SetBackgroundColor(sprec.NewVec3(0.2, 0.2, 0.2))
 
-	light := scene.CreateDirectionalLight()
-	light.SetIntensity(sprec.NewVec3(1.0, 1.0, 1.0))
-	light.SetMatrix(dprec.IdentityMat4())
+	scene.CreateDirectionalLight(graphics.DirectionalLightInfo{
+		Position:    dprec.ZeroVec3(),
+		Orientation: dprec.IdentityQuat(),
+		EmitColor:   dprec.NewVec3(1.0, 1.0, 1.0),
+		EmitRange:   300.0,
+	})
 
 	camera := scene.CreateCamera()
 	camera.SetMatrix(dprec.TranslationMat4(0.0, 0.0, 3.0))
@@ -168,7 +171,7 @@ func (t *TwoDTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.S
 	})
 }
 
-func (t *TwoDTexture) OnViewportMouseEvent(event mat.ViewportMouseEvent) bool {
+func (t *TwoDTexture) OnViewportMouseEvent(event std.ViewportMouseEvent) bool {
 	switch event.Type {
 	case ui.MouseEventTypeDown:
 		if event.Button == ui.MouseButtonMiddle {
@@ -300,6 +303,7 @@ func (t *TwoDTexture) createGraphicsRepresentation() {
 				Material:    t.material,
 			},
 		},
+		BoundingSphereRadius: 100.0,
 	})
 
 	t.mesh = t.scene.CreateMesh(graphics.MeshInfo{

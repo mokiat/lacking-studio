@@ -5,9 +5,11 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
+	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
-	"github.com/mokiat/lacking/ui/mat"
+	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/ui/std"
 )
 
 type CubeTextureEditorData struct {
@@ -19,63 +21,83 @@ type CubeTextureEditorData struct {
 	Visualization    model.Visualization
 }
 
-var CubeTextureEditor = co.Define(func(props co.Properties, scope co.Scope) co.Instance {
-	var (
-		data        = co.GetData[CubeTextureEditorData](props)
-		editorModel = data.EditorModel
-		viz         = data.Visualization
-	)
+var CubeTextureEditor = co.ContextScoped(co.Define(&cubeTextureEditorComponent{}))
 
-	mvc.UseBinding(editorModel, func(change mvc.Change) bool {
+type cubeTextureEditorComponent struct {
+	Scope      co.Scope      `co:"scope"`
+	Properties co.Properties `co:"properties"`
+
+	resourceModel    *model.Resource
+	textureModel     *model.CubeTexture
+	editorModel      *model.CubeTextureEditor
+	studioController StudioController
+	editorController EditorController
+	viz              model.Visualization
+}
+
+func (c *cubeTextureEditorComponent) OnUpsert() {
+	data := co.GetData[CubeTextureEditorData](c.Properties)
+	c.resourceModel = data.ResourceModel
+	c.textureModel = data.TextureModel
+	c.editorModel = data.EditorModel
+	c.studioController = data.StudioController
+	c.editorController = data.EditorController
+	c.viz = data.Visualization
+
+	mvc.UseBinding(c.editorModel, func(change mvc.Change) bool {
 		return true
 	})
+}
 
-	return co.New(mat.Container, func() {
-		co.WithData(mat.ContainerData{
-			BackgroundColor: opt.V(mat.SurfaceColor),
-			Layout:          mat.NewFrameLayout(),
+func (c *cubeTextureEditorComponent) Render() co.Instance {
+	return co.New(std.Element, func() {
+		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithData(std.ElementData{
+			Layout: layout.Frame(),
 		})
-		co.WithLayoutData(props.LayoutData())
 
-		co.WithChild("center", co.New(mat.DropZone, func() {
-			co.WithCallbackData(mat.DropZoneCallbackData{
+		co.WithChild("center", co.New(std.DropZone, func() {
+			co.WithLayoutData(layout.Data{
+				VerticalAlignment:   layout.VerticalAlignmentCenter,
+				HorizontalAlignment: layout.HorizontalAlignmentCenter,
+			})
+			co.WithCallbackData(std.DropZoneCallbackData{
 				OnDrop: func(paths []string) bool {
-					mvc.Dispatch(scope, action.ChangeCubeTextureContentFromPath{
-						Texture: data.TextureModel,
+					mvc.Dispatch(c.Scope, action.ChangeCubeTextureContentFromPath{
+						Texture: c.textureModel,
 						Path:    paths[0],
 					})
 					return true
 				},
 			})
-			co.WithLayoutData(mat.LayoutData{
-				Alignment: mat.AlignmentCenter,
-			})
 
-			co.WithChild("viewport", co.New(mat.Viewport, func() {
-				co.WithData(mat.ViewportData{
-					API: co.GetContext[global.Context]().API,
+			co.WithChild("viewport", co.New(std.Viewport, func() {
+				co.WithData(std.ViewportData{
+					API: co.TypedValue[global.Context](c.Scope).API,
 				})
-				co.WithCallbackData(mat.ViewportCallbackData{
-					OnMouseEvent: viz.OnViewportMouseEvent,
-					OnRender:     viz.OnViewportRender,
+				co.WithCallbackData(std.ViewportCallbackData{
+					OnKeyboardEvent: func(event ui.KeyboardEvent) bool { return false },
+					OnMouseEvent:    c.viz.OnViewportMouseEvent,
+					OnRender:        c.viz.OnViewportRender,
 				})
 			}))
 		}))
 
-		if editorModel.IsPropertiesVisible() {
+		if c.editorModel.IsPropertiesVisible() {
 			co.WithChild("right", co.New(CubeTextureProperties, func() {
-				co.WithData(CubeTexturePropertiesData{
-					Model:            editorModel.Properties(),
-					ResourceModel:    data.ResourceModel,
-					TextureModel:     data.TextureModel,
-					StudioController: data.StudioController,
-					EditorController: data.EditorController,
+				co.WithLayoutData(layout.Data{
+					VerticalAlignment:   layout.VerticalAlignmentCenter,
+					HorizontalAlignment: layout.HorizontalAlignmentRight,
+					Width:               opt.V(500),
 				})
-				co.WithLayoutData(mat.LayoutData{
-					Alignment: mat.AlignmentRight,
-					Width:     opt.V(500),
+				co.WithData(CubeTexturePropertiesData{
+					Model:            c.editorModel.Properties(),
+					ResourceModel:    c.resourceModel,
+					TextureModel:     c.textureModel,
+					StudioController: c.studioController,
+					EditorController: c.editorController,
 				})
 			}))
 		}
 	})
-})
+}
