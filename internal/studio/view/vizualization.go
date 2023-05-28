@@ -21,18 +21,17 @@ type VisualizationData struct {
 var Visualization = co.Define(&visualizationComponent{})
 
 type visualizationComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	api        render.API
 	controller VisualizationController
 }
 
 func (c *visualizationComponent) OnUpsert() {
-	context := co.TypedValue[global.Context](c.Scope)
+	context := co.TypedValue[global.Context](c.Scope())
 	c.api = context.API
 
-	data := co.GetData[VisualizationData](c.Properties)
+	data := co.GetData[VisualizationData](c.Properties())
 	c.controller = data.Controller
 }
 

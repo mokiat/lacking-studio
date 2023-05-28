@@ -12,21 +12,21 @@ type StudioTabbarData struct {
 	StudioController StudioController
 }
 
-var StudioTabbar = co.Define(&studioTabbarComponent{})
+var StudioTabbar = mvc.Wrap(co.Define(&studioTabbarComponent{}))
 
 type studioTabbarComponent struct {
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	studio     *model.Studio
 	controller StudioController
 }
 
 func (c *studioTabbarComponent) OnUpsert() {
-	data := co.GetData[StudioTabbarData](c.Properties)
+	data := co.GetData[StudioTabbarData](c.Properties())
 	c.studio = data.StudioModel
 	c.controller = data.StudioController
 
-	mvc.UseBinding(c.studio, func(ch mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.studio, func(ch mvc.Change) bool {
 		return mvc.IsChange(ch, model.ChangeStudioEditorAdded) ||
 			mvc.IsChange(ch, model.ChangeStudioEditorRemoved) ||
 			mvc.IsChange(ch, model.ChangeStudioEditorSelection)
@@ -35,7 +35,7 @@ func (c *studioTabbarComponent) OnUpsert() {
 
 func (c *studioTabbarComponent) Render() co.Instance {
 	return co.New(std.Tabbar, func() {
-		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithLayoutData(c.Properties().LayoutData())
 
 		c.studio.IterateEditors(func(editor *model.Editor) {
 			key := editor.Resource().ID()

@@ -22,11 +22,10 @@ type BinaryEditorData struct {
 	EditorController BinaryEditorController
 }
 
-var BinaryEditor = co.Define(&binaryEditorComponent{})
+var BinaryEditor = mvc.Wrap(co.Define(&binaryEditorComponent{}))
 
 type binaryEditorComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	resourceModel    *model.Resource
 	binaryModel      *model.Binary
@@ -36,21 +35,21 @@ type binaryEditorComponent struct {
 }
 
 func (c *binaryEditorComponent) OnUpsert() {
-	data := co.GetData[BinaryEditorData](c.Properties)
+	data := co.GetData[BinaryEditorData](c.Properties())
 	c.resourceModel = data.ResourceModel
 	c.binaryModel = data.BinaryModel
 	c.editorModel = data.EditorModel
 	c.studioController = data.StudioController
 	c.controller = data.EditorController
 
-	mvc.UseBinding(c.editorModel, func(change mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.editorModel, func(change mvc.Change) bool {
 		return true
 	})
 }
 
 func (c *binaryEditorComponent) Render() co.Instance {
 	return co.New(std.Element, func() {
-		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithLayoutData(c.Properties().LayoutData())
 		co.WithData(std.ElementData{
 			Layout: layout.Frame(),
 		})
@@ -81,7 +80,7 @@ func (c *binaryEditorComponent) Render() co.Instance {
 						VerticalCenter:   opt.V(48),
 					})
 					co.WithData(std.PictureData{
-						Image:      co.OpenImage(c.Scope, "icons/upload.png"),
+						Image:      co.OpenImage(c.Scope(), "icons/upload.png"),
 						ImageColor: opt.V(std.SurfaceColor),
 						Mode:       std.ImageModeStretch,
 					})

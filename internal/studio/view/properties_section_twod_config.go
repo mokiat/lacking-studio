@@ -16,20 +16,19 @@ type TwoDTextureConfigPropertiesSectionData struct {
 	Texture *model.TwoDTexture
 }
 
-var TwoDTextureConfigPropertiesSection = co.Define(&twoDTextureConfigPropertiesSectionComponent{})
+var TwoDTextureConfigPropertiesSection = mvc.Wrap(co.Define(&twoDTextureConfigPropertiesSectionComponent{}))
 
 type twoDTextureConfigPropertiesSectionComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	texture *model.TwoDTexture
 }
 
 func (c *twoDTextureConfigPropertiesSectionComponent) OnUpsert() {
-	data := co.GetData[TwoDTextureConfigPropertiesSectionData](c.Properties)
+	data := co.GetData[TwoDTextureConfigPropertiesSectionData](c.Properties())
 	c.texture = data.Texture
 
-	mvc.UseBinding(c.texture, func(change mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.texture, func(change mvc.Change) bool {
 		return true // TODO
 	})
 }
@@ -54,7 +53,7 @@ func (c *twoDTextureConfigPropertiesSectionComponent) Render() co.Instance {
 
 		co.WithChild("wrapping-label", co.New(std.Label, func() {
 			co.WithData(std.LabelData{
-				Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+				Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 				FontSize:  opt.V(float32(18)),
 				FontColor: opt.V(ui.Black()),
 				Text:      "Wrapping:",
@@ -75,7 +74,7 @@ func (c *twoDTextureConfigPropertiesSectionComponent) Render() co.Instance {
 			})
 			co.WithCallbackData(std.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					mvc.Dispatch(c.Scope, action.ChangeTwoDTextureWrapping{
+					mvc.Dispatch(c.Scope(), action.ChangeTwoDTextureWrapping{
 						Texture:  c.texture,
 						Wrapping: key.(asset.WrapMode),
 					})
@@ -85,7 +84,7 @@ func (c *twoDTextureConfigPropertiesSectionComponent) Render() co.Instance {
 
 		co.WithChild("filtering-label", co.New(std.Label, func() {
 			co.WithData(std.LabelData{
-				Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+				Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 				FontSize:  opt.V(float32(18)),
 				FontColor: opt.V(ui.Black()),
 				Text:      "Filtering:",
@@ -106,7 +105,7 @@ func (c *twoDTextureConfigPropertiesSectionComponent) Render() co.Instance {
 			})
 			co.WithCallbackData(std.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					mvc.Dispatch(c.Scope, action.ChangeTwoDTextureFiltering{
+					mvc.Dispatch(c.Scope(), action.ChangeTwoDTextureFiltering{
 						Texture:   c.texture,
 						Filtering: key.(asset.FilterMode),
 					})
@@ -116,7 +115,7 @@ func (c *twoDTextureConfigPropertiesSectionComponent) Render() co.Instance {
 
 		co.WithChild("data-format-label", co.New(std.Label, func() {
 			co.WithData(std.LabelData{
-				Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+				Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 				FontSize:  opt.V(float32(18)),
 				FontColor: opt.V(ui.Black()),
 				Text:      "Data Format:",
@@ -137,7 +136,7 @@ func (c *twoDTextureConfigPropertiesSectionComponent) Render() co.Instance {
 			})
 			co.WithCallbackData(std.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					mvc.Dispatch(c.Scope, action.ChangeTwoDTextureFormat{
+					mvc.Dispatch(c.Scope(), action.ChangeTwoDTextureFormat{
 						Texture: c.texture,
 						Format:  key.(asset.TexelFormat),
 					})

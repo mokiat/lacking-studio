@@ -20,11 +20,10 @@ type AssetPropertiesSectionData struct {
 	EditorController EditorController
 }
 
-var AssetPropertiesSection = co.Define(&assetPropertiesSectionComponent{})
+var AssetPropertiesSection = mvc.Wrap(co.Define(&assetPropertiesSectionComponent{}))
 
 type assetPropertiesSectionComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	resource         *model.Resource
 	controller       StudioController
@@ -32,12 +31,12 @@ type assetPropertiesSectionComponent struct {
 }
 
 func (c *assetPropertiesSectionComponent) OnUpsert() {
-	data := co.GetData[AssetPropertiesSectionData](c.Properties)
+	data := co.GetData[AssetPropertiesSectionData](c.Properties())
 	c.resource = data.Model
 	c.controller = data.StudioController
 	c.editorController = data.EditorController
 
-	mvc.UseBinding(c.resource, func(ch mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.resource, func(ch mvc.Change) bool {
 		return mvc.IsChange(ch, model.ChangeResourceName)
 	})
 }
@@ -72,7 +71,7 @@ func (c *assetPropertiesSectionComponent) Render() co.Instance {
 
 			co.WithChild("label", co.New(std.Label, func() {
 				co.WithData(std.LabelData{
-					Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+					Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 					FontSize:  opt.V(float32(18)),
 					FontColor: opt.V(std.OnSurfaceColor),
 					Text:      "ID:",
@@ -81,7 +80,7 @@ func (c *assetPropertiesSectionComponent) Render() co.Instance {
 
 			co.WithChild("value", co.New(std.Label, func() {
 				co.WithData(std.LabelData{
-					Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
+					Font:      co.OpenFont(c.Scope(), "ui:///roboto-regular.ttf"),
 					FontSize:  opt.V(float32(18)),
 					FontColor: opt.V(std.OnSurfaceColor),
 					Text:      c.resource.ID(),
@@ -99,7 +98,7 @@ func (c *assetPropertiesSectionComponent) Render() co.Instance {
 
 			co.WithChild("label", co.New(std.Label, func() {
 				co.WithData(std.LabelData{
-					Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+					Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 					FontSize:  opt.V(float32(18)),
 					FontColor: opt.V(std.OnSurfaceColor),
 					Text:      "Type:",
@@ -108,7 +107,7 @@ func (c *assetPropertiesSectionComponent) Render() co.Instance {
 
 			co.WithChild("value", co.New(std.Label, func() {
 				co.WithData(std.LabelData{
-					Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
+					Font:      co.OpenFont(c.Scope(), "ui:///roboto-regular.ttf"),
 					FontSize:  opt.V(float32(18)),
 					FontColor: opt.V(std.OnSurfaceColor),
 					Text:      string(c.resource.Kind()),
@@ -126,7 +125,7 @@ func (c *assetPropertiesSectionComponent) Render() co.Instance {
 
 			co.WithChild("label", co.New(std.Label, func() {
 				co.WithData(std.LabelData{
-					Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+					Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 					FontSize:  opt.V(float32(18)),
 					FontColor: opt.V(std.OnSurfaceColor),
 					Text:      "Name:",
@@ -158,7 +157,7 @@ func (c *assetPropertiesSectionComponent) Render() co.Instance {
 
 			co.WithChild("delete", co.New(std.Button, func() {
 				co.WithData(std.ButtonData{
-					Icon: co.OpenImage(c.Scope, "icons/delete.png"),
+					Icon: co.OpenImage(c.Scope(), "icons/delete.png"),
 					Text: "Delete",
 				})
 
@@ -171,7 +170,7 @@ func (c *assetPropertiesSectionComponent) Render() co.Instance {
 
 			co.WithChild("clone", co.New(std.Button, func() {
 				co.WithData(std.ButtonData{
-					Icon: co.OpenImage(c.Scope, "icons/file-copy.png"),
+					Icon: co.OpenImage(c.Scope(), "icons/file-copy.png"),
 					Text: "Clone",
 				})
 

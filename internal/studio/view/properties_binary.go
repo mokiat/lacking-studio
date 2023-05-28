@@ -17,10 +17,10 @@ type BinaryPropertiesData struct {
 	EditorController BinaryEditorController
 }
 
-var BinaryProperties = co.Define(&binaryPropertiesComponent{})
+var BinaryProperties = mvc.Wrap(co.Define(&binaryPropertiesComponent{}))
 
 type binaryPropertiesComponent struct {
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	properties       *model.BinaryEditorProperties
 	resourceModel    *model.Resource
@@ -30,14 +30,14 @@ type binaryPropertiesComponent struct {
 }
 
 func (c *binaryPropertiesComponent) OnUpsert() {
-	data := co.GetData[BinaryPropertiesData](c.Properties)
+	data := co.GetData[BinaryPropertiesData](c.Properties())
 	c.properties = data.Model
 	c.resourceModel = data.ResourceModel
 	c.binaryModel = data.BinaryModel
 	c.studioController = data.StudioController
 	c.editorController = data.EditorController
 
-	mvc.UseBinding(c.properties, func(change mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.properties, func(change mvc.Change) bool {
 		return true
 	})
 }
@@ -56,7 +56,7 @@ func (c *binaryPropertiesComponent) Render() co.Instance {
 				ContentSpacing:   5,
 			}),
 		})
-		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithLayoutData(c.Properties().LayoutData())
 
 		co.WithChild("asset", co.New(std.Accordion, func() {
 			co.WithLayoutData(layout.Data{

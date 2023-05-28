@@ -16,20 +16,19 @@ type CubeTextureConfigPropertiesSectionData struct {
 	Texture *model.CubeTexture
 }
 
-var CubeTextureConfigPropertiesSection = co.Define(&cubeTextureConfigPropertiesSectionComponent{})
+var CubeTextureConfigPropertiesSection = mvc.Wrap(co.Define(&cubeTextureConfigPropertiesSectionComponent{}))
 
 type cubeTextureConfigPropertiesSectionComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	texture *model.CubeTexture
 }
 
 func (c *cubeTextureConfigPropertiesSectionComponent) OnUpsert() {
-	data := co.GetData[CubeTextureConfigPropertiesSectionData](c.Properties)
+	data := co.GetData[CubeTextureConfigPropertiesSectionData](c.Properties())
 	c.texture = data.Texture
 
-	mvc.UseBinding(c.texture, func(change mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.texture, func(change mvc.Change) bool {
 		return true // TODO
 	})
 }
@@ -54,7 +53,7 @@ func (c *cubeTextureConfigPropertiesSectionComponent) Render() co.Instance {
 
 		co.WithChild("filtering-label", co.New(std.Label, func() {
 			co.WithData(std.LabelData{
-				Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+				Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 				FontSize:  opt.V(float32(18)),
 				FontColor: opt.V(ui.Black()),
 				Text:      "Filtering:",
@@ -75,7 +74,7 @@ func (c *cubeTextureConfigPropertiesSectionComponent) Render() co.Instance {
 			})
 			co.WithCallbackData(std.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					mvc.Dispatch(c.Scope, action.ChangeCubeTextureFiltering{
+					mvc.Dispatch(c.Scope(), action.ChangeCubeTextureFiltering{
 						Texture:   c.texture,
 						Filtering: key.(asset.FilterMode),
 					})
@@ -85,7 +84,7 @@ func (c *cubeTextureConfigPropertiesSectionComponent) Render() co.Instance {
 
 		co.WithChild("data-format-label", co.New(std.Label, func() {
 			co.WithData(std.LabelData{
-				Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+				Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 				FontSize:  opt.V(float32(18)),
 				FontColor: opt.V(ui.Black()),
 				Text:      "Data Format:",
@@ -106,7 +105,7 @@ func (c *cubeTextureConfigPropertiesSectionComponent) Render() co.Instance {
 			})
 			co.WithCallbackData(std.DropdownCallbackData{
 				OnItemSelected: func(key interface{}) {
-					mvc.Dispatch(c.Scope, action.ChangeCubeTextureFormat{
+					mvc.Dispatch(c.Scope(), action.ChangeCubeTextureFormat{
 						Texture: c.texture,
 						Format:  key.(asset.TexelFormat),
 					})

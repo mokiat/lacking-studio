@@ -31,21 +31,20 @@ type StudioData struct {
 	StudioController StudioController
 }
 
-var Studio = co.Define(&studioComponent{})
+var Studio = mvc.Wrap(co.Define(&studioComponent{}))
 
 type studioComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	studioModel      *model.Studio
 	studioController StudioController
 }
 
 func (c *studioComponent) OnUpsert() {
-	data := co.GetData[StudioData](c.Properties)
+	data := co.GetData[StudioData](c.Properties())
 	c.studioModel = data.StudioModel
 	c.studioController = data.StudioController
-	mvc.UseBinding(c.studioModel, filter.True[mvc.Change]()) // TODO
+	mvc.UseBinding(c.Scope(), c.studioModel, filter.True[mvc.Change]()) // TODO
 }
 
 func (c *studioComponent) Render() co.Instance {
@@ -54,7 +53,7 @@ func (c *studioComponent) Render() co.Instance {
 			BackgroundColor: opt.V(std.SurfaceColor),
 			Layout:          layout.Frame(),
 		})
-		co.WithScope(c.Scope)
+		co.WithScope(c.Scope())
 
 		co.WithChild("top", co.New(StudioHeader, func() {
 			co.WithLayoutData(layout.Data{
@@ -68,7 +67,7 @@ func (c *studioComponent) Render() co.Instance {
 
 		if editor := c.studioModel.SelectedEditor(); editor != nil {
 			key := fmt.Sprintf("center-%s", editor.Resource().ID())
-			instance := c.studioController.RenderEditor(editor, c.Scope, layout.Data{
+			instance := c.studioController.RenderEditor(editor, c.Scope(), layout.Data{
 				VerticalAlignment:   layout.VerticalAlignmentCenter,
 				HorizontalAlignment: layout.HorizontalAlignmentCenter,
 			})

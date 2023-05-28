@@ -21,11 +21,10 @@ type CubeTextureEditorData struct {
 	Visualization    model.Visualization
 }
 
-var CubeTextureEditor = co.ContextScoped(co.Define(&cubeTextureEditorComponent{}))
+var CubeTextureEditor = mvc.Wrap(co.ContextScoped(co.Define(&cubeTextureEditorComponent{})))
 
 type cubeTextureEditorComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	resourceModel    *model.Resource
 	textureModel     *model.CubeTexture
@@ -36,7 +35,7 @@ type cubeTextureEditorComponent struct {
 }
 
 func (c *cubeTextureEditorComponent) OnUpsert() {
-	data := co.GetData[CubeTextureEditorData](c.Properties)
+	data := co.GetData[CubeTextureEditorData](c.Properties())
 	c.resourceModel = data.ResourceModel
 	c.textureModel = data.TextureModel
 	c.editorModel = data.EditorModel
@@ -44,14 +43,14 @@ func (c *cubeTextureEditorComponent) OnUpsert() {
 	c.editorController = data.EditorController
 	c.viz = data.Visualization
 
-	mvc.UseBinding(c.editorModel, func(change mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.editorModel, func(change mvc.Change) bool {
 		return true
 	})
 }
 
 func (c *cubeTextureEditorComponent) Render() co.Instance {
 	return co.New(std.Element, func() {
-		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithLayoutData(c.Properties().LayoutData())
 		co.WithData(std.ElementData{
 			Layout: layout.Frame(),
 		})
@@ -63,7 +62,7 @@ func (c *cubeTextureEditorComponent) Render() co.Instance {
 			})
 			co.WithCallbackData(std.DropZoneCallbackData{
 				OnDrop: func(paths []string) bool {
-					mvc.Dispatch(c.Scope, action.ChangeCubeTextureContentFromPath{
+					mvc.Dispatch(c.Scope(), action.ChangeCubeTextureContentFromPath{
 						Texture: c.textureModel,
 						Path:    paths[0],
 					})
@@ -73,7 +72,7 @@ func (c *cubeTextureEditorComponent) Render() co.Instance {
 
 			co.WithChild("viewport", co.New(std.Viewport, func() {
 				co.WithData(std.ViewportData{
-					API: co.TypedValue[global.Context](c.Scope).API,
+					API: co.TypedValue[global.Context](c.Scope()).API,
 				})
 				co.WithCallbackData(std.ViewportCallbackData{
 					OnKeyboardEvent: func(event ui.KeyboardEvent) bool { return false },

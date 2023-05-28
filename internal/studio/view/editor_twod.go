@@ -21,11 +21,10 @@ type TwoDTextureEditorData struct {
 	EditorController EditorController
 }
 
-var TwoDTextureEditor = co.ContextScoped(co.Define(&twoDTextureEditorComponent{}))
+var TwoDTextureEditor = mvc.Wrap(co.ContextScoped(co.Define(&twoDTextureEditorComponent{})))
 
 type twoDTextureEditorComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	resourceModel    *model.Resource
 	textureModel     *model.TwoDTexture
@@ -36,7 +35,7 @@ type twoDTextureEditorComponent struct {
 }
 
 func (c *twoDTextureEditorComponent) OnUpsert() {
-	data := co.GetData[TwoDTextureEditorData](c.Properties)
+	data := co.GetData[TwoDTextureEditorData](c.Properties())
 	c.resourceModel = data.ResourceModel
 	c.textureModel = data.TextureModel
 	c.editorModel = data.EditorModel
@@ -44,7 +43,7 @@ func (c *twoDTextureEditorComponent) OnUpsert() {
 	c.editorController = data.EditorController
 	c.viz = data.Visualization
 
-	mvc.UseBinding(c.editorModel, func(change mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.editorModel, func(change mvc.Change) bool {
 		return true
 	})
 }
@@ -54,7 +53,7 @@ func (c *twoDTextureEditorComponent) Render() co.Instance {
 		co.WithData(std.ElementData{
 			Layout: layout.Frame(),
 		})
-		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithLayoutData(c.Properties().LayoutData())
 
 		co.WithChild("center", co.New(std.DropZone, func() {
 			co.WithLayoutData(layout.Data{
@@ -63,7 +62,7 @@ func (c *twoDTextureEditorComponent) Render() co.Instance {
 			})
 			co.WithCallbackData(std.DropZoneCallbackData{
 				OnDrop: func(paths []string) bool {
-					mvc.Dispatch(c.Scope, action.ChangeTwoDTextureContentFromPath{
+					mvc.Dispatch(c.Scope(), action.ChangeTwoDTextureContentFromPath{
 						Texture: c.textureModel,
 						Path:    paths[0],
 					})
@@ -73,7 +72,7 @@ func (c *twoDTextureEditorComponent) Render() co.Instance {
 
 			co.WithChild("viewport", co.New(std.Viewport, func() {
 				co.WithData(std.ViewportData{
-					API: co.TypedValue[global.Context](c.Scope).API,
+					API: co.TypedValue[global.Context](c.Scope()).API,
 				})
 				co.WithCallbackData(std.ViewportCallbackData{
 					OnKeyboardEvent: func(event ui.KeyboardEvent) bool { return false },

@@ -15,14 +15,14 @@ type StudioHeaderData struct {
 var StudioHeader = co.Define(&studioHeaderComponent{})
 
 type studioHeaderComponent struct {
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	studio     *model.Studio
 	controller StudioController
 }
 
 func (c *studioHeaderComponent) OnUpsert() {
-	data := co.GetData[StudioHeaderData](c.Properties)
+	data := co.GetData[StudioHeaderData](c.Properties())
 	c.studio = data.StudioModel
 	c.controller = data.StudioController
 }
@@ -34,7 +34,7 @@ func (c *studioHeaderComponent) Render() co.Instance {
 				ContentAlignment: layout.HorizontalAlignmentLeft,
 			}),
 		})
-		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithLayoutData(c.Properties().LayoutData())
 
 		co.WithChild("toolbar", co.New(StudioToolbar, func() {
 			co.WithData(StudioToolbarData{

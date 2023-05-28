@@ -16,20 +16,19 @@ type BinaryInfoPropertiesSectionData struct {
 	Binary *model.Binary
 }
 
-var BinaryInfoPropertiesSection = co.Define(&binaryInfoPropertiesSectionComponent{})
+var BinaryInfoPropertiesSection = mvc.Wrap(co.Define(&binaryInfoPropertiesSectionComponent{}))
 
 type binaryInfoPropertiesSectionComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	binary *model.Binary
 }
 
 func (c *binaryInfoPropertiesSectionComponent) OnUpsert() {
-	data := co.GetData[BinaryInfoPropertiesSectionData](c.Properties)
+	data := co.GetData[BinaryInfoPropertiesSectionData](c.Properties())
 	c.binary = data.Binary
 
-	mvc.UseBinding(c.binary, func(change mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.binary, func(change mvc.Change) bool {
 		return true // TODO
 	})
 }
@@ -54,7 +53,7 @@ func (c *binaryInfoPropertiesSectionComponent) Render() co.Instance {
 
 		co.WithChild("size-label", co.New(std.Label, func() {
 			co.WithData(std.LabelData{
-				Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+				Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 				FontSize:  opt.V(float32(18)),
 				FontColor: opt.V(ui.Black()),
 				Text:      "Size:",
@@ -63,7 +62,7 @@ func (c *binaryInfoPropertiesSectionComponent) Render() co.Instance {
 
 		co.WithChild("size-value-label", co.New(std.Label, func() {
 			co.WithData(std.LabelData{
-				Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
+				Font:      co.OpenFont(c.Scope(), "ui:///roboto-regular.ttf"),
 				FontSize:  opt.V(float32(18)),
 				FontColor: opt.V(ui.Black()),
 				Text:      fmt.Sprintf("%d bytes", c.binary.Size()),
@@ -72,7 +71,7 @@ func (c *binaryInfoPropertiesSectionComponent) Render() co.Instance {
 
 		co.WithChild("sha-label", co.New(std.Label, func() {
 			co.WithData(std.LabelData{
-				Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+				Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 				FontSize:  opt.V(float32(18)),
 				FontColor: opt.V(ui.Black()),
 				Text:      "Digest:",
@@ -81,7 +80,7 @@ func (c *binaryInfoPropertiesSectionComponent) Render() co.Instance {
 
 		co.WithChild("sha-value-label", co.New(std.Label, func() {
 			co.WithData(std.LabelData{
-				Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
+				Font:      co.OpenFont(c.Scope(), "ui:///roboto-regular.ttf"),
 				FontSize:  opt.V(float32(18)),
 				FontColor: opt.V(ui.Black()),
 				Text:      c.binary.Digest(),

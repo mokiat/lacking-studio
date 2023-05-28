@@ -25,19 +25,18 @@ func BootstrapApplication(globalCtx global.Context) error {
 var Bootstrap = co.Define(&bootstrapComponent{})
 
 type bootstrapComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	studioController *controller.Studio
 }
 
 func (c *bootstrapComponent) OnCreate() {
-	globalCtx := co.TypedValue[global.Context](c.Scope)
-	registryModel := co.GetData[*model.Registry](c.Properties)
+	globalCtx := co.TypedValue[global.Context](c.Scope())
+	registryModel := co.GetData[*model.Registry](c.Properties())
 	studioModel := model.NewStudio(registryModel)
 	c.studioController = controller.NewStudio(globalCtx, studioModel)
 }
 
 func (c *bootstrapComponent) Render() co.Instance {
-	return c.studioController.Render(c.Scope)
+	return c.studioController.Render(c.Scope())
 }

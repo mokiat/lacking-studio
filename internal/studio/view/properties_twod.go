@@ -17,10 +17,10 @@ type TwoDTexturePropertiesData struct {
 	EditorController EditorController
 }
 
-var TwoDTextureProperties = co.Define(&twoDTexturePropertiesComponent{})
+var TwoDTextureProperties = mvc.Wrap(co.Define(&twoDTexturePropertiesComponent{}))
 
 type twoDTexturePropertiesComponent struct {
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	properties       *model.TwoDTextureEditorProperties
 	resourceModel    *model.Resource
@@ -30,20 +30,20 @@ type twoDTexturePropertiesComponent struct {
 }
 
 func (c *twoDTexturePropertiesComponent) OnUpsert() {
-	data := co.GetData[TwoDTexturePropertiesData](c.Properties)
+	data := co.GetData[TwoDTexturePropertiesData](c.Properties())
 	c.properties = data.Model
 	c.resourceModel = data.ResourceModel
 	c.textureModel = data.TextureModel
 	c.studioController = data.StudioController
 	c.editorController = data.EditorController
-	mvc.UseBinding(c.properties, func(change mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.properties, func(change mvc.Change) bool {
 		return true
 	})
 }
 
 func (c *twoDTexturePropertiesComponent) Render() co.Instance {
 	return co.New(std.Element, func() {
-		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithLayoutData(c.Properties().LayoutData())
 		co.WithData(std.ElementData{
 			Padding: ui.Spacing{
 				Left:   5,

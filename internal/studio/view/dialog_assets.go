@@ -31,9 +31,7 @@ var defaultAssetDialogCallbackData = AssetDialogCallbackData{
 var AssetDialog = co.Define(&assetDialogComponent{})
 
 type assetDialogComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
-	Invalidate func()        `co:"invalidate"`
+	co.BaseComponent
 
 	controller       StudioController
 	registry         *model.Registry
@@ -51,11 +49,11 @@ func (c *assetDialogComponent) OnCreate() {
 }
 
 func (c *assetDialogComponent) OnUpsert() {
-	data := co.GetData[AssetDialogData](c.Properties)
+	data := co.GetData[AssetDialogData](c.Properties())
 	c.registry = data.Registry
 	c.controller = data.Controller
 
-	callbackData := co.GetOptionalCallbackData(c.Properties, defaultAssetDialogCallbackData)
+	callbackData := co.GetOptionalCallbackData(c.Properties(), defaultAssetDialogCallbackData)
 	c.onOpen = callbackData.OnOpen
 	c.onClose = callbackData.OnClose
 }
@@ -90,7 +88,7 @@ func (c *assetDialogComponent) Render() co.Instance {
 
 				co.WithChild("twod_texture", co.New(std.ToolbarButton, func() {
 					co.WithData(std.ToolbarButtonData{
-						Icon:     co.OpenImage(c.Scope, "icons/texture.png"),
+						Icon:     co.OpenImage(c.Scope(), "icons/texture.png"),
 						Text:     "2D Texture",
 						Selected: c.selectedKind == model.ResourceKindTwoDTexture,
 					})
@@ -103,7 +101,7 @@ func (c *assetDialogComponent) Render() co.Instance {
 
 				co.WithChild("cube_texture", co.New(std.ToolbarButton, func() {
 					co.WithData(std.ToolbarButtonData{
-						Icon:     co.OpenImage(c.Scope, "icons/texture.png"),
+						Icon:     co.OpenImage(c.Scope(), "icons/texture.png"),
 						Text:     "Cube Texture",
 						Selected: c.selectedKind == model.ResourceKindCubeTexture,
 					})
@@ -116,7 +114,7 @@ func (c *assetDialogComponent) Render() co.Instance {
 
 				co.WithChild("model", co.New(std.ToolbarButton, func() {
 					co.WithData(std.ToolbarButtonData{
-						Icon:     co.OpenImage(c.Scope, "icons/model.png"),
+						Icon:     co.OpenImage(c.Scope(), "icons/model.png"),
 						Text:     "Model",
 						Selected: c.selectedKind == model.ResourceKindModel,
 					})
@@ -130,7 +128,7 @@ func (c *assetDialogComponent) Render() co.Instance {
 				co.WithChild("scene", co.New(std.ToolbarButton, func() {
 					co.WithData(std.ToolbarButtonData{
 						Text:     "Scene",
-						Icon:     co.OpenImage(c.Scope, "icons/scene.png"),
+						Icon:     co.OpenImage(c.Scope(), "icons/scene.png"),
 						Selected: c.selectedKind == model.ResourceKindScene,
 					})
 					co.WithCallbackData(std.ToolbarButtonCallbackData{
@@ -143,7 +141,7 @@ func (c *assetDialogComponent) Render() co.Instance {
 				co.WithChild("binary", co.New(std.ToolbarButton, func() {
 					co.WithData(std.ToolbarButtonData{
 						Text:     "Binary",
-						Icon:     co.OpenImage(c.Scope, "icons/broken-image.png"),
+						Icon:     co.OpenImage(c.Scope(), "icons/broken-image.png"),
 						Selected: c.selectedKind == model.ResourceKindBinary,
 					})
 					co.WithCallbackData(std.ToolbarButtonCallbackData{
@@ -164,7 +162,7 @@ func (c *assetDialogComponent) Render() co.Instance {
 
 				co.WithChild("label", co.New(std.Label, func() {
 					co.WithData(std.LabelData{
-						Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
+						Font:      co.OpenFont(c.Scope(), "ui:///roboto-regular.ttf"),
 						FontSize:  opt.V(float32(18)),
 						FontColor: opt.V(std.OnSurfaceColor),
 						Text:      "Search:",
@@ -265,7 +263,7 @@ func (c *assetDialogComponent) Render() co.Instance {
 
 				co.WithChild("delete", co.New(std.Button, func() {
 					co.WithData(std.ButtonData{
-						Icon:    co.OpenImage(c.Scope, "icons/delete.png"),
+						Icon:    co.OpenImage(c.Scope(), "icons/delete.png"),
 						Text:    "Delete",
 						Enabled: opt.V(c.selectedResource != nil),
 					})
@@ -280,7 +278,7 @@ func (c *assetDialogComponent) Render() co.Instance {
 
 				co.WithChild("clone", co.New(std.Button, func() {
 					co.WithData(std.ButtonData{
-						Icon:    co.OpenImage(c.Scope, "icons/file-copy.png"),
+						Icon:    co.OpenImage(c.Scope(), "icons/file-copy.png"),
 						Text:    "Clone",
 						Enabled: opt.V(c.selectedResource != nil),
 					})
@@ -303,7 +301,7 @@ func (c *assetDialogComponent) Render() co.Instance {
 						HorizontalAlignment: layout.HorizontalAlignmentRight,
 					})
 					co.WithData(std.ButtonData{
-						Icon: co.OpenImage(c.Scope, "icons/file-add.png"),
+						Icon: co.OpenImage(c.Scope(), "icons/file-add.png"),
 						Text: "New",
 					})
 					co.WithCallbackData(std.ButtonCallbackData{
@@ -433,9 +431,7 @@ var defaultAssetItemCallbackData = AssetItemCallbackData{
 var AssetItem = co.Define(&assetItemComponent{})
 
 type assetItemComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
-	Invalidate func()        `co:"invalidate"`
+	co.BaseComponent
 
 	previewImage        *ui.Image
 	defaultPreviewImage *ui.Image
@@ -447,16 +443,16 @@ type assetItemComponent struct {
 }
 
 func (c *assetItemComponent) OnUpsert() {
-	data := co.GetData[AssetItemData](c.Properties)
-	callbackData := co.GetOptionalCallbackData(c.Properties, defaultAssetItemCallbackData)
+	data := co.GetData[AssetItemData](c.Properties())
+	callbackData := co.GetOptionalCallbackData(c.Properties(), defaultAssetItemCallbackData)
 
 	if c.previewImage != nil {
 		c.previewImage.Destroy()
 	}
 	if data.PreviewImage != nil {
-		c.previewImage = co.CreateImage(c.Scope, data.PreviewImage)
+		c.previewImage = co.CreateImage(c.Scope(), data.PreviewImage)
 	}
-	c.defaultPreviewImage = co.OpenImage(c.Scope, "icons/broken-image.png")
+	c.defaultPreviewImage = co.OpenImage(c.Scope(), "icons/broken-image.png")
 	c.assetID = data.ID
 	c.assetKind = data.Kind
 	c.assetName = data.Name
@@ -478,7 +474,7 @@ func (c *assetItemComponent) Render() co.Instance {
 	}
 
 	return co.New(std.ListItem, func() {
-		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithLayoutData(c.Properties().LayoutData())
 		co.WithData(std.ListItemData{
 			Selected: c.selected,
 		})
@@ -519,7 +515,7 @@ func (c *assetItemComponent) Render() co.Instance {
 
 				co.WithChild("name", co.New(std.Label, func() {
 					co.WithData(std.LabelData{
-						Font:      co.OpenFont(c.Scope, "ui:///roboto-bold.ttf"),
+						Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
 						FontSize:  opt.V(float32(16)),
 						FontColor: opt.V(ui.Black()),
 						Text:      c.assetName,
@@ -528,7 +524,7 @@ func (c *assetItemComponent) Render() co.Instance {
 
 				co.WithChild("id", co.New(std.Label, func() {
 					co.WithData(std.LabelData{
-						Font:      co.OpenFont(c.Scope, "ui:///roboto-regular.ttf"),
+						Font:      co.OpenFont(c.Scope(), "ui:///roboto-regular.ttf"),
 						FontSize:  opt.V(float32(16)),
 						FontColor: opt.V(ui.Black()),
 						Text:      c.assetID,

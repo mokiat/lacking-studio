@@ -14,11 +14,10 @@ type StudioToolbarData struct {
 	StudioController StudioController
 }
 
-var StudioToolbar = co.Define(&studioToolbarComponent{})
+var StudioToolbar = mvc.Wrap(co.Define(&studioToolbarComponent{}))
 
 type studioToolbarComponent struct {
-	Scope      co.Scope      `co:"scope"`
-	Properties co.Properties `co:"properties"`
+	co.BaseComponent
 
 	studioModel   *model.Studio
 	history       *model.History
@@ -27,29 +26,29 @@ type studioToolbarComponent struct {
 }
 
 func (c *studioToolbarComponent) OnUpsert() {
-	data := co.GetData[StudioToolbarData](c.Properties)
+	data := co.GetData[StudioToolbarData](c.Properties())
 	c.studioModel = data.StudioModel
 	c.controller = data.StudioController
 
-	mvc.UseBinding(c.studioModel, func(ch mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.studioModel, func(ch mvc.Change) bool {
 		return mvc.IsChange(ch, model.ChangeStudioEditorSelection)
 	})
 
 	c.history = c.studioModel.SelectedHistory()
-	mvc.UseBinding(c.history, func(ch mvc.Change) bool {
+	mvc.UseBinding(c.Scope(), c.history, func(ch mvc.Change) bool {
 		return mvc.IsChange(ch, model.ChangeHistory)
 	})
 
-	mvc.UseBinding(c.studioModel.Registry(), filter.True[mvc.Change]())
+	mvc.UseBinding(c.Scope(), c.studioModel.Registry(), filter.True[mvc.Change]())
 }
 
 func (c *studioToolbarComponent) Render() co.Instance {
 	return co.New(std.Toolbar, func() {
-		co.WithLayoutData(c.Properties.LayoutData())
+		co.WithLayoutData(c.Properties().LayoutData())
 
 		co.WithChild("assets", co.New(std.ToolbarButton, func() {
 			co.WithData(std.ToolbarButtonData{
-				Icon: co.OpenImage(c.Scope, "icons/assets.png"),
+				Icon: co.OpenImage(c.Scope(), "icons/assets.png"),
 				Text: "Assets",
 			})
 			co.WithCallbackData(std.ToolbarButtonCallbackData{
@@ -61,7 +60,7 @@ func (c *studioToolbarComponent) Render() co.Instance {
 
 		co.WithChild("save", co.New(std.ToolbarButton, func() {
 			co.WithData(std.ToolbarButtonData{
-				Icon:    co.OpenImage(c.Scope, "icons/save.png"),
+				Icon:    co.OpenImage(c.Scope(), "icons/save.png"),
 				Enabled: opt.V(c.history.CanSave()),
 			})
 			co.WithCallbackData(std.ToolbarButtonCallbackData{
@@ -75,7 +74,7 @@ func (c *studioToolbarComponent) Render() co.Instance {
 
 		co.WithChild("undo", co.New(std.ToolbarButton, func() {
 			co.WithData(std.ToolbarButtonData{
-				Icon:    co.OpenImage(c.Scope, "icons/undo.png"),
+				Icon:    co.OpenImage(c.Scope(), "icons/undo.png"),
 				Enabled: opt.V(c.history.CanUndo()),
 			})
 			co.WithCallbackData(std.ToolbarButtonCallbackData{
@@ -87,7 +86,7 @@ func (c *studioToolbarComponent) Render() co.Instance {
 
 		co.WithChild("redo", co.New(std.ToolbarButton, func() {
 			co.WithData(std.ToolbarButtonData{
-				Icon:    co.OpenImage(c.Scope, "icons/redo.png"),
+				Icon:    co.OpenImage(c.Scope(), "icons/redo.png"),
 				Enabled: opt.V(c.history.CanRedo()),
 			})
 			co.WithCallbackData(std.ToolbarButtonCallbackData{
@@ -101,7 +100,7 @@ func (c *studioToolbarComponent) Render() co.Instance {
 
 		co.WithChild("properties", co.New(std.ToolbarButton, func() {
 			co.WithData(std.ToolbarButtonData{
-				Icon: co.OpenImage(c.Scope, "icons/properties.png"),
+				Icon: co.OpenImage(c.Scope(), "icons/properties.png"),
 			})
 			co.WithCallbackData(std.ToolbarButtonCallbackData{
 				OnClick: func() {
@@ -113,7 +112,7 @@ func (c *studioToolbarComponent) Render() co.Instance {
 }
 
 func (c *studioToolbarComponent) onAssetsClicked() {
-	c.assetsOverlay = co.OpenOverlay(c.Scope, co.New(AssetDialog, func() {
+	c.assetsOverlay = co.OpenOverlay(c.Scope(), co.New(AssetDialog, func() {
 		co.WithData(AssetDialogData{
 			Registry:   c.studioModel.Registry(),
 			Controller: c.controller,
