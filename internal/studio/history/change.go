@@ -20,7 +20,7 @@ func (ch *CombinedChange) Apply() error {
 
 func (ch *CombinedChange) Revert() error {
 	for i := len(ch.Changes) - 1; i >= 0; i-- {
-		if err := ch.Changes[i].Apply(); err != nil {
+		if err := ch.Changes[i].Revert(); err != nil {
 			return err
 		}
 	}

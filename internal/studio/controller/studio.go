@@ -7,8 +7,8 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/change"
 	"github.com/mokiat/lacking-studio/internal/studio/view"
+	"github.com/mokiat/lacking/debug/log"
 	"github.com/mokiat/lacking/game/asset"
-	"github.com/mokiat/lacking/log"
 	co "github.com/mokiat/lacking/ui/component"
 )
 

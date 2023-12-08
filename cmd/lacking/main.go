@@ -6,19 +6,19 @@ import (
 	"os"
 	"time"
 
-	glapp "github.com/mokiat/lacking-gl/app"
-	glgame "github.com/mokiat/lacking-gl/game"
-	glrender "github.com/mokiat/lacking-gl/render"
-	glui "github.com/mokiat/lacking-gl/ui"
+	glapp "github.com/mokiat/lacking-native/app"
+	glgame "github.com/mokiat/lacking-native/game"
+	glrender "github.com/mokiat/lacking-native/render"
+	glui "github.com/mokiat/lacking-native/ui"
 	"github.com/mokiat/lacking-studio/internal/studio"
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/resources"
 	"github.com/mokiat/lacking/app"
+	"github.com/mokiat/lacking/debug/log"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/ecs"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/game/physics"
-	"github.com/mokiat/lacking/log"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/util/resource"
 )
@@ -51,10 +51,9 @@ func runApplication(projectDir string) error {
 	renderAPI := glrender.NewAPI()
 	graphicsEngine := graphics.NewEngine(renderAPI, glgame.NewShaderCollection())
 
-	uiCfg := ui.NewConfig(ui.WrappedLocator(locator), renderAPI, glui.NewShaderCollection())
 	controller := app.NewLayeredController(
 		studio.NewController(graphicsEngine),
-		ui.NewController(uiCfg, func(w *ui.Window) {
+		ui.NewController(ui.WrappedLocator(locator), glui.NewShaderCollection(), func(w *ui.Window) {
 			ctx := global.Context{
 				Window:         w,
 				API:            renderAPI,

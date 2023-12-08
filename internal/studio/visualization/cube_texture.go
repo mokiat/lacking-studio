@@ -157,31 +157,31 @@ func (t *CubeTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.S
 }
 
 func (t *CubeTexture) OnViewportMouseEvent(event std.ViewportMouseEvent) bool {
-	switch event.Type {
-	case ui.MouseEventTypeDown:
+	switch event.Action {
+	case ui.MouseActionDown:
 		if event.Button == ui.MouseButtonMiddle {
 			t.rotatingCamera = true
-			t.oldMouseX = event.Position.X
-			t.oldMouseY = event.Position.Y
+			t.oldMouseX = event.X
+			t.oldMouseY = event.Y
 			return true
 		}
-	case ui.MouseEventTypeMove:
+	case ui.MouseActionMove:
 		if t.rotatingCamera {
-			t.cameraPitch += dprec.Degrees(float64(event.Position.Y-t.oldMouseY) / 5)
-			t.cameraYaw += dprec.Degrees(float64(event.Position.X-t.oldMouseX) / 5)
-			t.oldMouseX = event.Position.X
-			t.oldMouseY = event.Position.Y
+			t.cameraPitch += dprec.Degrees(float64(event.Y-t.oldMouseY) / 5)
+			t.cameraYaw += dprec.Degrees(float64(event.X-t.oldMouseX) / 5)
+			t.oldMouseX = event.X
+			t.oldMouseY = event.Y
 			return true
 		}
-	case ui.MouseEventTypeUp:
+	case ui.MouseActionUp:
 		if event.Button == ui.MouseButtonMiddle {
 			t.rotatingCamera = false
 			return true
 		}
-	case ui.MouseEventTypeLeave:
+	case ui.MouseActionLeave:
 		t.rotatingCamera = false
 		return true
-	case ui.MouseEventTypeScroll:
+	case ui.MouseActionScroll:
 		fov := t.cameraFoV.Degrees()
 		fov -= 2 * float32(event.ScrollY)
 		fov = sprec.Clamp(fov, 0.1, 179.0)
