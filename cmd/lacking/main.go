@@ -1,78 +1,40 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	"os"
-	"time"
 
 	glapp "github.com/mokiat/lacking-native/app"
-	glgame "github.com/mokiat/lacking-native/game"
-	glrender "github.com/mokiat/lacking-native/render"
 	glui "github.com/mokiat/lacking-native/ui"
-	"github.com/mokiat/lacking-studio/internal/studio"
-	"github.com/mokiat/lacking-studio/internal/studio/global"
+	"github.com/mokiat/lacking-studio/internal"
 	"github.com/mokiat/lacking-studio/resources"
-	"github.com/mokiat/lacking/app"
 	"github.com/mokiat/lacking/debug/log"
-	"github.com/mokiat/lacking/game/asset"
-	"github.com/mokiat/lacking/game/ecs"
-	"github.com/mokiat/lacking/game/graphics"
-	"github.com/mokiat/lacking/game/physics"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/util/resource"
 )
 
 func main() {
-	flag.Parse()
-	projectDir := "."
-	if flag.NArg() > 0 {
-		projectDir = flag.Arg(0)
-	}
-
-	log.Info("Starting studio")
-	if err := runApplication(projectDir); err != nil {
-		log.Error("Studio crashed: %v", err)
+	log.Info("Started")
+	if err := runApplication(); err != nil {
+		log.Error("Crashed: %v", err)
 		os.Exit(1)
 	}
-	log.Info("Studio closed")
+	log.Info("Stopped")
 }
 
-func runApplication(projectDir string) error {
-	registry, err := asset.NewDirRegistry(projectDir)
-	if err != nil {
-		return fmt.Errorf("failed to initialize registry: %w", err)
-	}
+func runApplication() error {
+	locator := ui.WrappedLocator(resource.NewFSLocator(resources.FS))
 
-	locator := resource.NewFSLocator(resources.FS)
-
-	physicsEngine := physics.NewEngine(16 * time.Millisecond)
-	ecsEngine := ecs.NewEngine()
-	renderAPI := glrender.NewAPI()
-	graphicsEngine := graphics.NewEngine(renderAPI, glgame.NewShaderCollection())
-
-	controller := app.NewLayeredController(
-		studio.NewController(graphicsEngine),
-		ui.NewController(ui.WrappedLocator(locator), glui.NewShaderCollection(), func(w *ui.Window) {
-			ctx := global.Context{
-				Window:         w,
-				API:            renderAPI,
-				Registry:       registry,
-				GraphicsEngine: graphicsEngine,
-				PhysicsEngine:  physicsEngine,
-				ECSEngine:      ecsEngine,
-			}
-			if err := studio.BootstrapApplication(ctx); err != nil {
-				log.Error("Error bootstrapping application: %v", err)
-				w.Close()
-			}
-		}),
+	uiController := ui.NewController(
+		locator,
+		glui.NewShaderCollection(),
+		internal.BootstrapApplication,
 	)
 
-	cfg := glapp.NewConfig("Lacking Studio", 1024, 576)
-	cfg.SetVSync(true)
+	cfg := glapp.NewConfig("Lacking Studio", 1280, 800)
 	cfg.SetMaximized(true)
-	cfg.SetLocator(locator)
+	cfg.SetMinSize(1024, 768)
+	cfg.SetVSync(true)
 	cfg.SetIcon("icons/favicon.png")
-	return glapp.Run(cfg, controller)
+	cfg.SetLocator(locator)
+	return glapp.Run(cfg, uiController)
 }
