@@ -1,6 +1,7 @@
 package app
 
 import (
+	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
 	"github.com/mokiat/lacking/debug/log"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
@@ -11,16 +12,21 @@ import (
 var Toolbar = mvc.EventListener(co.Define(&toolbarComponent{}))
 
 type ToolbarData struct {
+	AppModel *appmodel.Model
 }
 
 type toolbarComponent struct {
 	co.BaseComponent
+
+	appModel *appmodel.Model
+}
+
+func (c *toolbarComponent) OnUpsert() {
+	data := co.GetData[ToolbarData](c.Properties())
+	c.appModel = data.AppModel
 }
 
 func (c *toolbarComponent) Render() co.Instance {
-	canExpandLeft := false
-	canExpandRight := false
-
 	return co.New(std.Toolbar, func() {
 		co.WithLayoutData(c.Properties().LayoutData())
 
@@ -77,19 +83,7 @@ func (c *toolbarComponent) Render() co.Instance {
 
 		co.WithChild("separator-after-history", co.New(std.ToolbarSeparator, nil))
 
-		if canExpandRight {
-			co.WithChild("expand-right", co.New(std.ToolbarButton, func() {
-				co.WithLayoutData(layout.Data{
-					HorizontalAlignment: layout.HorizontalAlignmentRight,
-				})
-				co.WithData(std.ToolbarButtonData{
-					Icon: co.OpenImage(c.Scope(), "icons/expand-right.png"),
-				})
-				co.WithCallbackData(std.ToolbarButtonCallbackData{
-					OnClick: c.onExpandRight,
-				})
-			}))
-		} else {
+		if c.appModel.IsInspectorVisible() {
 			co.WithChild("collapse-right", co.New(std.ToolbarButton, func() {
 				co.WithLayoutData(layout.Data{
 					HorizontalAlignment: layout.HorizontalAlignmentRight,
@@ -98,24 +92,24 @@ func (c *toolbarComponent) Render() co.Instance {
 					Icon: co.OpenImage(c.Scope(), "icons/collapse-right.png"),
 				})
 				co.WithCallbackData(std.ToolbarButtonCallbackData{
-					OnClick: c.onCollapseRight,
+					OnClick: c.onCollapseInspector,
 				})
 			}))
-		}
-
-		if canExpandLeft {
-			co.WithChild("expand-left", co.New(std.ToolbarButton, func() {
+		} else {
+			co.WithChild("expand-right", co.New(std.ToolbarButton, func() {
 				co.WithLayoutData(layout.Data{
 					HorizontalAlignment: layout.HorizontalAlignmentRight,
 				})
 				co.WithData(std.ToolbarButtonData{
-					Icon: co.OpenImage(c.Scope(), "icons/expand-left.png"),
+					Icon: co.OpenImage(c.Scope(), "icons/expand-right.png"),
 				})
 				co.WithCallbackData(std.ToolbarButtonCallbackData{
-					OnClick: c.onExpandLeft,
+					OnClick: c.onExpandInspector,
 				})
 			}))
-		} else {
+		}
+
+		if c.appModel.IsNavigatorVisible() {
 			co.WithChild("collapse-left", co.New(std.ToolbarButton, func() {
 				co.WithLayoutData(layout.Data{
 					HorizontalAlignment: layout.HorizontalAlignmentRight,
@@ -124,7 +118,19 @@ func (c *toolbarComponent) Render() co.Instance {
 					Icon: co.OpenImage(c.Scope(), "icons/collapse-left.png"),
 				})
 				co.WithCallbackData(std.ToolbarButtonCallbackData{
-					OnClick: c.onCollapseLeft,
+					OnClick: c.onCollapseNavigator,
+				})
+			}))
+		} else {
+			co.WithChild("expand-left", co.New(std.ToolbarButton, func() {
+				co.WithLayoutData(layout.Data{
+					HorizontalAlignment: layout.HorizontalAlignmentRight,
+				})
+				co.WithData(std.ToolbarButtonData{
+					Icon: co.OpenImage(c.Scope(), "icons/expand-left.png"),
+				})
+				co.WithCallbackData(std.ToolbarButtonCallbackData{
+					OnClick: c.onExpandNavigator,
 				})
 			}))
 		}
@@ -139,6 +145,10 @@ func (c *toolbarComponent) Render() co.Instance {
 
 func (c *toolbarComponent) OnEvent(event mvc.Event) {
 	switch event.(type) {
+	case appmodel.InspectorVisibleChangedEvent:
+		c.Invalidate()
+	case appmodel.NavigatorVisibleChangedEvent:
+		c.Invalidate()
 	}
 }
 
@@ -177,18 +187,18 @@ func (c *toolbarComponent) onRedoClicked() {
 	log.Info("Redo")
 }
 
-func (c *toolbarComponent) onExpandLeft() {
-	log.Info("Expand Left")
+func (c *toolbarComponent) onExpandNavigator() {
+	c.appModel.SetNavigatorVisible(true)
 }
 
-func (c *toolbarComponent) onCollapseLeft() {
-	log.Info("Collapse Left")
+func (c *toolbarComponent) onCollapseNavigator() {
+	c.appModel.SetNavigatorVisible(false)
 }
 
-func (c *toolbarComponent) onExpandRight() {
-	log.Info("Expand Right")
+func (c *toolbarComponent) onExpandInspector() {
+	c.appModel.SetInpsectorVisible(true)
 }
 
-func (c *toolbarComponent) onCollapseRight() {
-	log.Info("Collapse Right")
+func (c *toolbarComponent) onCollapseInspector() {
+	c.appModel.SetInpsectorVisible(false)
 }

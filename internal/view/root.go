@@ -2,6 +2,7 @@ package view
 
 import (
 	"github.com/mokiat/gog/opt"
+	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
 	appview "github.com/mokiat/lacking-studio/internal/view/app"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -16,10 +17,12 @@ type rootComponent struct {
 	co.BaseComponent
 
 	eventBus *mvc.EventBus
+	appModel *appmodel.Model
 }
 
 func (c *rootComponent) OnCreate() {
 	c.eventBus = co.TypedValue[*mvc.EventBus](c.Scope())
+	c.appModel = appmodel.NewModel(c.eventBus)
 
 	co.Window(c.Scope()).SetCloseInterceptor(c.onCloseRequested)
 }
@@ -49,7 +52,7 @@ func (c *rootComponent) Render() co.Instance {
 					GrowHorizontally: true,
 				})
 				co.WithData(appview.ToolbarData{
-					// TODO
+					AppModel: c.appModel,
 				})
 			}))
 
@@ -75,7 +78,8 @@ func (c *rootComponent) Render() co.Instance {
 			// for _, editor := range editors {
 			co.WithChild("editor-0101", co.New(appview.Editor, func() {
 				co.WithData(appview.EditorData{
-					Visible: true,
+					AppModel: c.appModel,
+					Visible:  true,
 				})
 			}))
 			// }
