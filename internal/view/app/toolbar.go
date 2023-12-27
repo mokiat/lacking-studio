@@ -2,6 +2,8 @@ package app
 
 import (
 	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
+	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
+	registryview "github.com/mokiat/lacking-studio/internal/view/registry"
 	"github.com/mokiat/lacking/debug/log"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
@@ -12,13 +14,15 @@ import (
 var Toolbar = mvc.EventListener(co.Define(&toolbarComponent{}))
 
 type ToolbarData struct {
-	AppModel *appmodel.Model
+	AppModel      *appmodel.Model
+	RegistryModel *registrymodel.Model
 }
 
 type toolbarComponent struct {
 	co.BaseComponent
 
-	appModel *appmodel.Model
+	appModel      *appmodel.Model
+	registryModel *registrymodel.Model
 }
 
 func (c *toolbarComponent) OnUpsert() {
@@ -157,22 +161,14 @@ func (c *toolbarComponent) onNewClicked() {
 }
 
 func (c *toolbarComponent) onBrowseClicked() {
-	log.Info("Browse")
-	// c.assetsOverlay = co.OpenOverlay(c.Scope(), co.New(AssetDialog, func() {
-	// 	co.WithData(AssetDialogData{
-	// 		Registry:   c.studioModel.Registry(),
-	// 		Controller: c.controller,
-	// 	})
-	// 	co.WithCallbackData(AssetDialogCallbackData{
-	// 		OnOpen: func(id string) {
-	// 			c.controller.OnOpenResource(id)
-	// 		},
-	// 		OnClose: func() {
-	// 			overlay := c.assetsOverlay
-	// 			overlay.Close()
-	// 		},
-	// 	})
-	// }))
+	co.OpenOverlay(c.Scope(), co.New(registryview.Modal, func() {
+		co.WithData(registryview.ModalData{
+			RegistryModel: c.registryModel,
+		})
+		co.WithCallbackData(registryview.ModalCallbackData{
+			OnOpen: c.onAssetOpen,
+		})
+	}))
 }
 
 func (c *toolbarComponent) onSaveClicked() {
@@ -201,4 +197,8 @@ func (c *toolbarComponent) onExpandInspector() {
 
 func (c *toolbarComponent) onCollapseInspector() {
 	c.appModel.SetInpsectorVisible(false)
+}
+
+func (c *toolbarComponent) onAssetOpen(asset *registrymodel.Asset) {
+	log.Info("OPEN %s", asset.Name())
 }

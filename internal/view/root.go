@@ -3,6 +3,7 @@ package view
 import (
 	"github.com/mokiat/gog/opt"
 	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
+	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	appview "github.com/mokiat/lacking-studio/internal/view/app"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -16,13 +17,15 @@ var Root = mvc.EventListener(co.Define(&rootComponent{}))
 type rootComponent struct {
 	co.BaseComponent
 
-	eventBus *mvc.EventBus
-	appModel *appmodel.Model
+	eventBus      *mvc.EventBus
+	appModel      *appmodel.Model
+	registryModel *registrymodel.Model
 }
 
 func (c *rootComponent) OnCreate() {
 	c.eventBus = co.TypedValue[*mvc.EventBus](c.Scope())
 	c.appModel = appmodel.NewModel(c.eventBus)
+	c.registryModel = registrymodel.NewModel(c.eventBus)
 
 	co.Window(c.Scope()).SetCloseInterceptor(c.onCloseRequested)
 }
@@ -52,7 +55,8 @@ func (c *rootComponent) Render() co.Instance {
 					GrowHorizontally: true,
 				})
 				co.WithData(appview.ToolbarData{
-					AppModel: c.appModel,
+					AppModel:      c.appModel,
+					RegistryModel: c.registryModel,
 				})
 			}))
 
