@@ -5,6 +5,7 @@ go 1.21
 toolchain go1.21.5
 
 require (
+	github.com/google/uuid v1.4.0
 	github.com/mokiat/gog v0.11.1
 	github.com/mokiat/gomath v0.8.1
 	github.com/mokiat/lacking v0.15.0
@@ -15,7 +16,6 @@ require (
 
 require (
 	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71 // indirect
-	github.com/google/uuid v1.4.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mdouchement/hdr v0.2.4 // indirect

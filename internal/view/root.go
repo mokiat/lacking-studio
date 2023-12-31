@@ -3,6 +3,7 @@ package view
 import (
 	"github.com/mokiat/gog/opt"
 	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
+	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	appview "github.com/mokiat/lacking-studio/internal/view/app"
 	"github.com/mokiat/lacking/ui"
@@ -26,6 +27,10 @@ func (c *rootComponent) OnCreate() {
 	c.eventBus = co.TypedValue[*mvc.EventBus](c.Scope())
 	c.appModel = appmodel.NewModel(c.eventBus)
 	c.registryModel = registrymodel.NewModel(c.eventBus)
+
+	newEditor := editormodel.NewModel(c.eventBus, "Untitled-1")
+	c.appModel.AddEditor(newEditor)
+	c.appModel.SetActiveEditor(newEditor)
 
 	co.Window(c.Scope()).SetCloseInterceptor(c.onCloseRequested)
 }
@@ -65,7 +70,7 @@ func (c *rootComponent) Render() co.Instance {
 					GrowHorizontally: true,
 				})
 				co.WithData(appview.TabbarData{
-					// 	// TODO
+					AppModel: c.appModel,
 				})
 			}))
 		}))

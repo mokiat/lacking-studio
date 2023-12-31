@@ -132,15 +132,15 @@ func (c *assetPropertiesSectionComponent) Render() co.Instance {
 				})
 			}))
 
-			co.WithChild("value", co.New(std.Editbox, func() {
-				co.WithData(std.EditboxData{
+			co.WithChild("value", co.New(std.EditBox, func() {
+				co.WithData(std.EditBoxData{
 					Text: c.resource.Name(),
 				})
 				co.WithLayoutData(layout.Data{
 					Width: opt.V(300),
 				})
-				co.WithCallbackData(std.EditboxCallbackData{
-					OnChanged: func(text string) {
+				co.WithCallbackData(std.EditBoxCallbackData{
+					OnChange: func(text string) {
 						c.editorController.OnRenameResource(text)
 					},
 				})

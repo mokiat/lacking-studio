@@ -169,8 +169,8 @@ func (c *assetDialogComponent) Render() co.Instance {
 					})
 				}))
 
-				co.WithChild("editbox", co.New(std.Editbox, func() {
-					co.WithData(std.EditboxData{
+				co.WithChild("editbox", co.New(std.EditBox, func() {
+					co.WithData(std.EditBoxData{
 						Text: c.searchText,
 					})
 
@@ -178,8 +178,8 @@ func (c *assetDialogComponent) Render() co.Instance {
 						Width: opt.V(200),
 					})
 
-					co.WithCallbackData(std.EditboxCallbackData{
-						OnChanged: func(text string) {
+					co.WithCallbackData(std.EditBoxCallbackData{
+						OnChange: func(text string) {
 							c.setSearchText(text)
 						},
 					})

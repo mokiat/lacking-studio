@@ -1,7 +1,10 @@
 package app
 
 import (
+	"fmt"
+
 	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
+	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	registryview "github.com/mokiat/lacking-studio/internal/view/registry"
 	"github.com/mokiat/lacking/debug/log"
@@ -153,11 +156,24 @@ func (c *toolbarComponent) OnEvent(event mvc.Event) {
 		c.Invalidate()
 	case appmodel.NavigatorVisibleChangedEvent:
 		c.Invalidate()
+	case appmodel.ActiveEditorChangedEvent:
+		c.Invalidate()
 	}
 }
 
 func (c *toolbarComponent) onNewClicked() {
-	log.Info("New")
+	var name string
+	for i := 1; ; i++ {
+		name = fmt.Sprintf("Untitled-%d", i)
+		if !c.appModel.HasEditorWithName(name) {
+			break
+		}
+	}
+
+	eventBus := co.TypedValue[*mvc.EventBus](c.Scope())
+	editor := editormodel.NewModel(eventBus, name)
+	c.appModel.AddEditor(editor)
+	c.appModel.SetActiveEditor(editor)
 }
 
 func (c *toolbarComponent) onBrowseClicked() {
@@ -200,5 +216,5 @@ func (c *toolbarComponent) onCollapseInspector() {
 }
 
 func (c *toolbarComponent) onAssetOpen(asset *registrymodel.Asset) {
-	log.Info("OPEN %s", asset.Name())
+	log.Info("OPEN")
 }

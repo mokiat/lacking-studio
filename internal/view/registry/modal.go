@@ -74,8 +74,8 @@ func (c *modalComponent) Render() co.Instance {
 
 			co.WithChild("separator-before-search", co.New(std.ToolbarSeparator, nil))
 
-			co.WithChild("search", co.New(std.Editbox, func() {
-				co.WithData(std.EditboxData{
+			co.WithChild("search", co.New(std.EditBox, func() {
+				co.WithData(std.EditBoxData{
 					Text: "Search text....",
 				})
 
@@ -83,8 +83,8 @@ func (c *modalComponent) Render() co.Instance {
 					Width: opt.V(200),
 				})
 
-				co.WithCallbackData(std.EditboxCallbackData{
-					OnChanged: func(text string) {
+				co.WithCallbackData(std.EditBoxCallbackData{
+					OnChange: func(text string) {
 						// c.setSearchText(text)
 					},
 				})
