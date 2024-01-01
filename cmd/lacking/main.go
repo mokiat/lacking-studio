@@ -31,7 +31,7 @@ func runApplication() error {
 	)
 
 	cfg := glapp.NewConfig("Lacking Studio", 1280, 800)
-	cfg.SetMaximized(true)
+	cfg.SetMaximized(false)
 	cfg.SetMinSize(1024, 768)
 	cfg.SetVSync(true)
 	cfg.SetIcon("icons/favicon.png")

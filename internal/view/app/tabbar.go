@@ -3,6 +3,7 @@ package app
 import (
 	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
 	"github.com/mokiat/lacking-studio/internal/model/editor"
+	"github.com/mokiat/lacking-studio/internal/view/common"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/mvc"
@@ -77,8 +78,11 @@ func (c *tabbarComponent) selectEditor(editor *editor.Model) {
 
 func (c *tabbarComponent) closeEditor(editor *editor.Model, force bool) {
 	if !force && editor.CanSave() {
-		// TODO: Open dialog to ask if user wants to save
-		return
+		common.OpenConfirmation(c.Scope(),
+			"There are unsaved changes!\n\nAre you sure you want to continue?",
+			func() { c.closeEditor(editor, true) },
+		)
+	} else {
+		c.appModel.RemoveEditor(editor)
 	}
-	c.appModel.RemoveEditor(editor)
 }

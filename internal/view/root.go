@@ -84,20 +84,23 @@ func (c *rootComponent) Render() co.Instance {
 				Layout: layout.Fill(),
 			})
 
-			// for _, editor := range editors {
-			co.WithChild("editor-0101", co.New(appview.Editor, func() {
-				co.WithData(appview.EditorData{
-					AppModel: c.appModel,
-					Visible:  true,
-				})
-			}))
-			// }
+			c.appModel.EachEditor(func(editor *editormodel.Model) {
+				co.WithChild(editor.ID(), co.New(appview.Editor, func() {
+					co.WithData(appview.EditorData{
+						AppModel:    c.appModel,
+						EditorModel: editor,
+						Visible:     c.appModel.ActiveEditor() == editor,
+					})
+				}))
+			})
 		}))
 	})
 }
 
 func (c *rootComponent) OnEvent(event mvc.Event) {
 	switch event.(type) {
+	case appmodel.ActiveEditorChangedEvent:
+		c.Invalidate()
 	}
 }
 

@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/mokiat/gog/opt"
 	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
+	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	editorview "github.com/mokiat/lacking-studio/internal/view/editor"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
@@ -13,8 +14,9 @@ import (
 var Editor = mvc.EventListener(co.Define(&editorComponent{}))
 
 type EditorData struct {
-	AppModel *appmodel.Model
-	Visible  bool
+	AppModel    *appmodel.Model
+	EditorModel *editormodel.Model
+	Visible     bool
 }
 
 type editorComponent struct {
