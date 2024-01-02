@@ -14,6 +14,15 @@ func OpenWarning(scope co.Scope, message string) {
 	}))
 }
 
+func OpenError(scope co.Scope, message string) {
+	co.OpenOverlay(scope, co.New(widget.NotificationModal, func() {
+		co.WithData(widget.NotificationModalData{
+			Icon: co.OpenImage(scope, "icons/error.png"),
+			Text: message,
+		})
+	}))
+}
+
 func OpenConfirmation(scope co.Scope, message string, cb func()) {
 	co.OpenOverlay(scope, co.New(widget.ConfirmationModal, func() {
 		co.WithData(widget.ConfirmationModalData{
@@ -24,4 +33,8 @@ func OpenConfirmation(scope co.Scope, message string, cb func()) {
 			OnApply: cb,
 		})
 	}))
+}
+
+func OpenLoading(scope co.Scope) co.Overlay {
+	return co.OpenOverlay(scope, co.New(widget.LoadingModal, nil))
 }
