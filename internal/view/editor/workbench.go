@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	"github.com/mokiat/lacking-studio/internal/view/common"
 	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/debug/log"
@@ -17,7 +18,9 @@ import (
 
 var Workbench = co.Define(&workbenchComponent{})
 
-type WorkbenchData struct{}
+type WorkbenchData struct {
+	EditorModel *editormodel.Model
+}
 
 type workbenchComponent struct {
 	co.BaseComponent

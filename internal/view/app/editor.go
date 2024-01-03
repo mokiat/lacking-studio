@@ -22,13 +22,15 @@ type EditorData struct {
 type editorComponent struct {
 	co.BaseComponent
 
-	appModel *appmodel.Model
-	visible  bool
+	appModel    *appmodel.Model
+	editorModel *editormodel.Model
+	visible     bool
 }
 
 func (c *editorComponent) OnUpsert() {
 	data := co.GetData[EditorData](c.Properties())
 	c.appModel = data.AppModel
+	c.editorModel = data.EditorModel
 	c.visible = data.Visible
 }
 
@@ -50,7 +52,7 @@ func (c *editorComponent) Render() co.Instance {
 					Width:               opt.V(300),
 				})
 				co.WithData(editorview.NavigatorData{
-					// TODO
+					EditorModel: c.editorModel,
 				})
 			}))
 		}
@@ -60,7 +62,7 @@ func (c *editorComponent) Render() co.Instance {
 				HorizontalAlignment: layout.HorizontalAlignmentCenter,
 			})
 			co.WithData(editorview.WorkbenchData{
-				// TODO
+				EditorModel: c.editorModel,
 			})
 		}))
 
@@ -71,11 +73,10 @@ func (c *editorComponent) Render() co.Instance {
 					Width:               opt.V(300),
 				})
 				co.WithData(editorview.InspectorData{
-					// TODO
+					EditorModel: c.editorModel,
 				})
 			}))
 		}
-
 	})
 }
 
