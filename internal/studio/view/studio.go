@@ -55,16 +55,6 @@ func (c *studioComponent) Render() co.Instance {
 		})
 		co.WithScope(c.Scope())
 
-		co.WithChild("top", co.New(StudioHeader, func() {
-			co.WithLayoutData(layout.Data{
-				VerticalAlignment: layout.VerticalAlignmentTop,
-			})
-			co.WithData(StudioHeaderData{
-				StudioModel:      c.studioModel,
-				StudioController: c.studioController,
-			})
-		}))
-
 		if editor := c.studioModel.SelectedEditor(); editor != nil {
 			key := fmt.Sprintf("center-%s", editor.Resource().ID())
 			instance := c.studioController.RenderEditor(editor, c.Scope(), layout.Data{

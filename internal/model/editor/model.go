@@ -14,6 +14,9 @@ func NewModel(eventBus *mvc.EventBus, name string) *Model {
 
 		id:   uuid.NewString(),
 		name: name,
+
+		navigatorPage: NavigatorPageNodes,
+		inspectorPage: InspectorPageAsset,
 	}
 }
 
@@ -23,6 +26,9 @@ type Model struct {
 
 	id   string
 	name string
+
+	navigatorPage NavigatorPage
+	inspectorPage InspectorPage
 }
 
 func (m *Model) ID() string {
@@ -43,4 +49,30 @@ func (m *Model) Asset() *registry.Asset {
 
 func (m *Model) CanSave() bool {
 	return false
+}
+
+func (m *Model) NavigatorPage() NavigatorPage {
+	return m.navigatorPage
+}
+
+func (m *Model) SetNavigatorPage(page NavigatorPage) {
+	if page != m.navigatorPage {
+		m.navigatorPage = page
+		m.eventBus.Notify(NavigatorPageChangedEvent{
+			Editor: m,
+		})
+	}
+}
+
+func (m *Model) InspectorPage() InspectorPage {
+	return m.inspectorPage
+}
+
+func (m *Model) SetInspectorPage(page InspectorPage) {
+	if page != m.inspectorPage {
+		m.inspectorPage = page
+		m.eventBus.Notify(InspectorPageChangedEvent{
+			Editor: m,
+		})
+	}
 }

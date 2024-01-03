@@ -131,14 +131,6 @@ func (s *Studio) OnOpenResource(id string) {
 		log.Info("TODO: Open Scene")
 		return
 
-	case model.ResourceKindBinary:
-		binModel, err := model.OpenBinary(resourceModel)
-		if err != nil {
-			panic(err)
-		}
-		controller := NewBinaryEditor(s.globalCtx, s, editorModel, binModel)
-		s.editorControllers[editorModel] = controller
-
 	default:
 		panic(fmt.Errorf("unknown kind %q", resourceModel.Kind()))
 	}
