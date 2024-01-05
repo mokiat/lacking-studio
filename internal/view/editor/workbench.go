@@ -60,10 +60,10 @@ func (c *workbenchComponent) handleDrop(paths []string) bool {
 	path := paths[0]
 	switch ext := filepath.Ext(path); ext {
 	case ".glb":
-		c.loadGLB(path)
+		c.handleDropGLB(path)
 		return true
 	case ".hdr":
-		c.loadHDR(path)
+		c.handleDropHDR(path)
 		return true
 	default:
 		common.OpenWarning(c.Scope(), fmt.Sprintf("Unsupported file extension %q", ext))
@@ -105,7 +105,7 @@ func (c *workbenchComponent) handleViewportRender(framebuffer render.Framebuffer
 	c.renderAPI.EndRenderPass()
 }
 
-func (c *workbenchComponent) loadGLB(path string) {
+func (c *workbenchComponent) handleDropGLB(path string) {
 	loadingModal := common.OpenLoading(c.Scope())
 
 	promise := async.NewPromise[*pack.Model]()
@@ -120,7 +120,14 @@ func (c *workbenchComponent) loadGLB(path string) {
 	promise.OnSuccess(func(model *pack.Model) {
 		co.Schedule(c.Scope(), func() {
 			loadingModal.Close()
-			log.Info("Textures: %d", len(model.Textures))
+			co.OpenOverlay(c.Scope(), co.New(ModelImport, func() {
+				co.WithData(ModelImportData{
+					Model: model,
+				})
+				co.WithCallbackData(ModelImportCallbackData{
+					OnImport: c.importModel,
+				})
+			}))
 		})
 	})
 	promise.OnError(func(err error) {
@@ -146,6 +153,10 @@ func (c *workbenchComponent) parseGLB(path string) (*pack.Model, error) {
 	return model, nil
 }
 
-func (c *workbenchComponent) loadHDR(path string) {
+func (c *workbenchComponent) handleDropHDR(path string) {
 
+}
+
+func (c *workbenchComponent) importModel(model *pack.Model) {
+	log.Info("Texture count: %d", len(model.Textures))
 }
