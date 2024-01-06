@@ -1,9 +1,11 @@
 package editor
 
 import (
+	"strconv"
+
+	"github.com/mokiat/gog/ds"
 	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking/data/pack"
-	"github.com/mokiat/lacking/debug/log"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
@@ -25,10 +27,26 @@ type modelImportComponent struct {
 
 	model *pack.Model
 
+	nodesExpanded      bool
+	texturesExpanded   bool
+	materialsExpanded  bool
+	meshesExpanded     bool
+	animationsExpanded bool
+
+	selectedTextures *ds.Set[*pack.Image]
+
 	onImport func(model *pack.Model)
 }
 
 func (c *modelImportComponent) OnCreate() {
+	c.nodesExpanded = true
+	c.texturesExpanded = true
+	c.materialsExpanded = true
+	c.meshesExpanded = true
+	c.animationsExpanded = true
+
+	c.selectedTextures = ds.NewSet[*pack.Image](0)
+
 	data := co.GetData[ModelImportData](c.Properties())
 	c.model = data.Model
 
@@ -37,6 +55,8 @@ func (c *modelImportComponent) OnCreate() {
 	if c.onImport == nil {
 		c.onImport = func(model *pack.Model) {}
 	}
+
+	c.handleSelectAll()
 }
 
 func (c *modelImportComponent) Render() co.Instance {
@@ -99,32 +119,11 @@ func (c *modelImportComponent) Render() co.Instance {
 					})
 					co.WithData(std.AccordionData{
 						Title:    "Nodes",
-						Expanded: true, // TODO
+						Expanded: c.nodesExpanded,
 					})
-
-					co.WithChild("first", co.New(std.Checkbox, func() {
-						co.WithData(std.CheckboxData{
-							Checked: true,
-							Label:   "hello.png",
-						})
-						co.WithCallbackData(std.CheckboxCallbackData{
-							OnToggle: func(active bool) {
-								log.Info("Toggle to %t", active)
-							},
-						})
-					}))
-
-					co.WithChild("second", co.New(std.Checkbox, func() {
-						co.WithData(std.CheckboxData{
-							Checked: false,
-							Label:   "world.png",
-						})
-						co.WithCallbackData(std.CheckboxCallbackData{
-							OnToggle: func(active bool) {
-								log.Info("Toggle to %t", active)
-							},
-						})
-					}))
+					co.WithCallbackData(std.AccordionCallbackData{
+						OnToggle: c.handleNodesToggle,
+					})
 				}))
 
 				co.WithChild("textures", co.New(std.Accordion, func() {
@@ -133,7 +132,24 @@ func (c *modelImportComponent) Render() co.Instance {
 					})
 					co.WithData(std.AccordionData{
 						Title:    "Textures",
-						Expanded: true, // TODO
+						Expanded: c.texturesExpanded,
+					})
+					co.WithCallbackData(std.AccordionCallbackData{
+						OnToggle: c.handleTexturesToggle,
+					})
+
+					c.eachTexture(func(index int, texture *pack.Image, selected bool) {
+						co.WithChild(strconv.Itoa(index), co.New(std.Checkbox, func() {
+							co.WithData(std.CheckboxData{
+								Checked: selected,
+								Label:   texture.Name,
+							})
+							co.WithCallbackData(std.CheckboxCallbackData{
+								OnToggle: func(active bool) {
+									c.handleTextureSelection(texture, active)
+								},
+							})
+						}))
 					})
 				}))
 
@@ -143,7 +159,10 @@ func (c *modelImportComponent) Render() co.Instance {
 					})
 					co.WithData(std.AccordionData{
 						Title:    "Materials",
-						Expanded: true, // TODO
+						Expanded: c.materialsExpanded,
+					})
+					co.WithCallbackData(std.AccordionCallbackData{
+						OnToggle: c.handleMaterialsToggle,
 					})
 				}))
 
@@ -153,7 +172,10 @@ func (c *modelImportComponent) Render() co.Instance {
 					})
 					co.WithData(std.AccordionData{
 						Title:    "Meshes",
-						Expanded: true, // TODO
+						Expanded: c.meshesExpanded,
+					})
+					co.WithCallbackData(std.AccordionCallbackData{
+						OnToggle: c.handleMeshesToggle,
 					})
 				}))
 
@@ -163,7 +185,10 @@ func (c *modelImportComponent) Render() co.Instance {
 					})
 					co.WithData(std.AccordionData{
 						Title:    "Animations",
-						Expanded: true, // TODO
+						Expanded: c.animationsExpanded,
+					})
+					co.WithCallbackData(std.AccordionCallbackData{
+						OnToggle: c.handleAnimationsToggle,
 					})
 				}))
 			}))
@@ -205,11 +230,51 @@ func (c *modelImportComponent) Render() co.Instance {
 }
 
 func (c *modelImportComponent) handleSelectAll() {
-
+	c.eachTexture(func(_ int, texture *pack.Image, _ bool) {
+		c.selectedTextures.Add(texture)
+	})
+	c.Invalidate()
 }
 
 func (c *modelImportComponent) handleDeselectAll() {
+	c.eachTexture(func(_ int, texture *pack.Image, _ bool) {
+		c.selectedTextures.Remove(texture)
+	})
+	c.Invalidate()
+}
 
+func (c *modelImportComponent) handleNodesToggle() {
+	c.nodesExpanded = !c.nodesExpanded
+	c.Invalidate()
+}
+
+func (c *modelImportComponent) handleTexturesToggle() {
+	c.texturesExpanded = !c.texturesExpanded
+	c.Invalidate()
+}
+
+func (c *modelImportComponent) handleTextureSelection(texture *pack.Image, active bool) {
+	if active {
+		c.selectedTextures.Add(texture)
+	} else {
+		c.selectedTextures.Remove(texture)
+	}
+	c.Invalidate()
+}
+
+func (c *modelImportComponent) handleMaterialsToggle() {
+	c.materialsExpanded = !c.materialsExpanded
+	c.Invalidate()
+}
+
+func (c *modelImportComponent) handleMeshesToggle() {
+	c.meshesExpanded = !c.meshesExpanded
+	c.Invalidate()
+}
+
+func (c *modelImportComponent) handleAnimationsToggle() {
+	c.animationsExpanded = !c.animationsExpanded
+	c.Invalidate()
 }
 
 func (c *modelImportComponent) handleImport() {
@@ -219,4 +284,10 @@ func (c *modelImportComponent) handleImport() {
 
 func (c *modelImportComponent) handleCancel() {
 	co.CloseOverlay(c.Scope())
+}
+
+func (c *modelImportComponent) eachTexture(cb func(index int, texture *pack.Image, selected bool)) {
+	for i, texture := range c.model.Textures {
+		cb(i, texture, c.selectedTextures.Contains(texture))
+	}
 }
