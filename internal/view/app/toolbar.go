@@ -1,10 +1,7 @@
 package app
 
 import (
-	"fmt"
-
 	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
-	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	registryview "github.com/mokiat/lacking-studio/internal/view/registry"
 	"github.com/mokiat/lacking/debug/log"
@@ -163,18 +160,11 @@ func (c *toolbarComponent) OnEvent(event mvc.Event) {
 }
 
 func (c *toolbarComponent) onNewClicked() {
-	var name string
-	for i := 1; ; i++ {
-		name = fmt.Sprintf("Untitled-%d", i)
-		if !c.appModel.HasEditorWithName(name) {
-			break
-		}
-	}
-
-	eventBus := co.TypedValue[*mvc.EventBus](c.Scope())
-	editor := editormodel.NewModel(eventBus, name)
-	c.appModel.AddEditor(editor)
-	c.appModel.SetActiveEditor(editor)
+	co.OpenOverlay(c.Scope(), co.New(registryview.CreateAssetModal, func() {
+		co.WithCallbackData(registryview.CreateAssetModalCallbackData{
+			OnApply: c.onCreateScene,
+		})
+	}))
 }
 
 func (c *toolbarComponent) onBrowseClicked() {
@@ -186,6 +176,18 @@ func (c *toolbarComponent) onBrowseClicked() {
 			OnOpen: c.onAssetOpen,
 		})
 	}))
+}
+
+func (c *toolbarComponent) onCreateScene(name string) {
+	log.Info("Create: %s", name)
+
+	// TODO: Create asset in registry model.
+	// TODO: Open editor for new asset.
+	// eventBus := co.TypedValue[*mvc.EventBus](c.Scope())
+	// editor := editormodel.NewModel(eventBus, name)
+	// c.appModel.AddEditor(editor)
+	// c.appModel.SetActiveEditor(editor)
+
 }
 
 func (c *toolbarComponent) onSaveClicked() {
