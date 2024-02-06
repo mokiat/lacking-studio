@@ -6,6 +6,7 @@ import (
 	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	appview "github.com/mokiat/lacking-studio/internal/view/app"
+	asset "github.com/mokiat/lacking/game/newasset"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
@@ -24,9 +25,13 @@ type rootComponent struct {
 }
 
 func (c *rootComponent) OnCreate() {
+	context := c.Scope().Context()
+	registry := co.TypedValue[*asset.Registry](c.Scope())
+
 	c.eventBus = co.TypedValue[*mvc.EventBus](c.Scope())
 	c.appModel = appmodel.NewModel(c.eventBus)
-	c.registryModel = registrymodel.NewModel(c.eventBus)
+
+	c.registryModel = registrymodel.NewModel(c.eventBus, context, registry)
 
 	newEditor := editormodel.NewModel(c.eventBus, "Untitled-1")
 	c.appModel.AddEditor(newEditor)

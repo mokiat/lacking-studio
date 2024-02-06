@@ -31,6 +31,7 @@ type toolbarComponent struct {
 func (c *toolbarComponent) OnUpsert() {
 	data := co.GetData[ToolbarData](c.Properties())
 	c.appModel = data.AppModel
+	c.registryModel = data.RegistryModel
 }
 
 func (c *toolbarComponent) Render() co.Instance {

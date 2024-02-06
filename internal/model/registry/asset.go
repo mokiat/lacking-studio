@@ -1,16 +1,20 @@
 package registry
 
-import "github.com/mokiat/lacking/ui"
+import (
+	asset "github.com/mokiat/lacking/game/newasset"
+	"github.com/mokiat/lacking/ui"
+)
 
 type Asset struct {
+	delegate *asset.Resource
 }
 
 func (a *Asset) ID() string {
-	return "guid-guid-guid"
+	return a.delegate.ID()
 }
 
 func (a *Asset) Name() string {
-	return "Funny Game Character"
+	return a.delegate.Name()
 }
 
 func (a *Asset) Image() *ui.Image {
