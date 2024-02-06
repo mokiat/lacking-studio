@@ -1,6 +1,8 @@
 package registry
 
 import (
+	"strings"
+
 	"github.com/mokiat/gog/opt"
 	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	"github.com/mokiat/lacking/debug/log"
@@ -9,34 +11,40 @@ import (
 	"github.com/mokiat/lacking/ui/std"
 )
 
-var Modal = co.Define(&modalComponent{})
+var BrowseAssetsModal = co.Define(&browseAssetsModalComponent{})
 
-type ModalData struct {
+type BrowseAssetsModalData struct {
 	RegistryModel *registrymodel.Model
 }
 
-type ModalCallbackData struct {
+type BrowseAssetsModalCallbackData struct {
 	OnOpen func(asset *registrymodel.Asset)
 }
 
-type modalComponent struct {
+type browseAssetsModalComponent struct {
 	co.BaseComponent
 
 	registryModel *registrymodel.Model
 	selectedAsset *registrymodel.Asset
 
+	searchText string
+
 	onOpen func(asset *registrymodel.Asset)
 }
 
-func (c *modalComponent) OnUpsert() {
-	data := co.GetData[ModalData](c.Properties())
+func (c *browseAssetsModalComponent) OnUpsert() {
+	data := co.GetData[BrowseAssetsModalData](c.Properties())
 	c.registryModel = data.RegistryModel
 
-	callbackData := co.GetCallbackData[ModalCallbackData](c.Properties())
+	callbackData := co.GetCallbackData[BrowseAssetsModalCallbackData](c.Properties())
 	c.onOpen = callbackData.OnOpen
+
+	if c.selectedAsset != nil && !c.assetMatchesSearch(c.selectedAsset) {
+		c.selectedAsset = nil
+	}
 }
 
-func (c *modalComponent) Render() co.Instance {
+func (c *browseAssetsModalComponent) Render() co.Instance {
 	return co.New(std.Modal, func() {
 		co.WithLayoutData(layout.Data{
 			Width:            opt.V(600),
@@ -49,6 +57,17 @@ func (c *modalComponent) Render() co.Instance {
 			co.WithLayoutData(layout.Data{
 				VerticalAlignment: layout.VerticalAlignmentTop,
 			})
+
+			co.WithChild("rename", co.New(std.ToolbarButton, func() {
+				co.WithData(std.ToolbarButtonData{
+					Icon:    co.OpenImage(c.Scope(), "icons/edit.png"),
+					Text:    "Rename",
+					Enabled: opt.V(c.selectedAsset != nil),
+				})
+				co.WithCallbackData(std.ToolbarButtonCallbackData{
+					OnClick: c.handleRename,
+				})
+			}))
 
 			co.WithChild("clone", co.New(std.ToolbarButton, func() {
 				co.WithData(std.ToolbarButtonData{
@@ -76,7 +95,7 @@ func (c *modalComponent) Render() co.Instance {
 
 			co.WithChild("search", co.New(std.EditBox, func() {
 				co.WithData(std.EditBoxData{
-					Text: "Search text....",
+					Text: c.searchText,
 				})
 
 				co.WithLayoutData(layout.Data{
@@ -84,9 +103,8 @@ func (c *modalComponent) Render() co.Instance {
 				})
 
 				co.WithCallbackData(std.EditBoxCallbackData{
-					OnChange: func(text string) {
-						// c.setSearchText(text)
-					},
+					OnChange: c.handleSearchTextChange,
+					OnReject: c.handleSearchReject,
 				})
 			}))
 		}))
@@ -97,9 +115,10 @@ func (c *modalComponent) Render() co.Instance {
 			})
 			co.WithData(std.ScrollPaneData{
 				DisableHorizontal: true,
+				Focused:           false,
 			})
 
-			co.WithChild("content", co.New(std.List, func() {
+			co.WithChild("list", co.New(std.List, func() {
 				co.WithLayoutData(layout.Data{
 					GrowHorizontally: true,
 				})
@@ -157,30 +176,53 @@ func (c *modalComponent) Render() co.Instance {
 	})
 }
 
-func (c *modalComponent) handleClone() {
+func (c *browseAssetsModalComponent) handleRename() {
+	log.Info("RENAME!")
+}
+
+func (c *browseAssetsModalComponent) handleClone() {
 	log.Info("CLONE!")
 }
 
-func (c *modalComponent) handleDelete() {
+func (c *browseAssetsModalComponent) handleDelete() {
 	log.Info("DELETE")
 }
 
-func (c *modalComponent) eachAsset(cb func(asset *registrymodel.Asset)) {
+func (c *browseAssetsModalComponent) handleSearchTextChange(text string) {
+	c.searchText = text
+	c.Invalidate()
+}
+
+func (c *browseAssetsModalComponent) handleSearchReject() {
+	c.searchText = ""
+	c.Invalidate()
+}
+
+func (c *browseAssetsModalComponent) eachAsset(cb func(asset *registrymodel.Asset)) {
 	for _, asset := range c.registryModel.Assets() {
-		cb(asset)
+		if c.assetMatchesSearch(asset) {
+			cb(asset)
+		}
 	}
 }
 
-func (c *modalComponent) handleItemSelected(asset *registrymodel.Asset) {
+func (c *browseAssetsModalComponent) assetMatchesSearch(asset *registrymodel.Asset) bool {
+	if c.searchText == "" {
+		return true
+	}
+	return strings.Contains(asset.ID(), c.searchText) || strings.Contains(asset.Name(), c.searchText)
+}
+
+func (c *browseAssetsModalComponent) handleItemSelected(asset *registrymodel.Asset) {
 	c.selectedAsset = asset
 	c.Invalidate()
 }
 
-func (c *modalComponent) handleOpen() {
+func (c *browseAssetsModalComponent) handleOpen() {
 	co.CloseOverlay(c.Scope())
 	c.onOpen(c.selectedAsset)
 }
 
-func (c *modalComponent) handleCancel() {
+func (c *browseAssetsModalComponent) handleCancel() {
 	co.CloseOverlay(c.Scope())
 }

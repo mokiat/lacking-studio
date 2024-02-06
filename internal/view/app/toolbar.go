@@ -176,11 +176,11 @@ func (c *toolbarComponent) onNewClicked() {
 }
 
 func (c *toolbarComponent) onBrowseClicked() {
-	co.OpenOverlay(c.Scope(), co.New(registryview.Modal, func() {
-		co.WithData(registryview.ModalData{
+	co.OpenOverlay(c.Scope(), co.New(registryview.BrowseAssetsModal, func() {
+		co.WithData(registryview.BrowseAssetsModalData{
 			RegistryModel: c.registryModel,
 		})
-		co.WithCallbackData(registryview.ModalCallbackData{
+		co.WithCallbackData(registryview.BrowseAssetsModalCallbackData{
 			OnOpen: c.onAssetOpen,
 		})
 	}))
