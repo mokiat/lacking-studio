@@ -7,3 +7,7 @@ type NavigatorPageChangedEvent struct {
 type InspectorPageChangedEvent struct {
 	Editor *Model
 }
+
+type SelectionChangedEvent struct {
+	Editor *Model
+}

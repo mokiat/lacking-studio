@@ -6,7 +6,8 @@ import (
 )
 
 type Asset struct {
-	delegate *asset.Resource
+	delegate     *asset.Resource
+	previewImage *ui.Image
 }
 
 func (a *Asset) ID() string {
@@ -18,5 +19,5 @@ func (a *Asset) Name() string {
 }
 
 func (a *Asset) Image() *ui.Image {
-	return nil
+	return a.previewImage
 }

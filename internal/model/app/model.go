@@ -2,10 +2,10 @@ package app
 
 import (
 	"slices"
-	"strings"
 
 	"github.com/mokiat/gog"
 	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
+	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	"github.com/mokiat/lacking/ui/mvc"
 )
 
@@ -60,9 +60,9 @@ func (m *Model) EachEditor(cb func(editor *editormodel.Model)) {
 	}
 }
 
-func (m *Model) HasEditorWithName(name string) bool {
+func (m *Model) HasEditorForAsseet(asset *registrymodel.Asset) bool {
 	_, has := gog.FindFunc(m.editors, func(editor *editormodel.Model) bool {
-		return strings.EqualFold(editor.Name(), name)
+		return editor.Asset() == asset
 	})
 	return has
 }

@@ -1,19 +1,15 @@
 package editor
 
 import (
-	"github.com/google/uuid"
-	"github.com/mokiat/lacking-studio/internal/model/registry"
+	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mvc"
 )
 
-func NewModel(eventBus *mvc.EventBus, name string) *Model {
+func NewModel(eventBus *mvc.EventBus, asset *registrymodel.Asset) *Model {
 	return &Model{
 		eventBus: eventBus,
-		asset:    nil,
-
-		id:   uuid.NewString(),
-		name: name,
+		asset:    asset,
 
 		navigatorPage: NavigatorPageNodes,
 		inspectorPage: InspectorPageAsset,
@@ -22,28 +18,29 @@ func NewModel(eventBus *mvc.EventBus, name string) *Model {
 
 type Model struct {
 	eventBus *mvc.EventBus
-	asset    *registry.Asset
-
-	id   string
-	name string
+	asset    *registrymodel.Asset
 
 	navigatorPage NavigatorPage
 	inspectorPage InspectorPage
+
+	textures []*Texture
+
+	selection any
 }
 
 func (m *Model) ID() string {
-	return m.id
+	return m.asset.ID()
 }
 
 func (m *Model) Name() string {
-	return m.name
+	return m.asset.Name()
 }
 
 func (m *Model) Image() *ui.Image {
-	return nil
+	return m.asset.Image()
 }
 
-func (m *Model) Asset() *registry.Asset {
+func (m *Model) Asset() *registrymodel.Asset {
 	return m.asset
 }
 
@@ -72,6 +69,23 @@ func (m *Model) SetInspectorPage(page InspectorPage) {
 	if page != m.inspectorPage {
 		m.inspectorPage = page
 		m.eventBus.Notify(InspectorPageChangedEvent{
+			Editor: m,
+		})
+	}
+}
+
+func (m *Model) Textures() []*Texture {
+	return m.textures
+}
+
+func (m *Model) Selection() any {
+	return m.selection
+}
+
+func (m *Model) SetSelection(selection any) {
+	if selection != m.selection {
+		m.selection = selection
+		m.eventBus.Notify(SelectionChangedEvent{
 			Editor: m,
 		})
 	}

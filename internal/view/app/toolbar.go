@@ -2,7 +2,9 @@ package app
 
 import (
 	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
+	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
+	"github.com/mokiat/lacking-studio/internal/view/common"
 	registryview "github.com/mokiat/lacking-studio/internal/view/registry"
 	"github.com/mokiat/lacking/debug/log"
 	co "github.com/mokiat/lacking/ui/component"
@@ -21,8 +23,14 @@ type ToolbarData struct {
 type toolbarComponent struct {
 	co.BaseComponent
 
+	eventBus *mvc.EventBus
+
 	appModel      *appmodel.Model
 	registryModel *registrymodel.Model
+}
+
+func (c *toolbarComponent) OnCreate() {
+	c.eventBus = co.TypedValue[*mvc.EventBus](c.Scope())
 }
 
 func (c *toolbarComponent) OnUpsert() {
@@ -179,15 +187,15 @@ func (c *toolbarComponent) onBrowseClicked() {
 }
 
 func (c *toolbarComponent) onCreateScene(name string) {
-	log.Info("Create: %s", name)
-
-	// TODO: Create asset in registry model.
-	// TODO: Open editor for new asset.
-	// eventBus := co.TypedValue[*mvc.EventBus](c.Scope())
-	// editor := editormodel.NewModel(eventBus, name)
-	// c.appModel.AddEditor(editor)
-	// c.appModel.SetActiveEditor(editor)
-
+	asset, err := c.registryModel.CreateAsset(name)
+	if err != nil {
+		log.Error("Failed to create asset: %v", err.Error())
+		common.OpenError(c.Scope(), "Error creating scene!\nCheck logs for more info.")
+		return
+	}
+	editor := editormodel.NewModel(c.eventBus, asset)
+	c.appModel.AddEditor(editor)
+	c.appModel.SetActiveEditor(editor)
 }
 
 func (c *toolbarComponent) onSaveClicked() {

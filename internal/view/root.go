@@ -33,10 +33,6 @@ func (c *rootComponent) OnCreate() {
 
 	c.registryModel = registrymodel.NewModel(c.eventBus, context, registry)
 
-	newEditor := editormodel.NewModel(c.eventBus, "Untitled-1")
-	c.appModel.AddEditor(newEditor)
-	c.appModel.SetActiveEditor(newEditor)
-
 	co.Window(c.Scope()).SetCloseInterceptor(c.onCloseRequested)
 }
 
