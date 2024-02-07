@@ -49,7 +49,7 @@ func (c *toolbarComponent) Render() co.Instance {
 				Text: "New",
 			})
 			co.WithCallbackData(std.ToolbarButtonCallbackData{
-				OnClick: c.onNewClicked,
+				OnClick: c.handleNewClicked,
 			})
 		}))
 
@@ -59,7 +59,7 @@ func (c *toolbarComponent) Render() co.Instance {
 				Text: "Browse",
 			})
 			co.WithCallbackData(std.ToolbarButtonCallbackData{
-				OnClick: c.onBrowseClicked,
+				OnClick: c.handleBrowseClicked,
 			})
 		}))
 
@@ -167,32 +167,38 @@ func (c *toolbarComponent) OnEvent(event mvc.Event) {
 	}
 }
 
-func (c *toolbarComponent) onNewClicked() {
+func (c *toolbarComponent) handleNewClicked() {
 	co.OpenOverlay(c.Scope(), co.New(registryview.CreateAssetModal, func() {
 		co.WithCallbackData(registryview.CreateAssetModalCallbackData{
-			OnApply: c.onCreateScene,
+			OnApply: c.handleCreateScene,
 		})
 	}))
 }
 
-func (c *toolbarComponent) onBrowseClicked() {
-	co.OpenOverlay(c.Scope(), co.New(registryview.BrowseAssetsModal, func() {
-		co.WithData(registryview.BrowseAssetsModalData{
-			RegistryModel: c.registryModel,
-		})
-		co.WithCallbackData(registryview.BrowseAssetsModalCallbackData{
-			OnOpen: c.onAssetOpen,
-		})
-	}))
-}
-
-func (c *toolbarComponent) onCreateScene(name string) {
+func (c *toolbarComponent) handleCreateScene(name string) {
 	asset, err := c.registryModel.CreateAsset(name)
 	if err != nil {
 		log.Error("Failed to create asset: %v", err.Error())
 		common.OpenError(c.Scope(), "Error creating scene!\nCheck logs for more info.")
 		return
 	}
+	editor := editormodel.NewModel(c.eventBus, asset)
+	c.appModel.AddEditor(editor)
+	c.appModel.SetActiveEditor(editor)
+}
+
+func (c *toolbarComponent) handleBrowseClicked() {
+	co.OpenOverlay(c.Scope(), co.New(registryview.BrowseAssetsModal, func() {
+		co.WithData(registryview.BrowseAssetsModalData{
+			RegistryModel: c.registryModel,
+		})
+		co.WithCallbackData(registryview.BrowseAssetsModalCallbackData{
+			OnOpen: c.handleAssetOpen,
+		})
+	}))
+}
+
+func (c *toolbarComponent) handleAssetOpen(asset *registrymodel.Asset) {
 	editor := editormodel.NewModel(c.eventBus, asset)
 	c.appModel.AddEditor(editor)
 	c.appModel.SetActiveEditor(editor)
@@ -224,8 +230,4 @@ func (c *toolbarComponent) onExpandInspector() {
 
 func (c *toolbarComponent) onCollapseInspector() {
 	c.appModel.SetInpsectorVisible(false)
-}
-
-func (c *toolbarComponent) onAssetOpen(asset *registrymodel.Asset) {
-	log.Info("OPEN")
 }

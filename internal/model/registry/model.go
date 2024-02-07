@@ -38,9 +38,7 @@ func (m *Model) Assets() []*Asset {
 }
 
 func (m *Model) CreateAsset(name string) (*Asset, error) {
-	resource, err := m.delegate.CreateResource(name, asset.Fragment{
-		// TODO: Initialize an interesting scene.
-	})
+	resource, err := m.delegate.CreateResource(name, asset.Fragment{})
 	if err != nil {
 		return nil, fmt.Errorf("error creating resource: %w", err)
 	}

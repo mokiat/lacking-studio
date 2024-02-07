@@ -28,9 +28,9 @@ type browseAssetsModalComponent struct {
 	co.BaseComponent
 
 	registryModel *registrymodel.Model
-	selectedAsset *registrymodel.Asset
 
-	searchText string
+	selectedAsset *registrymodel.Asset
+	searchText    string
 
 	onOpen func(asset *registrymodel.Asset)
 }
