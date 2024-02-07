@@ -82,7 +82,7 @@ func (c *navigatorComponent) Render() co.Instance {
 				VerticalAlignment: layout.VerticalAlignmentCenter,
 			})
 			co.WithData(std.ContainerData{
-				BackgroundColor: opt.V(ui.Red()),
+				BackgroundColor: opt.V(std.SurfaceColor),
 			})
 		}))
 	})
