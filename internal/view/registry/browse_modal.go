@@ -1,17 +1,20 @@
 package registry
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/mokiat/gog/opt"
 	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
+	"github.com/mokiat/lacking-studio/internal/view/common"
 	"github.com/mokiat/lacking/debug/log"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
+	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/ui/std"
 )
 
-var BrowseAssetsModal = co.Define(&browseAssetsModalComponent{})
+var BrowseAssetsModal = mvc.EventListener(co.Define(&browseAssetsModalComponent{}))
 
 type BrowseAssetsModalData struct {
 	RegistryModel *registrymodel.Model
@@ -176,16 +179,58 @@ func (c *browseAssetsModalComponent) Render() co.Instance {
 	})
 }
 
+func (c *browseAssetsModalComponent) OnEvent(event mvc.Event) {
+	switch event.(type) {
+	case registrymodel.AssetsChangedEvent:
+		c.Invalidate()
+	}
+}
+
 func (c *browseAssetsModalComponent) handleRename() {
-	log.Info("RENAME!")
+	co.OpenOverlay(c.Scope(), co.New(RenameAssetModal, func() {
+		co.WithData(RenameAssetModalData{
+			OldName: c.selectedAsset.Name(),
+		})
+		co.WithCallbackData(RenameAssetModalCallbackData{
+			OnApply: c.handleRenameApply,
+		})
+	}))
+}
+
+func (c *browseAssetsModalComponent) handleRenameApply(newName string) {
+	if err := c.registryModel.RenameAsset(c.selectedAsset, newName); err != nil {
+		log.Error("Failed to rename scene: %s", err.Error())
+		common.OpenError(c.Scope(), "Error renaming scene!")
+		return
+	}
 }
 
 func (c *browseAssetsModalComponent) handleClone() {
-	log.Info("CLONE!")
+	newAsset, err := c.registryModel.CloneAsset(c.selectedAsset)
+	if err != nil {
+		log.Error("Failed to clone scene: %s", err.Error())
+		common.OpenError(c.Scope(), "Error cloning scene!")
+		return
+	}
+	c.searchText = newAsset.Name()
+	c.selectedAsset = newAsset
+	c.Invalidate()
 }
 
 func (c *browseAssetsModalComponent) handleDelete() {
-	log.Info("DELETE")
+	message := fmt.Sprintf("Will delete scene:\n%q\n\nAre you sure?", c.selectedAsset.Name())
+	common.OpenConfirmation(c.Scope(), message, c.handleDeleteConfirm)
+}
+
+func (c *browseAssetsModalComponent) handleDeleteConfirm() {
+	defer func() {
+		c.selectedAsset = nil
+	}()
+	if err := c.registryModel.DeleteAsset(c.selectedAsset); err != nil {
+		log.Error("Failed to delete scene: %s", err.Error())
+		common.OpenError(c.Scope(), "Error deleting scene!")
+		return
+	}
 }
 
 func (c *browseAssetsModalComponent) handleSearchTextChange(text string) {
