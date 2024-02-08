@@ -19,7 +19,6 @@ import (
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/std"
 	"github.com/mokiat/lacking/util/async"
-	"github.com/mokiat/lacking/util/blob"
 )
 
 var Workbench = co.Define(&workbenchComponent{})
@@ -52,7 +51,7 @@ func (c *workbenchComponent) OnCreate() {
 	c.gfxCamera.SetMatrix(
 		dprec.Mat4MultiProd(
 			dprec.RotationMat4(dprec.Degrees(15), 0.0, 1.0, 0.0),
-			dprec.RotationMat4(dprec.Degrees(15), -1.0, 0.0, 0.0),
+			dprec.RotationMat4(dprec.Degrees(30), -1.0, 0.0, 0.0),
 			dprec.TranslationMat4(0.0, 0.0, 10.0),
 		),
 	)
@@ -121,53 +120,6 @@ func (c *workbenchComponent) handleViewportMouseEvent(event std.ViewportMouseEve
 }
 
 func (c *workbenchComponent) handleViewportRender(framebuffer render.Framebuffer, size ui.Size) {
-	// if false {
-	// 	c.gfxEngine.Debug().Reset()
-	// 	c.gfxEngine.Debug().Line(
-	// 		dprec.ZeroVec3(),
-	// 		dprec.NewVec3(1000.0, 0.0, 0.0),
-	// 		dprec.NewVec3(1.0, 0.0, 0.0),
-	// 	)
-	// 	c.gfxEngine.Debug().Line(
-	// 		dprec.ZeroVec3(),
-	// 		dprec.NewVec3(-1000.0, 0.0, 0.0),
-	// 		dprec.NewVec3(0.3, 0.0, 0.0),
-	// 	)
-	// 	c.gfxEngine.Debug().Line(
-	// 		dprec.ZeroVec3(),
-	// 		dprec.NewVec3(0.0, 0.0, 1000.0),
-	// 		dprec.NewVec3(0.0, 0.0, 1.0),
-	// 	)
-	// 	c.gfxEngine.Debug().Line(
-	// 		dprec.ZeroVec3(),
-	// 		dprec.NewVec3(0.0, 0.0, -1000.0),
-	// 		dprec.NewVec3(0.0, 0.0, 0.3),
-	// 	)
-	// 	const distance = 10
-	// 	for i := 1; i <= distance; i++ {
-	// 		c.gfxEngine.Debug().Line(
-	// 			dprec.NewVec3(-float64(i), 0.0, -distance),
-	// 			dprec.NewVec3(-float64(i), 0.0, distance),
-	// 			dprec.NewVec3(0.3, 0.3, 0.3),
-	// 		)
-	// 		c.gfxEngine.Debug().Line(
-	// 			dprec.NewVec3(float64(i), 0.0, -distance),
-	// 			dprec.NewVec3(float64(i), 0.0, distance),
-	// 			dprec.NewVec3(0.3, 0.3, 0.3),
-	// 		)
-	// 		c.gfxEngine.Debug().Line(
-	// 			dprec.NewVec3(-distance, 0.0, -float64(i)),
-	// 			dprec.NewVec3(distance, 0.0, -float64(i)),
-	// 			dprec.NewVec3(0.3, 0.3, 0.3),
-	// 		)
-	// 		c.gfxEngine.Debug().Line(
-	// 			dprec.NewVec3(-distance, 0.0, float64(i)),
-	// 			dprec.NewVec3(distance, 0.0, float64(i)),
-	// 			dprec.NewVec3(0.3, 0.3, 0.3),
-	// 		)
-	// 	}
-	// }
-
 	c.gfxScene.RenderFramebuffer(framebuffer, graphics.Viewport{
 		X:      0,
 		Y:      0,
@@ -233,63 +185,134 @@ func (c *workbenchComponent) importModel(model *pack.Model) {
 }
 
 func createGridMeshDefinition(gfxEngine *graphics.Engine) *graphics.MeshDefinition {
-	gridShading := gfxEngine.CreateShading(graphics.ShadingInfo{
-		ShadowFunc:   nil,
-		GeometryFunc: nil,
+	lightRedShading := gfxEngine.CreateShading(graphics.ShadingInfo{
 		ForwardFunc: func(palette *shading.ForwardPalette) {
-			color := palette.ConstVec4(0.0, 0.0, 1.0, 1.0)
-			color = palette.MulVec4(color, 0.1)
-			palette.OutputColor(color)
-		},
-		EmissiveFunc: nil,
-		LightingFunc: nil,
-	})
-
-	gridMaterialDef := gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		BackfaceCulling: false,
-		AlphaTesting:    false,
-		AlphaBlending:   false,
-		AlphaThreshold:  0.0,
-		Vectors:         []sprec.Vec4{},
-		TwoDTextures:    []render.Texture{},
-		CubeTextures:    []render.Texture{},
-		Shading:         gridShading,
-	})
-
-	// gridMeshBuilder := graphics.NewMeshBuilder(
-	// 	graphics.MeshBuilderWithCoords(),
-	// )
-	// gridMeshBuilder.BuildInfo() // TODO
-
-	// TODO: Draw actual lines, not a quad.
-	vertexData := blob.NewPlotter(make([]byte, 4*3*4))
-	vertexData.PlotSPVec3(sprec.NewVec3(-5.0, 5.0, 0.0))
-	vertexData.PlotSPVec3(sprec.NewVec3(-5.0, -5.0, 0.0))
-	vertexData.PlotSPVec3(sprec.NewVec3(5.0, -5.0, 0.0))
-	vertexData.PlotSPVec3(sprec.NewVec3(5.0, 5.0, 0.0))
-
-	indexData := blob.NewPlotter(make([]byte, 6*2))
-	indexData.PlotUint16(0)
-	indexData.PlotUint16(1)
-	indexData.PlotUint16(2)
-	indexData.PlotUint16(0)
-	indexData.PlotUint16(2)
-	indexData.PlotUint16(3)
-
-	return gfxEngine.CreateMeshDefinition(graphics.MeshDefinitionInfo{
-		VertexData: vertexData.Data(),
-		VertexFormat: graphics.VertexFormat{
-			HasCoord: true,
-		},
-		IndexData:   indexData.Data(),
-		IndexFormat: graphics.IndexFormatU16,
-		Fragments: []graphics.MeshFragmentDefinitionInfo{
-			{
-				Primitive:   graphics.PrimitiveTriangles,
-				IndexOffset: 0,
-				IndexCount:  8,
-				Material:    gridMaterialDef,
-			},
+			palette.OutputColor(palette.ConstVec4(1.0, 0.0, 0.0, 1.0))
 		},
 	})
+	darkRedShading := gfxEngine.CreateShading(graphics.ShadingInfo{
+		ForwardFunc: func(palette *shading.ForwardPalette) {
+			palette.OutputColor(palette.ConstVec4(0.1, 0.0, 0.0, 1.0))
+		},
+	})
+	lightGreenShading := gfxEngine.CreateShading(graphics.ShadingInfo{
+		ForwardFunc: func(palette *shading.ForwardPalette) {
+			palette.OutputColor(palette.ConstVec4(0.0, 1.0, 0.0, 1.0))
+		},
+	})
+	darkGreenShading := gfxEngine.CreateShading(graphics.ShadingInfo{
+		ForwardFunc: func(palette *shading.ForwardPalette) {
+			palette.OutputColor(palette.ConstVec4(0.0, 0.1, 0.0, 1.0))
+		},
+	})
+	grayShading := gfxEngine.CreateShading(graphics.ShadingInfo{
+		ForwardFunc: func(palette *shading.ForwardPalette) {
+			palette.OutputColor(palette.ConstVec4(0.5, 0.5, 0.5, 1.0))
+		},
+	})
+
+	lightRedMaterialDef := gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
+		Shading: lightRedShading,
+	})
+	darkRedMaterialDef := gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
+		Shading: darkRedShading,
+	})
+	lightGreenMaterialDef := gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
+		Shading: lightGreenShading,
+	})
+	darkGreenMaterialDef := gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
+		Shading: darkGreenShading,
+	})
+	grayMaterialDef := gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
+		Shading: grayShading,
+	})
+
+	gridMeshBuilder := graphics.NewMeshBuilder(
+		graphics.MeshBuilderWithCoords(),
+	)
+	gridMeshBuilder.UsePrimitive(graphics.PrimitiveLines)
+
+	const (
+		gridSize   = 100.0
+		gridOffset = 2.0
+	)
+
+	// Positive X axis
+	gridMeshBuilder.AddVertex()
+	gridMeshBuilder.Coord(0.0, 0.0, 0.0)
+	gridMeshBuilder.AddVertex()
+	gridMeshBuilder.Coord(gridSize, 0.0, 0.0)
+
+	gridMeshBuilder.UseMaterial(lightRedMaterialDef)
+	gridMeshBuilder.AddIndex(0)
+	gridMeshBuilder.AddIndex(1)
+
+	// Negative X axis
+	gridMeshBuilder.AddVertex()
+	gridMeshBuilder.Coord(0.0, 0.0, 0.0)
+	gridMeshBuilder.AddVertex()
+	gridMeshBuilder.Coord(-gridSize, 0.0, 0.0)
+
+	gridMeshBuilder.UseMaterial(darkRedMaterialDef)
+	gridMeshBuilder.AddIndex(2)
+	gridMeshBuilder.AddIndex(3)
+
+	// Positive Z axis
+	gridMeshBuilder.AddVertex()
+	gridMeshBuilder.Coord(0.0, 0.0, 0.0)
+	gridMeshBuilder.AddVertex()
+	gridMeshBuilder.Coord(0.0, 0.0, gridSize)
+
+	gridMeshBuilder.UseMaterial(lightGreenMaterialDef)
+	gridMeshBuilder.AddIndex(4)
+	gridMeshBuilder.AddIndex(5)
+
+	// Negative Z axis
+	gridMeshBuilder.AddVertex()
+	gridMeshBuilder.Coord(0.0, 0.0, 0.0)
+	gridMeshBuilder.AddVertex()
+	gridMeshBuilder.Coord(0.0, 0.0, -gridSize)
+
+	gridMeshBuilder.UseMaterial(darkGreenMaterialDef)
+	gridMeshBuilder.AddIndex(6)
+	gridMeshBuilder.AddIndex(7)
+
+	// Grid
+	index := uint32(8)
+	gridMeshBuilder.UseMaterial(grayMaterialDef)
+	for i := 1; i <= int(gridSize/gridOffset); i++ {
+		// Along X axis
+		gridMeshBuilder.AddVertex()
+		gridMeshBuilder.Coord(-gridSize, 0.0, -float32(i)*gridOffset)
+		gridMeshBuilder.AddVertex()
+		gridMeshBuilder.Coord(gridSize, 0.0, -float32(i)*gridOffset)
+
+		gridMeshBuilder.AddVertex()
+		gridMeshBuilder.Coord(-gridSize, 0.0, float32(i)*gridOffset)
+		gridMeshBuilder.AddVertex()
+		gridMeshBuilder.Coord(gridSize, 0.0, float32(i)*gridOffset)
+
+		// Along Z axis
+		gridMeshBuilder.AddVertex()
+		gridMeshBuilder.Coord(-float32(i)*gridOffset, 0.0, -gridSize)
+		gridMeshBuilder.AddVertex()
+		gridMeshBuilder.Coord(-float32(i)*gridOffset, 0.0, gridSize)
+
+		gridMeshBuilder.AddVertex()
+		gridMeshBuilder.Coord(float32(i)*gridOffset, 0.0, -gridSize)
+		gridMeshBuilder.AddVertex()
+		gridMeshBuilder.Coord(float32(i)*gridOffset, 0.0, gridSize)
+
+		gridMeshBuilder.AddIndex(index + 0)
+		gridMeshBuilder.AddIndex(index + 1)
+		gridMeshBuilder.AddIndex(index + 2)
+		gridMeshBuilder.AddIndex(index + 3)
+		gridMeshBuilder.AddIndex(index + 4)
+		gridMeshBuilder.AddIndex(index + 5)
+		gridMeshBuilder.AddIndex(index + 6)
+		gridMeshBuilder.AddIndex(index + 7)
+		index += 8
+	}
+
+	return gfxEngine.CreateMeshDefinition(gridMeshBuilder.BuildInfo())
 }
