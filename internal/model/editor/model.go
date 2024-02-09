@@ -23,6 +23,8 @@ type Model struct {
 	navigatorPage NavigatorPage
 	inspectorPage InspectorPage
 
+	nodes NodeList
+
 	textures []*Texture
 
 	selection any

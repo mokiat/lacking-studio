@@ -109,6 +109,13 @@ func (c *workbenchComponent) handleDrop(paths []string) bool {
 }
 
 func (c *workbenchComponent) handleViewportKeyboardEvent(element *ui.Element, event ui.KeyboardEvent) bool {
+	if event.Modifiers.Contains(ui.KeyModifierShift) && event.Code == ui.KeyCodeA {
+		if event.Action == ui.KeyboardActionUp {
+			c.openAddNodeModal()
+		}
+		return true
+	}
+
 	return c.cameraGizmo.OnKeyboardEvent(element, event)
 }
 
@@ -126,6 +133,18 @@ func (c *workbenchComponent) handleViewportRender(framebuffer render.Framebuffer
 		Width:  size.Width,
 		Height: size.Height,
 	})
+}
+
+func (c *workbenchComponent) openAddNodeModal() {
+	co.OpenOverlay(c.Scope(), co.New(AddNodeModal, func() {
+		co.WithCallbackData(AddNodeModalCallbackData{
+			OnAdd: c.handleAddNode,
+		})
+	}))
+}
+
+func (c *workbenchComponent) handleAddNode(kind editormodel.NodeKind) {
+	log.Info("Adding node of kind %v", kind)
 }
 
 func (c *workbenchComponent) handleDropGLB(path string) {
