@@ -85,13 +85,6 @@ func (s *Studio) OnCreateResource(kind model.ResourceKind) *model.Resource {
 		log.Info("TODO: Open Scene")
 		return nil
 
-	case model.ResourceKindBinary:
-		binModel, err := model.CreateBinary(s.registry())
-		if err != nil {
-			panic(err)
-		}
-		return binModel.Resource()
-
 	default:
 		panic(fmt.Errorf("unknown kind %q", kind))
 	}

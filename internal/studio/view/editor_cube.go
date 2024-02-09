@@ -5,7 +5,6 @@ import (
 	"github.com/mokiat/lacking-studio/internal/studio/global"
 	"github.com/mokiat/lacking-studio/internal/studio/model"
 	"github.com/mokiat/lacking-studio/internal/studio/model/action"
-	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
@@ -75,9 +74,8 @@ func (c *cubeTextureEditorComponent) Render() co.Instance {
 					API: co.TypedValue[global.Context](c.Scope()).API,
 				})
 				co.WithCallbackData(std.ViewportCallbackData{
-					OnKeyboardEvent: func(event ui.KeyboardEvent) bool { return false },
-					OnMouseEvent:    c.viz.OnViewportMouseEvent,
-					OnRender:        c.viz.OnViewportRender,
+					OnMouseEvent: c.viz.OnViewportMouseEvent,
+					OnRender:     c.viz.OnViewportRender,
 				})
 			}))
 		}))

@@ -26,7 +26,6 @@ const (
 	ResourceKindCubeTexture ResourceKind = "cube_texture"
 	ResourceKindModel       ResourceKind = "model"
 	ResourceKindScene       ResourceKind = "scene"
-	ResourceKindBinary      ResourceKind = "binary"
 )
 
 type ResourceKind = string

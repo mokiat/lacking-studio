@@ -9,8 +9,8 @@ import (
 )
 
 type VisualizationController interface {
-	OnViewportKeyboardEvent(event ui.KeyboardEvent) bool
-	OnViewportMouseEvent(event std.ViewportMouseEvent) bool
+	OnViewportKeyboardEvent(element *ui.Element, event ui.KeyboardEvent) bool
+	OnViewportMouseEvent(element *ui.Element, event ui.MouseEvent) bool
 	OnViewportRender(framebuffer render.Framebuffer, size ui.Size)
 }
 

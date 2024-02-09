@@ -10,7 +10,6 @@ import (
 	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mvc"
-	"github.com/mokiat/lacking/ui/std"
 )
 
 func NewCubeTexture(api render.API, engine *graphics.Engine, texModel *model.CubeTexture) *CubeTexture {
@@ -61,84 +60,85 @@ type CubeTexture struct {
 }
 
 func (t *CubeTexture) TakeSnapshot(size ui.Size) image.Image {
-	colorTexture := t.api.CreateColorTexture2D(render.ColorTexture2DInfo{
-		Width:           size.Width,
-		Height:          size.Height,
-		Wrapping:        render.WrapModeClamp,
-		Filtering:       render.FilterModeNearest,
-		Mipmapping:      false,
-		GammaCorrection: false,
-		Format:          render.DataFormatRGBA8,
-	})
-	defer colorTexture.Release()
+	panic("TODO")
+	// colorTexture := t.api.CreateColorTexture2D(render.ColorTexture2DInfo{
+	// 	Width:           size.Width,
+	// 	Height:          size.Height,
+	// 	Wrapping:        render.WrapModeClamp,
+	// 	Filtering:       render.FilterModeNearest,
+	// 	Mipmapping:      false,
+	// 	GammaCorrection: false,
+	// 	Format:          render.DataFormatRGBA8,
+	// })
+	// defer colorTexture.Release()
 
-	framebuffer := t.api.CreateFramebuffer(render.FramebufferInfo{
-		ColorAttachments: [4]render.Texture{
-			colorTexture,
-		},
-	})
-	defer framebuffer.Release()
+	// framebuffer := t.api.CreateFramebuffer(render.FramebufferInfo{
+	// 	ColorAttachments: [4]render.Texture{
+	// 		colorTexture,
+	// 	},
+	// })
+	// defer framebuffer.Release()
 
-	buffer := t.api.CreatePixelTransferBuffer(render.BufferInfo{
-		Size: 4 * size.Width * size.Height,
-	})
-	defer buffer.Release()
+	// buffer := t.api.CreatePixelTransferBuffer(render.BufferInfo{
+	// 	Size: 4 * size.Width * size.Height,
+	// })
+	// defer buffer.Release()
 
-	t.api.BeginRenderPass(render.RenderPassInfo{
-		Framebuffer: framebuffer,
-		Viewport: render.Area{
-			X:      0,
-			Y:      0,
-			Width:  size.Width,
-			Height: size.Height,
-		},
-		DepthLoadOp:    render.LoadOperationDontCare,
-		DepthStoreOp:   render.StoreOperationDontCare,
-		StencilLoadOp:  render.LoadOperationDontCare,
-		StencilStoreOp: render.StoreOperationDontCare,
-		Colors: [4]render.ColorAttachmentInfo{
-			{
-				LoadOp:     render.LoadOperationClear,
-				ClearValue: [4]float32{0.0, 0.0, 0.0, 1.0},
-			},
-		},
-	})
+	// t.api.BeginRenderPass(render.RenderPassInfo{
+	// 	Framebuffer: framebuffer,
+	// 	Viewport: render.Area{
+	// 		X:      0,
+	// 		Y:      0,
+	// 		Width:  size.Width,
+	// 		Height: size.Height,
+	// 	},
+	// 	DepthLoadOp:    render.LoadOperationDontCare,
+	// 	DepthStoreOp:   render.StoreOperationDontCare,
+	// 	StencilLoadOp:  render.LoadOperationDontCare,
+	// 	StencilStoreOp: render.StoreOperationDontCare,
+	// 	Colors: [4]render.ColorAttachmentInfo{
+	// 		{
+	// 			LoadOp:     render.LoadOperationClear,
+	// 			ClearValue: [4]float32{0.0, 0.0, 0.0, 1.0},
+	// 		},
+	// 	},
+	// })
 
-	t.scene.RenderFramebuffer(framebuffer, graphics.Viewport{
-		X:      0,
-		Y:      0,
-		Width:  size.Width,
-		Height: size.Height,
-	})
+	// t.scene.RenderFramebuffer(framebuffer, graphics.Viewport{
+	// 	X:      0,
+	// 	Y:      0,
+	// 	Width:  size.Width,
+	// 	Height: size.Height,
+	// })
 
-	commands := t.api.CreateCommandQueue()
-	defer commands.Release()
-	commands.CopyContentToBuffer(render.CopyContentToBufferInfo{
-		Buffer: buffer,
-		X:      0,
-		Y:      0,
-		Width:  size.Width,
-		Height: size.Height,
-		Format: render.DataFormatRGBA8,
-	})
-	t.api.SubmitQueue(commands)
+	// commands := t.api.CreateCommandQueue()
+	// defer commands.Release()
+	// commands.CopyContentToBuffer(render.CopyFramebufferToBufferInfo{
+	// 	Buffer: buffer,
+	// 	X:      0,
+	// 	Y:      0,
+	// 	Width:  size.Width,
+	// 	Height: size.Height,
+	// 	Format: render.DataFormatRGBA8,
+	// })
+	// t.api.SubmitQueue(commands)
 
-	previewImg := image.NewRGBA(image.Rect(0, 0, size.Width, size.Height))
-	buffer.Fetch(render.BufferFetchInfo{
-		Offset: 0,
-		Target: previewImg.Pix,
-	})
-	for y := 0; y < size.Height/2; y++ {
-		topOffset := y * (4 * size.Width)
-		bottomOffset := (size.Height - y - 1) * (4 * size.Width)
-		for x := 0; x < size.Width*4; x++ {
-			previewImg.Pix[topOffset+x], previewImg.Pix[bottomOffset+x] =
-				previewImg.Pix[bottomOffset+x], previewImg.Pix[topOffset+x]
-		}
-	}
+	// previewImg := image.NewRGBA(image.Rect(0, 0, size.Width, size.Height))
+	// buffer.Fetch(render.BufferFetchInfo{
+	// 	Offset: 0,
+	// 	Target: previewImg.Pix,
+	// })
+	// for y := 0; y < size.Height/2; y++ {
+	// 	topOffset := y * (4 * size.Width)
+	// 	bottomOffset := (size.Height - y - 1) * (4 * size.Width)
+	// 	for x := 0; x < size.Width*4; x++ {
+	// 		previewImg.Pix[topOffset+x], previewImg.Pix[bottomOffset+x] =
+	// 			previewImg.Pix[bottomOffset+x], previewImg.Pix[topOffset+x]
+	// 	}
+	// }
 
-	t.api.EndRenderPass()
-	return previewImg
+	// t.api.EndRenderPass()
+	// return previewImg
 }
 
 func (t *CubeTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.Size) {
@@ -156,7 +156,7 @@ func (t *CubeTexture) OnViewportRender(framebuffer render.Framebuffer, size ui.S
 	})
 }
 
-func (t *CubeTexture) OnViewportMouseEvent(event std.ViewportMouseEvent) bool {
+func (t *CubeTexture) OnViewportMouseEvent(element *ui.Element, event ui.MouseEvent) bool {
 	switch event.Action {
 	case ui.MouseActionDown:
 		if event.Button == ui.MouseButtonMiddle {
