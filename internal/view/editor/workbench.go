@@ -10,6 +10,7 @@ import (
 	glgame "github.com/mokiat/lacking-native/game"
 	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	"github.com/mokiat/lacking-studio/internal/view/common"
+	"github.com/mokiat/lacking-studio/internal/view/editor/viewport"
 	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/debug/log"
 	"github.com/mokiat/lacking/game/graphics"
@@ -35,6 +36,8 @@ type workbenchComponent struct {
 	gfxEngine *graphics.Engine
 	gfxScene  *graphics.Scene
 	gfxCamera *graphics.Camera
+
+	cameraGizmo *viewport.CameraGizmo
 }
 
 func (c *workbenchComponent) OnCreate() {
@@ -48,19 +51,13 @@ func (c *workbenchComponent) OnCreate() {
 	c.gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.01, 0.01, 0.02))
 
 	c.gfxCamera = c.gfxScene.CreateCamera()
-	c.gfxCamera.SetMatrix(
-		dprec.Mat4MultiProd(
-			dprec.RotationMat4(dprec.Degrees(15), 0.0, 1.0, 0.0),
-			dprec.RotationMat4(dprec.Degrees(30), -1.0, 0.0, 0.0),
-			dprec.TranslationMat4(0.0, 0.0, 10.0),
-		),
-	)
 	c.gfxCamera.SetExposure(1.0)
 	c.gfxCamera.SetAutoExposure(false)
+	c.gfxCamera.SetFoV(sprec.Degrees(60))
 	c.gfxCamera.SetFoVMode(graphics.FoVModeHorizontalPlus)
+	c.cameraGizmo = viewport.NewCameraGizmo(c.gfxCamera)
 
 	gridMeshDef := createGridMeshDefinition(c.gfxEngine)
-
 	gridMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
 		Definition: gridMeshDef,
 		Armature:   nil,
@@ -111,12 +108,15 @@ func (c *workbenchComponent) handleDrop(paths []string) bool {
 	}
 }
 
-func (c *workbenchComponent) handleViewportKeyboardEvent(event ui.KeyboardEvent) bool {
-	return false
+func (c *workbenchComponent) handleViewportKeyboardEvent(element *ui.Element, event ui.KeyboardEvent) bool {
+	return c.cameraGizmo.OnKeyboardEvent(element, event)
 }
 
-func (c *workbenchComponent) handleViewportMouseEvent(event std.ViewportMouseEvent) bool {
-	return false
+func (c *workbenchComponent) handleViewportMouseEvent(element *ui.Element, event ui.MouseEvent) bool {
+	// TODO: Do camera motion. Have a "Gadget" concept and pass control initially to it.
+	// Then trickle down until you get to here. If no gadget is interested, then do camera motion.
+
+	return c.cameraGizmo.OnMouseEvent(element, event)
 }
 
 func (c *workbenchComponent) handleViewportRender(framebuffer render.Framebuffer, size ui.Size) {
