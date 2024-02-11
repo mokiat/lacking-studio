@@ -2,8 +2,6 @@ module github.com/mokiat/lacking-studio
 
 go 1.21
 
-toolchain go1.21.5
-
 require (
 	github.com/google/uuid v1.6.0
 	github.com/mokiat/gog v0.11.1

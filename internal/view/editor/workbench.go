@@ -204,6 +204,11 @@ func (c *workbenchComponent) importModel(model *pack.Model) {
 }
 
 func createGridMeshDefinition(gfxEngine *graphics.Engine) *graphics.MeshDefinition {
+	const (
+		gridSize   = 100.0
+		gridOffset = 2.0
+	)
+
 	lightRedShading := gfxEngine.CreateShading(graphics.ShadingInfo{
 		ForwardFunc: func(palette *shading.ForwardPalette) {
 			palette.OutputColor(palette.ConstVec4(1.0, 0.0, 0.0, 1.0))
@@ -249,89 +254,79 @@ func createGridMeshDefinition(gfxEngine *graphics.Engine) *graphics.MeshDefiniti
 	gridMeshBuilder := graphics.NewMeshBuilder(
 		graphics.MeshBuilderWithCoords(),
 	)
-	gridMeshBuilder.UsePrimitive(graphics.PrimitiveLines)
-
-	const (
-		gridSize   = 100.0
-		gridOffset = 2.0
-	)
 
 	// Positive X axis
-	gridMeshBuilder.AddVertex()
-	gridMeshBuilder.Coord(0.0, 0.0, 0.0)
-	gridMeshBuilder.AddVertex()
-	gridMeshBuilder.Coord(gridSize, 0.0, 0.0)
-
-	gridMeshBuilder.UseMaterial(lightRedMaterialDef)
-	gridMeshBuilder.AddIndex(0)
-	gridMeshBuilder.AddIndex(1)
+	vertexOffset := gridMeshBuilder.VertexOffset()
+	gridMeshBuilder.Vertex().
+		Coord(0.0, 0.0, 0.0)
+	gridMeshBuilder.Vertex().
+		Coord(gridSize, 0.0, 0.0)
+	indexStart, indexEnd := gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
+	gridMeshBuilder.Fragment(graphics.PrimitiveLines, lightRedMaterialDef, indexStart, indexEnd-indexStart)
 
 	// Negative X axis
-	gridMeshBuilder.AddVertex()
-	gridMeshBuilder.Coord(0.0, 0.0, 0.0)
-	gridMeshBuilder.AddVertex()
-	gridMeshBuilder.Coord(-gridSize, 0.0, 0.0)
+	vertexOffset = gridMeshBuilder.VertexOffset()
+	gridMeshBuilder.Vertex().
+		Coord(0.0, 0.0, 0.0)
+	gridMeshBuilder.Vertex().
+		Coord(-gridSize, 0.0, 0.0)
 
-	gridMeshBuilder.UseMaterial(darkRedMaterialDef)
-	gridMeshBuilder.AddIndex(2)
-	gridMeshBuilder.AddIndex(3)
+	indexStart, indexEnd = gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
+	gridMeshBuilder.Fragment(graphics.PrimitiveLines, darkRedMaterialDef, indexStart, indexEnd-indexStart)
 
 	// Positive Z axis
-	gridMeshBuilder.AddVertex()
-	gridMeshBuilder.Coord(0.0, 0.0, 0.0)
-	gridMeshBuilder.AddVertex()
-	gridMeshBuilder.Coord(0.0, 0.0, gridSize)
-
-	gridMeshBuilder.UseMaterial(lightGreenMaterialDef)
-	gridMeshBuilder.AddIndex(4)
-	gridMeshBuilder.AddIndex(5)
+	vertexOffset = gridMeshBuilder.VertexOffset()
+	gridMeshBuilder.Vertex().
+		Coord(0.0, 0.0, 0.0)
+	gridMeshBuilder.Vertex().
+		Coord(0.0, 0.0, gridSize)
+	indexStart, indexEnd = gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
+	gridMeshBuilder.Fragment(graphics.PrimitiveLines, lightGreenMaterialDef, indexStart, indexEnd-indexStart)
 
 	// Negative Z axis
-	gridMeshBuilder.AddVertex()
-	gridMeshBuilder.Coord(0.0, 0.0, 0.0)
-	gridMeshBuilder.AddVertex()
-	gridMeshBuilder.Coord(0.0, 0.0, -gridSize)
-
-	gridMeshBuilder.UseMaterial(darkGreenMaterialDef)
-	gridMeshBuilder.AddIndex(6)
-	gridMeshBuilder.AddIndex(7)
+	vertexOffset = gridMeshBuilder.VertexOffset()
+	gridMeshBuilder.Vertex().
+		Coord(0.0, 0.0, 0.0)
+	gridMeshBuilder.Vertex().
+		Coord(0.0, 0.0, -gridSize)
+	indexStart, indexEnd = gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
+	gridMeshBuilder.Fragment(graphics.PrimitiveLines, darkGreenMaterialDef, indexStart, indexEnd-indexStart)
 
 	// Grid
-	index := uint32(8)
-	gridMeshBuilder.UseMaterial(grayMaterialDef)
+	indexStart = gridMeshBuilder.IndexOffset()
 	for i := 1; i <= int(gridSize/gridOffset); i++ {
 		// Along X axis
-		gridMeshBuilder.AddVertex()
-		gridMeshBuilder.Coord(-gridSize, 0.0, -float32(i)*gridOffset)
-		gridMeshBuilder.AddVertex()
-		gridMeshBuilder.Coord(gridSize, 0.0, -float32(i)*gridOffset)
+		vertexOffset := gridMeshBuilder.VertexOffset()
+		gridMeshBuilder.Vertex().
+			Coord(-gridSize, 0.0, -float32(i)*gridOffset)
+		gridMeshBuilder.Vertex().
+			Coord(gridSize, 0.0, -float32(i)*gridOffset)
+		gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
 
-		gridMeshBuilder.AddVertex()
-		gridMeshBuilder.Coord(-gridSize, 0.0, float32(i)*gridOffset)
-		gridMeshBuilder.AddVertex()
-		gridMeshBuilder.Coord(gridSize, 0.0, float32(i)*gridOffset)
+		vertexOffset = gridMeshBuilder.VertexOffset()
+		gridMeshBuilder.Vertex().
+			Coord(-gridSize, 0.0, float32(i)*gridOffset)
+		gridMeshBuilder.Vertex().
+			Coord(gridSize, 0.0, float32(i)*gridOffset)
+		gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
 
 		// Along Z axis
-		gridMeshBuilder.AddVertex()
-		gridMeshBuilder.Coord(-float32(i)*gridOffset, 0.0, -gridSize)
-		gridMeshBuilder.AddVertex()
-		gridMeshBuilder.Coord(-float32(i)*gridOffset, 0.0, gridSize)
+		vertexOffset = gridMeshBuilder.VertexOffset()
+		gridMeshBuilder.Vertex().
+			Coord(-float32(i)*gridOffset, 0.0, -gridSize)
+		gridMeshBuilder.Vertex().
+			Coord(-float32(i)*gridOffset, 0.0, gridSize)
+		gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
 
-		gridMeshBuilder.AddVertex()
-		gridMeshBuilder.Coord(float32(i)*gridOffset, 0.0, -gridSize)
-		gridMeshBuilder.AddVertex()
-		gridMeshBuilder.Coord(float32(i)*gridOffset, 0.0, gridSize)
-
-		gridMeshBuilder.AddIndex(index + 0)
-		gridMeshBuilder.AddIndex(index + 1)
-		gridMeshBuilder.AddIndex(index + 2)
-		gridMeshBuilder.AddIndex(index + 3)
-		gridMeshBuilder.AddIndex(index + 4)
-		gridMeshBuilder.AddIndex(index + 5)
-		gridMeshBuilder.AddIndex(index + 6)
-		gridMeshBuilder.AddIndex(index + 7)
-		index += 8
+		vertexOffset = gridMeshBuilder.VertexOffset()
+		gridMeshBuilder.Vertex().
+			Coord(float32(i)*gridOffset, 0.0, -gridSize)
+		gridMeshBuilder.Vertex().
+			Coord(float32(i)*gridOffset, 0.0, gridSize)
+		gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
 	}
+	indexEnd = gridMeshBuilder.IndexOffset()
+	gridMeshBuilder.Fragment(graphics.PrimitiveLines, grayMaterialDef, indexStart, indexEnd-indexStart)
 
 	return gfxEngine.CreateMeshDefinition(gridMeshBuilder.BuildInfo())
 }
