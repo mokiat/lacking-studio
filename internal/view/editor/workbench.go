@@ -63,6 +63,13 @@ func (c *workbenchComponent) OnCreate() {
 		Armature:   nil,
 	})
 	gridMesh.SetMatrix(dprec.IdentityMat4())
+
+	cameraMeshDef := createCameraMeshDefinition(c.gfxEngine)
+	cameraMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
+		Definition: cameraMeshDef,
+		Armature:   nil,
+	})
+	cameraMesh.SetMatrix(dprec.TranslationMat4(0.0, 0.0, 0.0))
 }
 
 func (c *workbenchComponent) OnDelete() {
@@ -201,6 +208,28 @@ func (c *workbenchComponent) handleDropHDR(path string) {
 
 func (c *workbenchComponent) importModel(model *pack.Model) {
 	log.Info("Texture count: %d", len(model.Textures))
+}
+
+func createCameraMeshDefinition(gfxEngine *graphics.Engine) *graphics.MeshDefinition {
+	shading := gfxEngine.CreateShading(graphics.ShadingInfo{
+		ForwardFunc: func(palette *shading.ForwardPalette) {
+			palette.OutputColor(palette.ConstVec4(1.0, 1.0, 0.0, 1.0))
+		},
+	})
+	materialDef := gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
+		BackfaceCulling: true,
+		Shading:         shading,
+	})
+
+	meshBuilder := graphics.NewSimpleMeshBuilder(materialDef)
+
+	meshBuilder.Solid().
+		Cuboid(sprec.ZeroVec3(), sprec.IdentityQuat(), sprec.NewVec3(0.2, 0.3, 0.5)).
+		Cylinder(sprec.NewVec3(0.0, 0.25, 0.1), sprec.RotationQuat(sprec.Degrees(90), sprec.BasisZVec3()), 0.15, 0.1, 20).
+		Cylinder(sprec.NewVec3(0.0, 0.23, -0.13), sprec.RotationQuat(sprec.Degrees(90), sprec.BasisZVec3()), 0.1, 0.1, 20).
+		Cone(sprec.NewVec3(0.0, 0.0, 0.3), sprec.RotationQuat(sprec.Degrees(-90), sprec.BasisXVec3()), 0.2, 0.3, 20)
+
+	return gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
 }
 
 func createGridMeshDefinition(gfxEngine *graphics.Engine) *graphics.MeshDefinition {
