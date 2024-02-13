@@ -1,7 +1,10 @@
 package internal
 
 import (
+	glgame "github.com/mokiat/lacking-native/game"
 	"github.com/mokiat/lacking-studio/internal/view"
+	"github.com/mokiat/lacking-studio/internal/view/editor/viewport"
+	"github.com/mokiat/lacking/game/graphics"
 	asset "github.com/mokiat/lacking/game/newasset"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -11,9 +14,14 @@ import (
 func BootstrapApplication(window *ui.Window, registry *asset.Registry) {
 	eventBus := mvc.NewEventBus()
 
+	gfxEngine := graphics.NewEngine(window.RenderAPI(), glgame.NewShaderCollection())
+	commonData := viewport.NewCommonData(gfxEngine)
+
 	scope := co.RootScope(window)
 	scope = co.TypedValueScope(scope, eventBus)
 	scope = co.TypedValueScope[*asset.Registry](scope, registry)
+	scope = co.TypedValueScope[*graphics.Engine](scope, gfxEngine)
+	scope = co.TypedValueScope[*viewport.CommonData](scope, commonData)
 	co.Initialize(scope, co.New(Bootstrap, nil))
 }
 

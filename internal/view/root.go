@@ -6,6 +6,8 @@ import (
 	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	appview "github.com/mokiat/lacking-studio/internal/view/app"
+	"github.com/mokiat/lacking-studio/internal/view/editor/viewport"
+	"github.com/mokiat/lacking/game/graphics"
 	asset "github.com/mokiat/lacking/game/newasset"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -25,12 +27,18 @@ type rootComponent struct {
 }
 
 func (c *rootComponent) OnCreate() {
-	context := c.Scope().Context()
+	gfxEngine := co.TypedValue[*graphics.Engine](c.Scope())
+	gfxEngine.Create()
+
+	commonData := co.TypedValue[*viewport.CommonData](c.Scope())
+	commonData.Create()
+
 	registry := co.TypedValue[*asset.Registry](c.Scope())
 
 	c.eventBus = co.TypedValue[*mvc.EventBus](c.Scope())
 	c.appModel = appmodel.NewModel(c.eventBus)
 
+	context := c.Scope().Context()
 	c.registryModel = registrymodel.NewModel(c.eventBus, context, registry)
 
 	co.Window(c.Scope()).SetCloseInterceptor(c.onCloseRequested)
@@ -38,6 +46,12 @@ func (c *rootComponent) OnCreate() {
 
 func (c *rootComponent) OnDelete() {
 	co.Window(c.Scope()).SetCloseInterceptor(nil)
+
+	commonData := co.TypedValue[*viewport.CommonData](c.Scope())
+	commonData.Delete()
+
+	gfxEngine := co.TypedValue[*graphics.Engine](c.Scope())
+	gfxEngine.Destroy()
 }
 
 func (c *rootComponent) Render() co.Instance {
