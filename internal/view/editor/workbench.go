@@ -59,16 +59,20 @@ func (c *workbenchComponent) OnCreate() {
 	gridMeshDef := c.commonData.GridMeshDefinition()
 	gridMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
 		Definition: gridMeshDef,
-		Armature:   nil,
 	})
 	gridMesh.SetMatrix(dprec.IdentityMat4())
 
 	cameraMeshDef := c.commonData.CameraMeshDefinition()
 	cameraMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
 		Definition: cameraMeshDef,
-		Armature:   nil,
 	})
 	cameraMesh.SetMatrix(dprec.TranslationMat4(0.0, 0.0, 0.0))
+
+	nodeMeshDef := c.commonData.NodeMeshDefinition()
+	nodeMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
+		Definition: nodeMeshDef,
+	})
+	nodeMesh.SetMatrix(dprec.TranslationMat4(1.0, 0.0, 0.0))
 }
 
 func (c *workbenchComponent) OnDelete() {

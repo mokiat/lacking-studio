@@ -25,12 +25,14 @@ type CommonData struct {
 	yellowMaterialDef    *graphics.MaterialDefinition
 
 	gridMeshDef   *graphics.MeshDefinition
+	nodeMeshDef   *graphics.MeshDefinition
 	cameraMeshDef *graphics.MeshDefinition
 }
 
 func (d *CommonData) Create() {
 	d.createMaterials()
 	d.createGridMesh()
+	d.createNodeMesh()
 	d.createCameraMesh()
 }
 
@@ -38,11 +40,16 @@ func (d *CommonData) Delete() {
 	// NOTE: Using defer to ensure deletion but also reverse execution order.
 	defer d.deleteMaterials()
 	defer d.deleteGridMesh()
+	defer d.deleteNodeMesh()
 	defer d.deleteCameraMesh()
 }
 
 func (d *CommonData) GridMeshDefinition() *graphics.MeshDefinition {
 	return d.gridMeshDef
+}
+
+func (d *CommonData) NodeMeshDefinition() *graphics.MeshDefinition {
+	return d.nodeMeshDef
 }
 
 func (d *CommonData) CameraMeshDefinition() *graphics.MeshDefinition {
@@ -218,6 +225,53 @@ func (d *CommonData) createGridMesh() {
 
 func (d *CommonData) deleteGridMesh() {
 	d.gridMeshDef.Delete()
+}
+
+func (d *CommonData) createNodeMesh() {
+	meshBuilder := graphics.NewSimpleMeshBuilder(d.yellowMaterialDef)
+
+	meshBuilder.Solid().
+		Cuboid(sprec.ZeroVec3(), sprec.IdentityQuat(), sprec.NewVec3(0.2, 0.2, 0.2))
+
+	meshBuilder.Wireframe().
+		// front-top-left
+		Line(sprec.NewVec3(-0.2, 0.2, 0.2), sprec.NewVec3(-0.1, 0.2, 0.2)).
+		Line(sprec.NewVec3(-0.2, 0.2, 0.2), sprec.NewVec3(-0.2, 0.1, 0.2)).
+		Line(sprec.NewVec3(-0.2, 0.2, 0.2), sprec.NewVec3(-0.2, 0.2, 0.1)).
+		// front-top-right
+		Line(sprec.NewVec3(0.2, 0.2, 0.2), sprec.NewVec3(0.1, 0.2, 0.2)).
+		Line(sprec.NewVec3(0.2, 0.2, 0.2), sprec.NewVec3(0.2, 0.1, 0.2)).
+		Line(sprec.NewVec3(0.2, 0.2, 0.2), sprec.NewVec3(0.2, 0.2, 0.1)).
+		// front-bottom-left
+		Line(sprec.NewVec3(-0.2, -0.2, 0.2), sprec.NewVec3(-0.1, -0.2, 0.2)).
+		Line(sprec.NewVec3(-0.2, -0.2, 0.2), sprec.NewVec3(-0.2, -0.1, 0.2)).
+		Line(sprec.NewVec3(-0.2, -0.2, 0.2), sprec.NewVec3(-0.2, -0.2, 0.1)).
+		// front-bottom-right
+		Line(sprec.NewVec3(0.2, -0.2, 0.2), sprec.NewVec3(0.1, -0.2, 0.2)).
+		Line(sprec.NewVec3(0.2, -0.2, 0.2), sprec.NewVec3(0.2, -0.1, 0.2)).
+		Line(sprec.NewVec3(0.2, -0.2, 0.2), sprec.NewVec3(0.2, -0.2, 0.1)).
+		// back-top-left
+		Line(sprec.NewVec3(-0.2, 0.2, -0.2), sprec.NewVec3(-0.1, 0.2, -0.2)).
+		Line(sprec.NewVec3(-0.2, 0.2, -0.2), sprec.NewVec3(-0.2, 0.1, -0.2)).
+		Line(sprec.NewVec3(-0.2, 0.2, -0.2), sprec.NewVec3(-0.2, 0.2, -0.1)).
+		// back-top-right
+		Line(sprec.NewVec3(0.2, 0.2, -0.2), sprec.NewVec3(0.1, 0.2, -0.2)).
+		Line(sprec.NewVec3(0.2, 0.2, -0.2), sprec.NewVec3(0.2, 0.1, -0.2)).
+		Line(sprec.NewVec3(0.2, 0.2, -0.2), sprec.NewVec3(0.2, 0.2, -0.1)).
+		// back-bottom-left
+		Line(sprec.NewVec3(-0.2, -0.2, -0.2), sprec.NewVec3(-0.1, -0.2, -0.2)).
+		Line(sprec.NewVec3(-0.2, -0.2, -0.2), sprec.NewVec3(-0.2, -0.1, -0.2)).
+		Line(sprec.NewVec3(-0.2, -0.2, -0.2), sprec.NewVec3(-0.2, -0.2, -0.1)).
+		// back-bottom-right
+		Line(sprec.NewVec3(0.2, -0.2, -0.2), sprec.NewVec3(0.1, -0.2, -0.2)).
+		Line(sprec.NewVec3(0.2, -0.2, -0.2), sprec.NewVec3(0.2, -0.1, -0.2)).
+		Line(sprec.NewVec3(0.2, -0.2, -0.2), sprec.NewVec3(0.2, -0.2, -0.1))
+
+	d.nodeMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
+}
+
+func (d *CommonData) deleteNodeMesh() {
+	d.nodeMeshDef.Delete()
 }
 
 func (d *CommonData) createCameraMesh() {
