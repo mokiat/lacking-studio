@@ -143,84 +143,47 @@ func (d *CommonData) createGridMesh() {
 		gridOffset = 2.0
 	)
 
-	gridMeshBuilder := graphics.NewMeshBuilder(
-		graphics.MeshBuilderWithCoords(),
-	)
+	meshBuilder := graphics.NewSimpleMeshBuilder()
 
 	// Positive X axis
-	vertexOffset := gridMeshBuilder.VertexOffset()
-	gridMeshBuilder.Vertex().
-		Coord(0.0, 0.0, 0.0)
-	gridMeshBuilder.Vertex().
-		Coord(gridSize, 0.0, 0.0)
-	indexStart, indexEnd := gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
-	gridMeshBuilder.Fragment(graphics.PrimitiveLines, d.redMaterialDef, indexStart, indexEnd-indexStart)
+	meshBuilder.Wireframe(d.redMaterialDef).
+		Line(sprec.ZeroVec3(), sprec.NewVec3(gridSize, 0.0, 0.0))
 
 	// Negative X axis
-	vertexOffset = gridMeshBuilder.VertexOffset()
-	gridMeshBuilder.Vertex().
-		Coord(0.0, 0.0, 0.0)
-	gridMeshBuilder.Vertex().
-		Coord(-gridSize, 0.0, 0.0)
-
-	indexStart, indexEnd = gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
-	gridMeshBuilder.Fragment(graphics.PrimitiveLines, d.darkRedMaterialDef, indexStart, indexEnd-indexStart)
+	meshBuilder.Wireframe(d.darkRedMaterialDef).
+		Line(sprec.ZeroVec3(), sprec.NewVec3(-gridSize, 0.0, 0.0))
 
 	// Positive Z axis
-	vertexOffset = gridMeshBuilder.VertexOffset()
-	gridMeshBuilder.Vertex().
-		Coord(0.0, 0.0, 0.0)
-	gridMeshBuilder.Vertex().
-		Coord(0.0, 0.0, gridSize)
-	indexStart, indexEnd = gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
-	gridMeshBuilder.Fragment(graphics.PrimitiveLines, d.greenMaterialDef, indexStart, indexEnd-indexStart)
+	meshBuilder.Wireframe(d.greenMaterialDef).
+		Line(sprec.ZeroVec3(), sprec.NewVec3(0.0, 0.0, gridSize))
 
-	// Negative Z axis
-	vertexOffset = gridMeshBuilder.VertexOffset()
-	gridMeshBuilder.Vertex().
-		Coord(0.0, 0.0, 0.0)
-	gridMeshBuilder.Vertex().
-		Coord(0.0, 0.0, -gridSize)
-	indexStart, indexEnd = gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
-	gridMeshBuilder.Fragment(graphics.PrimitiveLines, d.darkGreenMaterialDef, indexStart, indexEnd-indexStart)
+	meshBuilder.Wireframe(d.darkGreenMaterialDef).
+		Line(sprec.ZeroVec3(), sprec.NewVec3(0.0, 0.0, -gridSize))
 
 	// Grid
-	indexStart = gridMeshBuilder.IndexOffset()
+	lines := meshBuilder.Wireframe(d.grayMaterialDef)
 	for i := 1; i <= int(gridSize/gridOffset); i++ {
 		// Along X axis
-		vertexOffset := gridMeshBuilder.VertexOffset()
-		gridMeshBuilder.Vertex().
-			Coord(-gridSize, 0.0, -float32(i)*gridOffset)
-		gridMeshBuilder.Vertex().
-			Coord(gridSize, 0.0, -float32(i)*gridOffset)
-		gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
-
-		vertexOffset = gridMeshBuilder.VertexOffset()
-		gridMeshBuilder.Vertex().
-			Coord(-gridSize, 0.0, float32(i)*gridOffset)
-		gridMeshBuilder.Vertex().
-			Coord(gridSize, 0.0, float32(i)*gridOffset)
-		gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
-
+		lines.Line(
+			sprec.NewVec3(-gridSize, 0.0, -float32(i)*gridOffset),
+			sprec.NewVec3(gridSize, 0.0, -float32(i)*gridOffset),
+		)
+		lines.Line(
+			sprec.NewVec3(-gridSize, 0.0, float32(i)*gridOffset),
+			sprec.NewVec3(gridSize, 0.0, float32(i)*gridOffset),
+		)
 		// Along Z axis
-		vertexOffset = gridMeshBuilder.VertexOffset()
-		gridMeshBuilder.Vertex().
-			Coord(-float32(i)*gridOffset, 0.0, -gridSize)
-		gridMeshBuilder.Vertex().
-			Coord(-float32(i)*gridOffset, 0.0, gridSize)
-		gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
-
-		vertexOffset = gridMeshBuilder.VertexOffset()
-		gridMeshBuilder.Vertex().
-			Coord(float32(i)*gridOffset, 0.0, -gridSize)
-		gridMeshBuilder.Vertex().
-			Coord(float32(i)*gridOffset, 0.0, gridSize)
-		gridMeshBuilder.IndexLine(vertexOffset, vertexOffset+1)
+		lines.Line(
+			sprec.NewVec3(-float32(i)*gridOffset, 0.0, -gridSize),
+			sprec.NewVec3(-float32(i)*gridOffset, 0.0, gridSize),
+		)
+		lines.Line(
+			sprec.NewVec3(float32(i)*gridOffset, 0.0, -gridSize),
+			sprec.NewVec3(float32(i)*gridOffset, 0.0, gridSize),
+		)
 	}
-	indexEnd = gridMeshBuilder.IndexOffset()
-	gridMeshBuilder.Fragment(graphics.PrimitiveLines, d.grayMaterialDef, indexStart, indexEnd-indexStart)
 
-	d.gridMeshDef = d.gfxEngine.CreateMeshDefinition(gridMeshBuilder.BuildInfo())
+	d.gridMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
 }
 
 func (d *CommonData) deleteGridMesh() {
@@ -228,12 +191,12 @@ func (d *CommonData) deleteGridMesh() {
 }
 
 func (d *CommonData) createNodeMesh() {
-	meshBuilder := graphics.NewSimpleMeshBuilder(d.yellowMaterialDef)
+	meshBuilder := graphics.NewSimpleMeshBuilder()
 
-	meshBuilder.Solid().
+	meshBuilder.Solid(d.yellowMaterialDef).
 		Cuboid(sprec.ZeroVec3(), sprec.IdentityQuat(), sprec.NewVec3(0.2, 0.2, 0.2))
 
-	meshBuilder.Wireframe().
+	meshBuilder.Wireframe(d.yellowMaterialDef).
 		// front-top-left
 		Line(sprec.NewVec3(-0.2, 0.2, 0.2), sprec.NewVec3(-0.1, 0.2, 0.2)).
 		Line(sprec.NewVec3(-0.2, 0.2, 0.2), sprec.NewVec3(-0.2, 0.1, 0.2)).
@@ -267,6 +230,13 @@ func (d *CommonData) createNodeMesh() {
 		Line(sprec.NewVec3(0.2, -0.2, -0.2), sprec.NewVec3(0.2, -0.1, -0.2)).
 		Line(sprec.NewVec3(0.2, -0.2, -0.2), sprec.NewVec3(0.2, -0.2, -0.1))
 
+	meshBuilder.Wireframe(d.redMaterialDef).
+		Line(sprec.ZeroVec3(), sprec.NewVec3(0.2, 0.0, 0.0))
+	meshBuilder.Wireframe(d.greenMaterialDef).
+		Line(sprec.ZeroVec3(), sprec.NewVec3(0.0, 0.0, 0.2))
+	meshBuilder.Wireframe(d.blueMaterialDef).
+		Line(sprec.ZeroVec3(), sprec.NewVec3(0.0, 0.2, 0.0))
+
 	d.nodeMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
 }
 
@@ -275,9 +245,9 @@ func (d *CommonData) deleteNodeMesh() {
 }
 
 func (d *CommonData) createCameraMesh() {
-	meshBuilder := graphics.NewSimpleMeshBuilder(d.yellowMaterialDef)
+	meshBuilder := graphics.NewSimpleMeshBuilder()
 
-	meshBuilder.Solid().
+	meshBuilder.Solid(d.yellowMaterialDef).
 		Cuboid(sprec.ZeroVec3(), sprec.IdentityQuat(), sprec.NewVec3(0.2, 0.3, 0.5)).
 		Cylinder(sprec.NewVec3(0.0, 0.25, 0.1), sprec.RotationQuat(sprec.Degrees(90), sprec.BasisZVec3()), 0.15, 0.1, 20).
 		Cylinder(sprec.NewVec3(0.0, 0.23, -0.13), sprec.RotationQuat(sprec.Degrees(90), sprec.BasisZVec3()), 0.1, 0.1, 20).

@@ -66,13 +66,13 @@ func (c *workbenchComponent) OnCreate() {
 	cameraMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
 		Definition: cameraMeshDef,
 	})
-	cameraMesh.SetMatrix(dprec.TranslationMat4(0.0, 0.0, 0.0))
+	cameraMesh.SetMatrix(dprec.TranslationMat4(0.0, 0.1, 0.0))
 
 	nodeMeshDef := c.commonData.NodeMeshDefinition()
 	nodeMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
 		Definition: nodeMeshDef,
 	})
-	nodeMesh.SetMatrix(dprec.TranslationMat4(1.0, 0.0, 0.0))
+	nodeMesh.SetMatrix(dprec.TranslationMat4(1.0, 0.1, 0.0))
 }
 
 func (c *workbenchComponent) OnDelete() {
