@@ -66,13 +66,37 @@ func (c *workbenchComponent) OnCreate() {
 	cameraMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
 		Definition: cameraMeshDef,
 	})
-	cameraMesh.SetMatrix(dprec.TranslationMat4(0.0, 0.1, 0.0))
+	cameraMesh.SetMatrix(dprec.TranslationMat4(-3.0, 0.1, 0.0))
 
 	nodeMeshDef := c.commonData.NodeMeshDefinition()
 	nodeMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
 		Definition: nodeMeshDef,
 	})
-	nodeMesh.SetMatrix(dprec.TranslationMat4(1.0, 0.1, 0.0))
+	nodeMesh.SetMatrix(dprec.TranslationMat4(-2.0, 0.1, 0.0))
+
+	ambientLightMeshDef := c.commonData.AmbientLightMeshDefinition()
+	ambientLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
+		Definition: ambientLightMeshDef,
+	})
+	ambientLight.SetMatrix(dprec.TranslationMat4(-1.0, 0.1, 0.0))
+
+	pointLightMeshDef := c.commonData.PointLightMeshDefinition()
+	pointLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
+		Definition: pointLightMeshDef,
+	})
+	pointLight.SetMatrix(dprec.TranslationMat4(0.0, 0.1, 0.0))
+
+	spotLightMeshDef := c.commonData.SpotLightMeshDefinition()
+	spotLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
+		Definition: spotLightMeshDef,
+	})
+	spotLight.SetMatrix(dprec.TranslationMat4(1.0, 0.1, 0.0))
+
+	directionalLightMeshDef := c.commonData.DirectionalLightMeshDefinition()
+	directionalLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
+		Definition: directionalLightMeshDef,
+	})
+	directionalLight.SetMatrix(dprec.TranslationMat4(2.0, 0.1, 0.0))
 }
 
 func (c *workbenchComponent) OnDelete() {
