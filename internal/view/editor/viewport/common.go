@@ -3,7 +3,8 @@ package viewport
 import (
 	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/game/graphics"
-	"github.com/mokiat/lacking/game/graphics/shading"
+	"github.com/mokiat/lacking/render"
+	"github.com/mokiat/lacking/util/blob"
 )
 
 func NewCommonData(gfxEngine *graphics.Engine) *CommonData {
@@ -15,23 +16,36 @@ func NewCommonData(gfxEngine *graphics.Engine) *CommonData {
 type CommonData struct {
 	gfxEngine *graphics.Engine
 
-	redMaterialDef        *graphics.MaterialDefinition
-	darkRedMaterialDef    *graphics.MaterialDefinition
-	greenMaterialDef      *graphics.MaterialDefinition
-	darkGreenMaterialDef  *graphics.MaterialDefinition
-	blueMaterialDef       *graphics.MaterialDefinition
-	darkBlueMaterialDef   *graphics.MaterialDefinition
-	grayMaterialDef       *graphics.MaterialDefinition
-	yellowMaterialDef     *graphics.MaterialDefinition
-	darkYellowMaterialDef *graphics.MaterialDefinition
+	redMaterial        *graphics.Material
+	darkRedMaterial    *graphics.Material
+	greenMaterial      *graphics.Material
+	darkGreenMaterial  *graphics.Material
+	blueMaterial       *graphics.Material
+	darkBlueMaterial   *graphics.Material
+	grayMaterial       *graphics.Material
+	yellowMaterial     *graphics.Material
+	darkYellowMaterial *graphics.Material
 
-	gridMeshDef             *graphics.MeshDefinition
-	nodeMeshDef             *graphics.MeshDefinition
-	cameraMeshDef           *graphics.MeshDefinition
-	ambientLightMeshDef     *graphics.MeshDefinition
-	pointLightMeshDef       *graphics.MeshDefinition
-	spotLightMeshDef        *graphics.MeshDefinition
-	directionalLightMeshDef *graphics.MeshDefinition
+	gridGeometry *graphics.MeshGeometry
+	gridMeshDef  *graphics.MeshDefinition
+
+	nodeMeshGeometry *graphics.MeshGeometry
+	nodeMeshDef      *graphics.MeshDefinition
+
+	cameraMeshGeometry *graphics.MeshGeometry
+	cameraMeshDef      *graphics.MeshDefinition
+
+	ambientLightMeshGeometry *graphics.MeshGeometry
+	ambientLightMeshDef      *graphics.MeshDefinition
+
+	pointLightMeshGeometry *graphics.MeshGeometry
+	pointLightMeshDef      *graphics.MeshDefinition
+
+	spotLightMeshGeometry *graphics.MeshGeometry
+	spotLightMeshDef      *graphics.MeshDefinition
+
+	directionalLightMeshGeometry *graphics.MeshGeometry
+	directionalLightMeshDef      *graphics.MeshDefinition
 }
 
 func (d *CommonData) Create() {
@@ -89,87 +103,107 @@ func (d *CommonData) createMaterials() {
 	// TODO: Use the same shading for all materials that follow
 	// and just adjust the material data for each.
 
-	redShading := d.gfxEngine.CreateShading(graphics.ShadingInfo{
-		ForwardFunc: func(palette *shading.ForwardPalette) {
-			palette.OutputColor(palette.ConstVec4(1.0, 0.0, 0.0, 1.0))
-		},
-	})
-	d.redMaterialDef = d.gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		Shading: redShading,
+	colorShader := d.gfxEngine.CreateForwardShader(graphics.ShaderInfo{
+		SourceCode: `
+			uniforms {
+				color vec4,
+			}
+
+			func #fragment() {
+				#color = color
+			}	
+		`,
 	})
 
-	darkRedShading := d.gfxEngine.CreateShading(graphics.ShadingInfo{
-		ForwardFunc: func(palette *shading.ForwardPalette) {
-			palette.OutputColor(palette.ConstVec4(0.3, 0.0, 0.0, 1.0))
+	d.redMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		Name: "ColorRed",
+		ForwardPasses: []graphics.ForwardRenderPassInfo{
+			{
+				Shader: colorShader,
+			},
 		},
 	})
-	d.darkRedMaterialDef = d.gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		Shading: darkRedShading,
-	})
+	d.redMaterial.SetProperty("color", sprec.NewVec4(1.0, 0.0, 0.0, 1.0))
 
-	greenShading := d.gfxEngine.CreateShading(graphics.ShadingInfo{
-		ForwardFunc: func(palette *shading.ForwardPalette) {
-			palette.OutputColor(palette.ConstVec4(0.0, 1.0, 0.0, 1.0))
+	d.darkRedMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		Name: "ColorDarkRed",
+		ForwardPasses: []graphics.ForwardRenderPassInfo{
+			{
+				Shader: colorShader,
+			},
 		},
 	})
-	d.greenMaterialDef = d.gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		Shading: greenShading,
-	})
+	d.darkRedMaterial.SetProperty("color", sprec.NewVec4(0.3, 0.0, 0.0, 1.0))
 
-	darkGreenShading := d.gfxEngine.CreateShading(graphics.ShadingInfo{
-		ForwardFunc: func(palette *shading.ForwardPalette) {
-			palette.OutputColor(palette.ConstVec4(0.0, 0.3, 0.0, 1.0))
+	d.greenMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		Name: "ColorGreen",
+		ForwardPasses: []graphics.ForwardRenderPassInfo{
+			{
+				Shader: colorShader,
+			},
 		},
 	})
-	d.darkGreenMaterialDef = d.gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		Shading: darkGreenShading,
-	})
+	d.greenMaterial.SetProperty("color", sprec.NewVec4(0.0, 1.0, 0.0, 1.0))
 
-	blueShading := d.gfxEngine.CreateShading(graphics.ShadingInfo{
-		ForwardFunc: func(palette *shading.ForwardPalette) {
-			palette.OutputColor(palette.ConstVec4(0.0, 0.0, 1.0, 1.0))
+	d.darkGreenMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		Name: "ColorDarkGreen",
+		ForwardPasses: []graphics.ForwardRenderPassInfo{
+			{
+				Shader: colorShader,
+			},
 		},
 	})
-	d.blueMaterialDef = d.gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		Shading: blueShading,
-	})
+	d.darkGreenMaterial.SetProperty("color", sprec.NewVec4(0.0, 0.3, 0.0, 1.0))
 
-	darkBlueShading := d.gfxEngine.CreateShading(graphics.ShadingInfo{
-		ForwardFunc: func(palette *shading.ForwardPalette) {
-			palette.OutputColor(palette.ConstVec4(0.0, 0.0, 0.3, 1.0))
+	d.blueMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		Name: "ColorBlue",
+		ForwardPasses: []graphics.ForwardRenderPassInfo{
+			{
+				Shader: colorShader,
+			},
 		},
 	})
-	d.darkBlueMaterialDef = d.gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		Shading: darkBlueShading,
-	})
+	d.blueMaterial.SetProperty("color", sprec.NewVec4(0.0, 0.0, 1.0, 1.0))
 
-	grayShading := d.gfxEngine.CreateShading(graphics.ShadingInfo{
-		ForwardFunc: func(palette *shading.ForwardPalette) {
-			palette.OutputColor(palette.ConstVec4(0.3, 0.3, 0.3, 1.0))
+	d.darkBlueMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		Name: "ColorDarkBlue",
+		ForwardPasses: []graphics.ForwardRenderPassInfo{
+			{
+				Shader: colorShader,
+			},
 		},
 	})
-	d.grayMaterialDef = d.gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		Shading: grayShading,
-	})
+	d.darkBlueMaterial.SetProperty("color", sprec.NewVec4(0.0, 0.0, 0.3, 1.0))
 
-	yellowShading := d.gfxEngine.CreateShading(graphics.ShadingInfo{
-		ForwardFunc: func(palette *shading.ForwardPalette) {
-			palette.OutputColor(palette.ConstVec4(1.0, 1.0, 0.0, 1.0))
+	d.grayMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		Name: "ColorGray",
+		ForwardPasses: []graphics.ForwardRenderPassInfo{
+			{
+				Shader: colorShader,
+			},
 		},
 	})
-	d.yellowMaterialDef = d.gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		Shading: yellowShading,
-	})
+	d.grayMaterial.SetProperty("color", sprec.NewVec4(0.3, 0.3, 0.3, 1.0))
 
-	darkYellowShading := d.gfxEngine.CreateShading(graphics.ShadingInfo{
-		ForwardFunc: func(palette *shading.ForwardPalette) {
-			palette.OutputColor(palette.ConstVec4(0.3, 0.3, 0.0, 1.0))
+	d.yellowMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		Name: "ColorYellow",
+		ForwardPasses: []graphics.ForwardRenderPassInfo{
+			{
+				Shader: colorShader,
+			},
 		},
 	})
-	d.darkYellowMaterialDef = d.gfxEngine.CreateMaterialDefinition(graphics.MaterialDefinitionInfo{
-		Shading: darkYellowShading,
-	})
+	d.yellowMaterial.SetProperty("color", sprec.NewVec4(1.0, 1.0, 0.0, 1.0))
 
+	d.darkYellowMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		Name: "ColorDarkYellow",
+		ForwardPasses: []graphics.ForwardRenderPassInfo{
+			{
+				Shader: colorShader,
+			},
+		},
+	})
+	d.darkYellowMaterial.SetProperty("color", sprec.NewVec4(0.3, 0.3, 0.0, 1.0))
 }
 
 func (d *CommonData) deleteMaterials() {
@@ -182,25 +216,25 @@ func (d *CommonData) createGridMesh() {
 		gridOffset = 2.0
 	)
 
-	meshBuilder := graphics.NewSimpleMeshBuilder()
+	meshBuilder := graphics.NewShapeBuilder()
 
 	// Positive X axis
-	meshBuilder.Wireframe(d.redMaterialDef).
+	meshBuilder.Wireframe(d.redMaterial).
 		Line(sprec.ZeroVec3(), sprec.NewVec3(gridSize, 0.0, 0.0))
 
 	// Negative X axis
-	meshBuilder.Wireframe(d.darkRedMaterialDef).
+	meshBuilder.Wireframe(d.darkRedMaterial).
 		Line(sprec.ZeroVec3(), sprec.NewVec3(-gridSize, 0.0, 0.0))
 
 	// Positive Z axis
-	meshBuilder.Wireframe(d.greenMaterialDef).
+	meshBuilder.Wireframe(d.greenMaterial).
 		Line(sprec.ZeroVec3(), sprec.NewVec3(0.0, 0.0, gridSize))
 
-	meshBuilder.Wireframe(d.darkGreenMaterialDef).
+	meshBuilder.Wireframe(d.darkGreenMaterial).
 		Line(sprec.ZeroVec3(), sprec.NewVec3(0.0, 0.0, -gridSize))
 
 	// Grid
-	lines := meshBuilder.Wireframe(d.grayMaterialDef)
+	lines := meshBuilder.Wireframe(d.grayMaterial)
 	for i := 1; i <= int(gridSize/gridOffset); i++ {
 		// Along X axis
 		lines.Line(
@@ -222,20 +256,22 @@ func (d *CommonData) createGridMesh() {
 		)
 	}
 
-	d.gridMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
+	d.gridGeometry = d.gfxEngine.CreateMeshGeometry(meshBuilder.BuildGeometryInfo())
+	d.gridMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildMeshDefinitionInfo(d.gridGeometry))
 }
 
 func (d *CommonData) deleteGridMesh() {
-	d.gridMeshDef.Delete()
+	defer d.gridGeometry.Delete()
+	defer d.gridMeshDef.Delete()
 }
 
 func (d *CommonData) createNodeMesh() {
-	meshBuilder := graphics.NewSimpleMeshBuilder()
+	meshBuilder := graphics.NewShapeBuilder()
 
-	meshBuilder.Solid(d.yellowMaterialDef).
+	meshBuilder.Solid(d.yellowMaterial).
 		Cuboid(sprec.ZeroVec3(), sprec.IdentityQuat(), sprec.NewVec3(0.2, 0.2, 0.2))
 
-	meshBuilder.Wireframe(d.darkYellowMaterialDef).
+	meshBuilder.Wireframe(d.darkYellowMaterial).
 		// front-top-left
 		Line(sprec.NewVec3(-0.2, 0.2, 0.2), sprec.NewVec3(-0.1, 0.2, 0.2)).
 		Line(sprec.NewVec3(-0.2, 0.2, 0.2), sprec.NewVec3(-0.2, 0.1, 0.2)).
@@ -269,24 +305,26 @@ func (d *CommonData) createNodeMesh() {
 		Line(sprec.NewVec3(0.2, -0.2, -0.2), sprec.NewVec3(0.2, -0.1, -0.2)).
 		Line(sprec.NewVec3(0.2, -0.2, -0.2), sprec.NewVec3(0.2, -0.2, -0.1))
 
-	meshBuilder.Wireframe(d.redMaterialDef).
+	meshBuilder.Wireframe(d.redMaterial).
 		Line(sprec.ZeroVec3(), sprec.NewVec3(0.2, 0.0, 0.0))
-	meshBuilder.Wireframe(d.greenMaterialDef).
+	meshBuilder.Wireframe(d.greenMaterial).
 		Line(sprec.ZeroVec3(), sprec.NewVec3(0.0, 0.0, 0.2))
-	meshBuilder.Wireframe(d.blueMaterialDef).
+	meshBuilder.Wireframe(d.blueMaterial).
 		Line(sprec.ZeroVec3(), sprec.NewVec3(0.0, 0.2, 0.0))
 
-	d.nodeMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
+	d.nodeMeshGeometry = d.gfxEngine.CreateMeshGeometry(meshBuilder.BuildGeometryInfo())
+	d.nodeMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildMeshDefinitionInfo(d.nodeMeshGeometry))
 }
 
 func (d *CommonData) deleteNodeMesh() {
-	d.nodeMeshDef.Delete()
+	defer d.nodeMeshGeometry.Delete()
+	defer d.nodeMeshDef.Delete()
 }
 
 func (d *CommonData) createCameraMesh() {
-	meshBuilder := graphics.NewSimpleMeshBuilder()
+	meshBuilder := graphics.NewShapeBuilder()
 
-	solids := meshBuilder.Solid(d.yellowMaterialDef)
+	solids := meshBuilder.Solid(d.yellowMaterial)
 	solids.Cuboid(
 		sprec.ZeroVec3(),
 		sprec.IdentityQuat(),
@@ -308,11 +346,13 @@ func (d *CommonData) createCameraMesh() {
 		0.2, 0.3, 20,
 	)
 
-	d.cameraMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
+	d.cameraMeshGeometry = d.gfxEngine.CreateMeshGeometry(meshBuilder.BuildGeometryInfo())
+	d.cameraMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildMeshDefinitionInfo(d.cameraMeshGeometry))
 }
 
 func (d *CommonData) deleteCameraMesh() {
-	d.cameraMeshDef.Delete()
+	defer d.cameraMeshGeometry.Delete()
+	defer d.cameraMeshDef.Delete()
 }
 
 func (d *CommonData) createAmbientLightMesh() {
@@ -322,8 +362,8 @@ func (d *CommonData) createAmbientLightMesh() {
 		coneSegments = 12
 	)
 
-	meshBuilder := graphics.NewSimpleMeshBuilder()
-	solids := meshBuilder.Solid(d.yellowMaterialDef)
+	meshBuilder := graphics.NewShapeBuilder()
+	solids := meshBuilder.Solid(d.yellowMaterial)
 	solids.Cone(
 		sprec.NewVec3(0.0, -0.2, 0.0),
 		sprec.IdentityQuat(),
@@ -355,11 +395,13 @@ func (d *CommonData) createAmbientLightMesh() {
 		coneRadius, coneHeight, coneSegments,
 	)
 
-	d.ambientLightMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
+	d.ambientLightMeshGeometry = d.gfxEngine.CreateMeshGeometry(meshBuilder.BuildGeometryInfo())
+	d.ambientLightMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildMeshDefinitionInfo(d.ambientLightMeshGeometry))
 }
 
 func (d *CommonData) deleteAmbientLightMesh() {
-	d.ambientLightMeshDef.Delete()
+	defer d.ambientLightMeshGeometry.Delete()
+	defer d.ambientLightMeshDef.Delete()
 }
 
 func (d *CommonData) createPointLightMesh() {
@@ -371,14 +413,14 @@ func (d *CommonData) createPointLightMesh() {
 		coneSegments   = 12
 	)
 
-	meshBuilder := graphics.NewSimpleMeshBuilder()
-	solids := meshBuilder.Solid(d.yellowMaterialDef)
+	meshBuilder := graphics.NewShapeBuilder()
+	solids := meshBuilder.Solid(d.yellowMaterial)
 	solids.Sphere(
 		sprec.ZeroVec3(),
 		sphereRadius,
 		sphereSegments,
 	)
-	solids = meshBuilder.Solid(d.darkYellowMaterialDef)
+	solids = meshBuilder.Solid(d.darkYellowMaterial)
 	solids.Cone(
 		sprec.NewVec3(0.0, 0.2, 0.0),
 		sprec.IdentityQuat(),
@@ -410,11 +452,13 @@ func (d *CommonData) createPointLightMesh() {
 		coneRadius, coneHeight, coneSegments,
 	)
 
-	d.pointLightMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
+	d.pointLightMeshGeometry = d.gfxEngine.CreateMeshGeometry(meshBuilder.BuildGeometryInfo())
+	d.pointLightMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildMeshDefinitionInfo(d.pointLightMeshGeometry))
 }
 
 func (d *CommonData) deletePointLightMesh() {
-	d.pointLightMeshDef.Delete()
+	defer d.pointLightMeshGeometry.Delete()
+	defer d.pointLightMeshDef.Delete()
 }
 
 func (d *CommonData) createSpotLightMesh() {
@@ -426,14 +470,14 @@ func (d *CommonData) createSpotLightMesh() {
 		coneSegments   = 12
 	)
 
-	meshBuilder := graphics.NewSimpleMeshBuilder()
-	solids := meshBuilder.Solid(d.yellowMaterialDef)
+	meshBuilder := graphics.NewShapeBuilder()
+	solids := meshBuilder.Solid(d.yellowMaterial)
 	solids.Sphere(
 		sprec.ZeroVec3(),
 		sphereRadius,
 		sphereSegments,
 	)
-	solids = meshBuilder.Solid(d.darkYellowMaterialDef)
+	solids = meshBuilder.Solid(d.darkYellowMaterial)
 	solids.Cone(
 		sprec.NewVec3(0.0, 0.0, -0.2),
 		sprec.RotationQuat(sprec.Degrees(-90), sprec.BasisXVec3()),
@@ -441,7 +485,7 @@ func (d *CommonData) createSpotLightMesh() {
 	)
 
 	// TODO: Split these lines as separate meshes
-	lines := meshBuilder.Wireframe(d.darkYellowMaterialDef)
+	lines := meshBuilder.Wireframe(d.darkYellowMaterial)
 	lines.Circle(
 		sprec.NewVec3(0.0, 0.0, -0.4),
 		sprec.IdentityQuat(),
@@ -453,11 +497,13 @@ func (d *CommonData) createSpotLightMesh() {
 		0.05, 20,
 	)
 
-	d.spotLightMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
+	d.spotLightMeshGeometry = d.gfxEngine.CreateMeshGeometry(meshBuilder.BuildGeometryInfo())
+	d.spotLightMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildMeshDefinitionInfo(d.spotLightMeshGeometry))
 }
 
 func (d *CommonData) deleteSpotLightMesh() {
-	d.spotLightMeshDef.Delete()
+	defer d.spotLightMeshGeometry.Delete()
+	defer d.spotLightMeshDef.Delete()
 }
 
 func (d *CommonData) createDirectionalLightMesh() {
@@ -467,14 +513,14 @@ func (d *CommonData) createDirectionalLightMesh() {
 		coneSegments = 12
 	)
 
-	meshBuilder := graphics.NewSimpleMeshBuilder()
-	solids := meshBuilder.Solid(d.yellowMaterialDef)
+	meshBuilder := graphics.NewShapeBuilder()
+	solids := meshBuilder.Solid(d.yellowMaterial)
 	solids.Cuboid(
 		sprec.ZeroVec3(),
 		sprec.IdentityQuat(),
 		sprec.NewVec3(0.3, 0.3, 0.02),
 	)
-	solids = meshBuilder.Solid(d.darkYellowMaterialDef)
+	solids = meshBuilder.Solid(d.darkYellowMaterial)
 	solids.Cone(
 		sprec.NewVec3(-0.1, 0.1, -0.15),
 		sprec.RotationQuat(sprec.Degrees(-90), sprec.BasisXVec3()),
@@ -496,9 +542,23 @@ func (d *CommonData) createDirectionalLightMesh() {
 		coneRadius, coneHeight, coneSegments,
 	)
 
-	d.directionalLightMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildInfo())
+	d.directionalLightMeshGeometry = d.gfxEngine.CreateMeshGeometry(meshBuilder.BuildGeometryInfo())
+	d.directionalLightMeshDef = d.gfxEngine.CreateMeshDefinition(meshBuilder.BuildMeshDefinitionInfo(d.directionalLightMeshGeometry))
 }
 
 func (d *CommonData) deleteDirectionalLightMesh() {
-	d.directionalLightMeshDef.Delete()
+	defer d.directionalLightMeshGeometry.Delete()
+	defer d.directionalLightMeshDef.Delete()
+}
+
+type ColorUniform struct {
+	Color sprec.Vec4
+}
+
+func (u ColorUniform) Std140Plot(plotter *blob.Plotter) {
+	plotter.PlotSPVec4(u.Color)
+}
+
+func (u ColorUniform) Std140Size() int {
+	return 4 * render.SizeF32
 }

@@ -6,7 +6,7 @@ import (
 
 	"github.com/mokiat/gog"
 	"github.com/mokiat/lacking/debug/log"
-	asset "github.com/mokiat/lacking/game/newasset"
+	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mvc"
 )
@@ -38,7 +38,7 @@ func (m *Model) Assets() []*Asset {
 }
 
 func (m *Model) CreateAsset(name string) (*Asset, error) {
-	resource, err := m.delegate.CreateResource(name, asset.Fragment{})
+	resource, err := m.delegate.CreateResource(name, asset.Model{})
 	if err != nil {
 		return nil, fmt.Errorf("error creating resource: %w", err)
 	}

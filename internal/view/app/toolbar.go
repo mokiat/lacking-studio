@@ -1,12 +1,17 @@
 package app
 
 import (
+	"os/exec"
+
 	appmodel "github.com/mokiat/lacking-studio/internal/model/app"
 	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	registrymodel "github.com/mokiat/lacking-studio/internal/model/registry"
 	"github.com/mokiat/lacking-studio/internal/view/common"
+	"github.com/mokiat/lacking-studio/internal/view/editor/viewport"
 	registryview "github.com/mokiat/lacking-studio/internal/view/registry"
+	"github.com/mokiat/lacking-studio/internal/visualization"
 	"github.com/mokiat/lacking/debug/log"
+	"github.com/mokiat/lacking/game/graphics"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
@@ -96,6 +101,15 @@ func (c *toolbarComponent) Render() co.Instance {
 
 		co.WithChild("separator-after-history", co.New(std.ToolbarSeparator, nil))
 
+		co.WithChild("play", co.New(std.ToolbarButton, func() {
+			co.WithData(std.ToolbarButtonData{
+				Icon: co.OpenImage(c.Scope(), "icons/play.png"),
+			})
+			co.WithCallbackData(std.ToolbarButtonCallbackData{
+				OnClick: c.handlePlayClicked,
+			})
+		}))
+
 		if c.appModel.IsInspectorVisible() {
 			co.WithChild("collapse-right", co.New(std.ToolbarButton, func() {
 				co.WithLayoutData(layout.Data{
@@ -182,7 +196,8 @@ func (c *toolbarComponent) handleCreateScene(name string) {
 		common.OpenError(c.Scope(), "Error creating scene!\nCheck logs for more info.")
 		return
 	}
-	editor := editormodel.NewModel(c.eventBus, asset)
+
+	editor := c.createEditor(asset)
 	c.appModel.AddEditor(editor)
 	c.appModel.SetActiveEditor(editor)
 }
@@ -199,21 +214,28 @@ func (c *toolbarComponent) handleBrowseClicked() {
 }
 
 func (c *toolbarComponent) handleAssetOpen(asset *registrymodel.Asset) {
-	editor := editormodel.NewModel(c.eventBus, asset)
-	c.appModel.AddEditor(editor)
+	editor := c.appModel.EditorForAsseet(asset)
+	if editor == nil {
+		editor = c.createEditor(asset)
+		c.appModel.AddEditor(editor)
+	}
 	c.appModel.SetActiveEditor(editor)
 }
 
 func (c *toolbarComponent) onSaveClicked() {
-	log.Info("Save")
+	co.Window(c.Scope()).Save()
 }
 
 func (c *toolbarComponent) onUndoClicked() {
-	log.Info("Undo")
+	co.Window(c.Scope()).Undo()
 }
 
 func (c *toolbarComponent) onRedoClicked() {
-	log.Info("Redo")
+	co.Window(c.Scope()).Redo()
+}
+
+func (c *toolbarComponent) handlePlayClicked() {
+	exec.Command("task", "run").Start()
 }
 
 func (c *toolbarComponent) onExpandNavigator() {
@@ -230,4 +252,13 @@ func (c *toolbarComponent) onExpandInspector() {
 
 func (c *toolbarComponent) onCollapseInspector() {
 	c.appModel.SetInpsectorVisible(false)
+}
+
+func (c *toolbarComponent) createEditor(asset *registrymodel.Asset) *editormodel.Model {
+	window := co.Window(c.Scope())
+	renderAPI := window.RenderAPI()
+	commonData := co.TypedValue[*viewport.CommonData](c.Scope())
+	gfxEngine := co.TypedValue[*graphics.Engine](c.Scope())
+	vis := visualization.NewFragment(renderAPI, gfxEngine, commonData)
+	return editormodel.NewModel(c.eventBus, asset, vis)
 }

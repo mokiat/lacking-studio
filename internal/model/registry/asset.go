@@ -1,13 +1,17 @@
 package registry
 
 import (
-	asset "github.com/mokiat/lacking/game/newasset"
+	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
 )
 
 type Asset struct {
 	delegate     *asset.Resource
 	previewImage *ui.Image
+}
+
+func (a *Asset) Resource() *asset.Resource {
+	return a.delegate
 }
 
 func (a *Asset) ID() string {
@@ -20,4 +24,8 @@ func (a *Asset) Name() string {
 
 func (a *Asset) Image() *ui.Image {
 	return a.previewImage
+}
+
+func (a *Asset) SetImage(image *ui.Image) {
+	a.previewImage = image
 }

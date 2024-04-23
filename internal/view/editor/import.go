@@ -8,6 +8,7 @@ import (
 	"github.com/mokiat/gog/ds"
 	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking/data/pack"
+	"github.com/mokiat/lacking/game/asset/mdl"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
@@ -36,7 +37,7 @@ type modelImportComponent struct {
 	animationsExpanded bool
 
 	selectedNodes     *ds.Set[*pack.Node]
-	selectedTextures  *ds.Set[*pack.Image]
+	selectedTextures  *ds.Set[*mdl.Image]
 	selectedMaterials *ds.Set[*pack.Material]
 	selectedMeshes    *ds.Set[*pack.MeshDefinition]
 
@@ -51,7 +52,7 @@ func (c *modelImportComponent) OnCreate() {
 	c.animationsExpanded = true
 
 	c.selectedNodes = ds.NewSet[*pack.Node](0)
-	c.selectedTextures = ds.NewSet[*pack.Image](0)
+	c.selectedTextures = ds.NewSet[*mdl.Image](0)
 	c.selectedMaterials = ds.NewSet[*pack.Material](0)
 	c.selectedMeshes = ds.NewSet[*pack.MeshDefinition](0)
 
@@ -160,11 +161,12 @@ func (c *modelImportComponent) Render() co.Instance {
 						OnToggle: c.handleTexturesToggle,
 					})
 
-					c.eachTexture(func(index int, texture *pack.Image, selected bool) {
+					c.eachTexture(func(index int, texture *mdl.Image, selected bool) {
 						co.WithChild(strconv.Itoa(index), co.New(std.Checkbox, func() {
 							co.WithData(std.CheckboxData{
 								Checked: selected,
-								Label:   texture.Name,
+								// Label:   texture.Name,
+								Label: "TODO: texture.Name",
 							})
 							co.WithCallbackData(std.CheckboxCallbackData{
 								OnToggle: func(active bool) {
@@ -283,7 +285,7 @@ func (c *modelImportComponent) handleSelectAll() {
 	c.eachNode(func(_ int, _ int, node *pack.Node, _ bool) {
 		c.selectedNodes.Add(node)
 	})
-	c.eachTexture(func(_ int, texture *pack.Image, _ bool) {
+	c.eachTexture(func(_ int, texture *mdl.Image, _ bool) {
 		c.selectedTextures.Add(texture)
 	})
 	c.eachMaterial(func(_ int, material *pack.Material, _ bool) {
@@ -299,7 +301,7 @@ func (c *modelImportComponent) handleDeselectAll() {
 	c.eachNode(func(_ int, _ int, node *pack.Node, _ bool) {
 		c.selectedNodes.Remove(node)
 	})
-	c.eachTexture(func(_ int, texture *pack.Image, _ bool) {
+	c.eachTexture(func(_ int, texture *mdl.Image, _ bool) {
 		c.selectedTextures.Remove(texture)
 	})
 	c.eachMaterial(func(_ int, material *pack.Material, _ bool) {
@@ -330,7 +332,7 @@ func (c *modelImportComponent) handleTexturesToggle() {
 	c.Invalidate()
 }
 
-func (c *modelImportComponent) handleTextureSelection(texture *pack.Image, active bool) {
+func (c *modelImportComponent) handleTextureSelection(texture *mdl.Image, active bool) {
 	if active {
 		c.selectedTextures.Add(texture)
 	} else {
@@ -397,7 +399,7 @@ func (c *modelImportComponent) eachNode(cb func(index, depth int, node *pack.Nod
 	}
 }
 
-func (c *modelImportComponent) eachTexture(cb func(index int, texture *pack.Image, selected bool)) {
+func (c *modelImportComponent) eachTexture(cb func(index int, texture *mdl.Image, selected bool)) {
 	for i, texture := range c.model.Textures {
 		cb(i, texture, c.selectedTextures.Contains(texture))
 	}

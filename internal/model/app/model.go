@@ -60,11 +60,14 @@ func (m *Model) EachEditor(cb func(editor *editormodel.Model)) {
 	}
 }
 
-func (m *Model) HasEditorForAsseet(asset *registrymodel.Asset) bool {
-	_, has := gog.FindFunc(m.editors, func(editor *editormodel.Model) bool {
+func (m *Model) EditorForAsseet(asset *registrymodel.Asset) *editormodel.Model {
+	editor, has := gog.FindFunc(m.editors, func(editor *editormodel.Model) bool {
 		return editor.Asset() == asset
 	})
-	return has
+	if !has {
+		return nil
+	}
+	return editor
 }
 
 func (m *Model) AddEditor(editor *editormodel.Model) {

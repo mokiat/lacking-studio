@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"fmt"
+
 	"github.com/mokiat/gog/opt"
 	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	"github.com/mokiat/lacking/ui"
@@ -83,7 +85,31 @@ func (c *navigatorComponent) Render() co.Instance {
 			})
 			co.WithData(std.ContainerData{
 				BackgroundColor: opt.V(std.SurfaceColor),
+				BorderColor:     opt.V(std.OutlineColor),
+				BorderSize:      ui.UniformSpacing(1),
+				Layout: layout.Vertical(layout.VerticalSettings{
+					ContentAlignment: layout.HorizontalAlignmentLeft,
+				}),
 			})
+
+			selectedNode, ok := c.editorModel.Selection().(editormodel.Node)
+			if !ok {
+				selectedNode = nil
+			}
+			for i, node := range c.editorModel.Nodes() {
+				co.WithChild(fmt.Sprintf("node-%d", i), co.New(NodeBranch, func() {
+					co.WithLayoutData(layout.Data{
+						GrowHorizontally: true,
+					})
+					co.WithData(NodeBranchData{
+						Node:         node,
+						SelectedNode: selectedNode,
+					})
+					co.WithCallbackData(NodeBranchCallbackData{
+						OnSelect: c.handleNodeSelect,
+					})
+				}))
+			}
 		}))
 	})
 }
@@ -99,4 +125,9 @@ func (c *navigatorComponent) OnEvent(event mvc.Event) {
 
 func (c *navigatorComponent) handlePageSelected(key any) {
 	c.editorModel.SetNavigatorPage(key.(editormodel.NavigatorPage))
+}
+
+func (c *navigatorComponent) handleNodeSelect(node editormodel.Node) {
+	c.editorModel.SetSelection(node)
+	c.Invalidate()
 }

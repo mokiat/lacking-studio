@@ -11,3 +11,7 @@ type InspectorPageChangedEvent struct {
 type SelectionChangedEvent struct {
 	Editor *Model
 }
+
+type NodesChangedEvent struct {
+	Editor *Model
+}

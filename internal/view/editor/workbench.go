@@ -2,17 +2,16 @@ package editor
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 
 	"github.com/mokiat/gomath/dprec"
-	"github.com/mokiat/gomath/sprec"
 	editormodel "github.com/mokiat/lacking-studio/internal/model/editor"
 	"github.com/mokiat/lacking-studio/internal/view/common"
-	"github.com/mokiat/lacking-studio/internal/view/editor/viewport"
+	"github.com/mokiat/lacking-studio/internal/visualization"
 	"github.com/mokiat/lacking/data/pack"
 	"github.com/mokiat/lacking/debug/log"
-	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -29,78 +28,85 @@ type WorkbenchData struct {
 type workbenchComponent struct {
 	co.BaseComponent
 
-	renderAPI  render.API
-	commonData *viewport.CommonData
+	editorModel *editormodel.Model
+	vis         *visualization.Fragment
 
-	gfxEngine *graphics.Engine
-	gfxScene  *graphics.Scene
-	gfxCamera *graphics.Camera
+	renderAPI render.API
+	// commonData *viewport.CommonData
 
-	cameraGizmo *viewport.CameraGizmo
+	// gfxEngine *graphics.Engine
+	// gfxScene  *graphics.Scene
+	// gfxCamera *graphics.Camera
+
+	// cameraGizmo *viewport.CameraGizmo
 }
 
 func (c *workbenchComponent) OnCreate() {
+	data := co.GetData[WorkbenchData](c.Properties())
+	c.editorModel = data.EditorModel
+	c.vis = c.editorModel.Visualization()
+
 	window := co.Window(c.Scope())
 	c.renderAPI = window.RenderAPI()
 
-	c.commonData = co.TypedValue[*viewport.CommonData](c.Scope())
-	c.gfxEngine = co.TypedValue[*graphics.Engine](c.Scope())
+	// c.commonData = co.TypedValue[*viewport.CommonData](c.Scope())
+	// c.gfxEngine = co.TypedValue[*graphics.Engine](c.Scope())
 
-	c.gfxScene = c.gfxEngine.CreateScene()
-	c.gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.01, 0.01, 0.02))
+	// c.gfxScene = c.gfxEngine.CreateScene()
+	// c.gfxScene.Sky().SetBackgroundColor(sprec.NewVec3(0.01, 0.01, 0.02))
 
-	c.gfxCamera = c.gfxScene.CreateCamera()
-	c.gfxCamera.SetExposure(1.0)
-	c.gfxCamera.SetAutoExposure(false)
-	c.gfxCamera.SetFoV(sprec.Degrees(60))
-	c.gfxCamera.SetFoVMode(graphics.FoVModeHorizontalPlus)
-	c.cameraGizmo = viewport.NewCameraGizmo(c.gfxCamera)
+	// c.gfxCamera = c.gfxScene.CreateCamera()
+	// c.gfxCamera.SetExposure(1.0)
+	// c.gfxCamera.SetAutoExposure(false)
+	// c.gfxCamera.SetFoV(sprec.Degrees(60))
+	// c.gfxCamera.SetFoVMode(graphics.FoVModeHorizontalPlus)
+	// c.cameraGizmo = viewport.NewCameraGizmo(c.gfxCamera)
 
-	gridMeshDef := c.commonData.GridMeshDefinition()
-	gridMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
-		Definition: gridMeshDef,
-	})
-	gridMesh.SetMatrix(dprec.IdentityMat4())
+	// gridMeshDef := c.commonData.GridMeshDefinition()
+	// gridMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
+	// 	Definition: gridMeshDef,
+	// })
+	// gridMesh.SetMatrix(dprec.IdentityMat4())
 
-	cameraMeshDef := c.commonData.CameraMeshDefinition()
-	cameraMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
-		Definition: cameraMeshDef,
-	})
-	cameraMesh.SetMatrix(dprec.TranslationMat4(-3.0, 0.1, 0.0))
+	// cameraMeshDef := c.commonData.CameraMeshDefinition()
+	// cameraMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
+	// 	Definition: cameraMeshDef,
+	// })
+	// cameraMesh.SetMatrix(dprec.TranslationMat4(-3.0, 0.1, 0.0))
 
-	nodeMeshDef := c.commonData.NodeMeshDefinition()
-	nodeMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
-		Definition: nodeMeshDef,
-	})
-	nodeMesh.SetMatrix(dprec.TranslationMat4(-2.0, 0.1, 0.0))
+	// nodeMeshDef := c.commonData.NodeMeshDefinition()
+	// nodeMesh := c.gfxScene.CreateMesh(graphics.MeshInfo{
+	// 	Definition: nodeMeshDef,
+	// })
+	// nodeMesh.SetMatrix(dprec.TranslationMat4(-2.0, 0.1, 0.0))
 
-	ambientLightMeshDef := c.commonData.AmbientLightMeshDefinition()
-	ambientLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
-		Definition: ambientLightMeshDef,
-	})
-	ambientLight.SetMatrix(dprec.TranslationMat4(-1.0, 0.1, 0.0))
+	// ambientLightMeshDef := c.commonData.AmbientLightMeshDefinition()
+	// ambientLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
+	// 	Definition: ambientLightMeshDef,
+	// })
+	// ambientLight.SetMatrix(dprec.TranslationMat4(-1.0, 0.1, 0.0))
 
-	pointLightMeshDef := c.commonData.PointLightMeshDefinition()
-	pointLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
-		Definition: pointLightMeshDef,
-	})
-	pointLight.SetMatrix(dprec.TranslationMat4(0.0, 0.1, 0.0))
+	// pointLightMeshDef := c.commonData.PointLightMeshDefinition()
+	// pointLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
+	// 	Definition: pointLightMeshDef,
+	// })
+	// pointLight.SetMatrix(dprec.TranslationMat4(0.0, 0.1, 0.0))
 
-	spotLightMeshDef := c.commonData.SpotLightMeshDefinition()
-	spotLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
-		Definition: spotLightMeshDef,
-	})
-	spotLight.SetMatrix(dprec.TranslationMat4(1.0, 0.1, 0.0))
+	// spotLightMeshDef := c.commonData.SpotLightMeshDefinition()
+	// spotLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
+	// 	Definition: spotLightMeshDef,
+	// })
+	// spotLight.SetMatrix(dprec.TranslationMat4(1.0, 0.1, 0.0))
 
-	directionalLightMeshDef := c.commonData.DirectionalLightMeshDefinition()
-	directionalLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
-		Definition: directionalLightMeshDef,
-	})
-	directionalLight.SetMatrix(dprec.TranslationMat4(2.0, 0.1, 0.0))
+	// directionalLightMeshDef := c.commonData.DirectionalLightMeshDefinition()
+	// directionalLight := c.gfxScene.CreateMesh(graphics.MeshInfo{
+	// 	Definition: directionalLightMeshDef,
+	// })
+	// directionalLight.SetMatrix(dprec.TranslationMat4(2.0, 0.1, 0.0))
 }
 
 func (c *workbenchComponent) OnDelete() {
-	c.gfxScene.Delete()
+	// c.gfxScene.Delete()
 }
 
 func (c *workbenchComponent) Render() co.Instance {
@@ -149,23 +155,28 @@ func (c *workbenchComponent) handleViewportKeyboardEvent(element *ui.Element, ev
 		return true
 	}
 
-	return c.cameraGizmo.OnKeyboardEvent(element, event)
+	// return c.cameraGizmo.OnKeyboardEvent(element, event)
+
+	return c.vis.OnKeyboardEvent(element, event)
 }
 
 func (c *workbenchComponent) handleViewportMouseEvent(element *ui.Element, event ui.MouseEvent) bool {
 	// TODO: Do camera motion. Have a "Gadget" concept and pass control initially to it.
 	// Then trickle down until you get to here. If no gadget is interested, then do camera motion.
 
-	return c.cameraGizmo.OnMouseEvent(element, event)
+	// return c.cameraGizmo.OnMouseEvent(element, event)
+
+	return c.vis.OnMouseEvent(element, event)
 }
 
 func (c *workbenchComponent) handleViewportRender(framebuffer render.Framebuffer, size ui.Size) {
-	c.gfxScene.RenderFramebuffer(framebuffer, graphics.Viewport{
-		X:      0,
-		Y:      0,
-		Width:  size.Width,
-		Height: size.Height,
-	})
+	// c.gfxScene.RenderFramebuffer(framebuffer, graphics.Viewport{
+	// 	X:      0,
+	// 	Y:      0,
+	// 	Width:  size.Width,
+	// 	Height: size.Height,
+	// })
+	c.vis.OnRender(framebuffer, size)
 }
 
 func (c *workbenchComponent) openAddNodeModal() {
@@ -177,7 +188,17 @@ func (c *workbenchComponent) openAddNodeModal() {
 }
 
 func (c *workbenchComponent) handleAddNode(kind editormodel.NodeKind) {
-	log.Info("Adding node of kind %v", kind)
+	selectedNode, ok := c.editorModel.Selection().(editormodel.Node)
+	if !ok {
+		selectedNode = nil
+	}
+
+	switch kind {
+	case editormodel.NodeKindPointLight:
+		c.createPointLight(selectedNode)
+	default:
+		log.Info("Adding node of kind %v", kind)
+	}
 }
 
 func (c *workbenchComponent) handleDropGLB(path string) {
@@ -234,4 +255,22 @@ func (c *workbenchComponent) handleDropHDR(path string) {
 
 func (c *workbenchComponent) importModel(model *pack.Model) {
 	log.Info("Texture count: %d", len(model.Textures))
+}
+
+func (c *workbenchComponent) createPointLight(parent editormodel.Node) {
+	node := c.editorModel.CreatePointLight(editormodel.PointLightInfo{
+		Name: fmt.Sprintf("PointLight %d", rand.Intn(1000)), // FIXME
+	})
+	node.SetPosition(dprec.Vec3{
+		X: rand.Float64()*10.0 - 5.0,
+		Y: 2.0, // FIXME
+		Z: rand.Float64()*10.0 - 5.0,
+	})
+
+	if extendable, ok := parent.(editormodel.ExtendableNode); ok {
+		extendable.AppendChild(node)
+	} else {
+		c.editorModel.AddNode(node)
+	}
+	// c.editorModel.SetSelection(node)
 }
