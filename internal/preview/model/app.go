@@ -28,6 +28,7 @@ func (m *AppModel) SetSelectedResource(resource *asset.Resource) {
 	m.eventBus.Notify(SelectedResourceChangedEvent{})
 }
 
+// TODO: Return a promise.
 func (m *AppModel) Refresh() {
 	if m.selectedResource == nil {
 		if err := m.registry.Reload(); err != nil {

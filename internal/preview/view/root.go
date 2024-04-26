@@ -2,10 +2,11 @@ package view
 
 import (
 	"github.com/mokiat/gog/opt"
+	"github.com/mokiat/lacking-studio/internal/global"
 	"github.com/mokiat/lacking-studio/internal/preview/model"
+	"github.com/mokiat/lacking-studio/internal/viewport"
 	"github.com/mokiat/lacking/debug/log"
 	"github.com/mokiat/lacking/game/asset"
-	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
@@ -19,25 +20,23 @@ var Root = mvc.EventListener(co.Define(&rootComponent{}))
 type rootComponent struct {
 	co.BaseComponent
 
-	registry *asset.Registry
+	commonData *viewport.CommonData
+	registry   *asset.Registry
+
 	appModel *model.AppModel
 }
 
 func (c *rootComponent) OnCreate() {
-	// TODO: Initialize gfx engine and common data
-
-	c.registry = co.TypedValue[*asset.Registry](c.Scope())
+	ctx := co.TypedValue[*global.Context](c.Scope())
+	c.commonData = ctx.CommonData
+	c.registry = ctx.Registry
 
 	eventBus := co.TypedValue[*mvc.EventBus](c.Scope())
 	c.appModel = model.NewAppModel(eventBus, c.registry)
-
-	co.Window(c.Scope()).SetCloseInterceptor(c.onCloseRequested)
 }
 
 func (c *rootComponent) OnDelete() {
-	co.Window(c.Scope()).SetCloseInterceptor(nil)
-
-	// TODO: release common data and gfx engine
+	c.commonData.Delete()
 }
 
 func (c *rootComponent) Render() co.Instance {
@@ -67,14 +66,14 @@ func (c *rootComponent) Render() co.Instance {
 				})
 			}))
 		} else {
-			co.WithChild("viewport", co.New(std.Container, func() {
+			co.WithChild("viewport", co.New(Viewport, func() {
 				co.WithLayoutData(layout.Data{
 					HorizontalAlignment: layout.HorizontalAlignmentCenter,
 					VerticalAlignment:   layout.VerticalAlignmentCenter,
 				})
-				co.WithData(std.ContainerData{
-					Layout:          layout.Fill(),
-					BackgroundColor: opt.V(ui.Black()),
+				co.WithData(ViewportData{
+					AppModel: c.appModel,
+					Resource: c.appModel.SelectedResource(),
 				})
 			}))
 		}
@@ -89,8 +88,4 @@ func (c *rootComponent) OnEvent(event mvc.Event) {
 		// TODO: Open error dialog
 		log.Error("Refresh error: %v", event.Err)
 	}
-}
-
-func (c *rootComponent) onCloseRequested() bool {
-	return true
 }
