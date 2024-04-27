@@ -32,7 +32,7 @@ func (c *rootComponent) OnCreate() {
 	c.registry = ctx.Registry
 
 	eventBus := co.TypedValue[*mvc.EventBus](c.Scope())
-	c.appModel = model.NewAppModel(eventBus, c.registry)
+	c.appModel = model.NewAppModel(co.Window(c.Scope()), eventBus, c.registry)
 }
 
 func (c *rootComponent) OnDelete() {

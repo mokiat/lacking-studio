@@ -1,12 +1,18 @@
 package model
 
 import (
+	"os"
+	"os/exec"
+
 	"github.com/mokiat/lacking/game/asset"
+	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mvc"
+	"github.com/mokiat/lacking/util/async"
 )
 
-func NewAppModel(eventBus *mvc.EventBus, registry *asset.Registry) *AppModel {
+func NewAppModel(window *ui.Window, eventBus *mvc.EventBus, registry *asset.Registry) *AppModel {
 	return &AppModel{
+		window:   window,
 		eventBus: eventBus,
 		registry: registry,
 
@@ -18,10 +24,13 @@ func NewAppModel(eventBus *mvc.EventBus, registry *asset.Registry) *AppModel {
 		showAmbientLight:     true,
 		showDirectionalLight: true,
 		showSky:              true,
+
+		refreshEnabled: true,
 	}
 }
 
 type AppModel struct {
+	window   *ui.Window
 	eventBus *mvc.EventBus
 	registry *asset.Registry
 
@@ -35,6 +44,8 @@ type AppModel struct {
 	showAmbientLight     bool
 	showDirectionalLight bool
 	showSky              bool
+
+	refreshEnabled bool
 }
 
 func (m *AppModel) SelectedResource() *asset.Resource {
@@ -46,17 +57,79 @@ func (m *AppModel) SetSelectedResource(resource *asset.Resource) {
 	m.eventBus.Notify(SelectedResourceChangedEvent{})
 }
 
-// TODO: Return a promise.
+func (m *AppModel) RefreshEnabled() bool {
+	return m.refreshEnabled
+}
+
 func (m *AppModel) Refresh() {
-	if m.selectedResource == nil {
-		if err := m.registry.Reload(); err != nil {
-			m.eventBus.Notify(RefreshErrorEvent{
-				Err: err,
-			})
-			return
+	if m.refreshEnabled {
+		m.refreshEnabled = false
+		var promise async.Promise[struct{}]
+		if m.selectedResource == nil {
+			promise = m.refreshRegistry()
+		} else {
+			promise = m.refreshResource(m.selectedResource)
 		}
+		promise.OnSuccess(func(struct{}) {
+			m.window.Schedule(func() {
+				m.refreshEnabled = true
+				m.eventBus.Notify(RefreshEvent{})
+			})
+		})
+		promise.OnError(func(err error) {
+			m.window.Schedule(func() {
+				m.refreshEnabled = true
+				m.eventBus.Notify(RefreshErrorEvent{
+					Err: err,
+				})
+			})
+		})
 	}
-	m.eventBus.Notify(RefreshEvent{})
+}
+
+func (m *AppModel) refreshRegistry() async.Promise[struct{}] {
+	promise := async.NewPromise[struct{}]()
+	go func() {
+		if err := m.packAssets(""); err != nil {
+			promise.Fail(err)
+		}
+
+		reloadErr := make(chan error)
+		m.window.Schedule(func() {
+			reloadErr <- m.registry.Reload()
+		})
+		if err := <-reloadErr; err != nil {
+			promise.Fail(err)
+		}
+
+		promise.Deliver(struct{}{})
+	}()
+	return promise
+}
+
+func (m *AppModel) refreshResource(resource *asset.Resource) async.Promise[struct{}] {
+	promise := async.NewPromise[struct{}]()
+	go func() {
+		if err := m.packAssets(resource.Name()); err != nil {
+			promise.Fail(err)
+		}
+		promise.Deliver(struct{}{})
+	}()
+	return promise
+}
+
+func (m *AppModel) packAssets(model string) error {
+	args := []string{"pack"}
+	if model != "" {
+		args = append(args, "--", model)
+	}
+	cmd := exec.Command("task", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *AppModel) Resources() []*asset.Resource {

@@ -32,8 +32,9 @@ func (c *toolbarComponent) Render() co.Instance {
 
 		co.WithChild("refresh", co.New(std.ToolbarButton, func() {
 			co.WithData(std.ToolbarButtonData{
-				Icon: co.OpenImage(c.Scope(), "icons/refresh.png"),
-				Text: "Refresh",
+				Icon:    co.OpenImage(c.Scope(), "icons/refresh.png"),
+				Text:    "Refresh",
+				Enabled: opt.V(c.appModel.RefreshEnabled()),
 			})
 			co.WithCallbackData(std.ToolbarButtonCallbackData{
 				OnClick: c.handleRefresh,
@@ -79,6 +80,12 @@ func (c *toolbarComponent) Render() co.Instance {
 
 func (c *toolbarComponent) OnEvent(event mvc.Event) {
 	switch event.(type) {
+	case model.RefreshEvent:
+		// TODO: Hide loading indicator
+		c.Invalidate()
+	case model.RefreshErrorEvent:
+		// TODO: Hide loading indicator and show error
+		c.Invalidate()
 	case model.SelectedResourceChangedEvent:
 		c.Invalidate()
 	}
@@ -86,6 +93,7 @@ func (c *toolbarComponent) OnEvent(event mvc.Event) {
 
 func (c *toolbarComponent) handleRefresh() {
 	c.appModel.Refresh()
+	// TODO: Show loading indicator
 	c.Invalidate()
 }
 
