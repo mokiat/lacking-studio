@@ -3,6 +3,8 @@ package view
 import (
 	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/preview/model"
+	"github.com/mokiat/lacking-studio/internal/widget"
+	"github.com/mokiat/lacking/debug/log"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
@@ -19,6 +21,8 @@ type toolbarComponent struct {
 	co.BaseComponent
 
 	appModel *model.AppModel
+
+	loadingModal co.Overlay
 }
 
 func (c *toolbarComponent) OnUpsert() {
@@ -79,12 +83,12 @@ func (c *toolbarComponent) Render() co.Instance {
 }
 
 func (c *toolbarComponent) OnEvent(event mvc.Event) {
-	switch event.(type) {
+	switch event := event.(type) {
 	case model.RefreshEvent:
-		// TODO: Hide loading indicator
+		c.handleRefreshComplete(nil)
 		c.Invalidate()
 	case model.RefreshErrorEvent:
-		// TODO: Hide loading indicator and show error
+		c.handleRefreshComplete(event.Err)
 		c.Invalidate()
 	case model.SelectedResourceChangedEvent:
 		c.Invalidate()
@@ -93,8 +97,21 @@ func (c *toolbarComponent) OnEvent(event mvc.Event) {
 
 func (c *toolbarComponent) handleRefresh() {
 	c.appModel.Refresh()
-	// TODO: Show loading indicator
+	c.loadingModal = co.OpenOverlay(c.Scope(), co.New(widget.LoadingModal, nil))
 	c.Invalidate()
+}
+
+func (c *toolbarComponent) handleRefreshComplete(err error) {
+	c.loadingModal.Close()
+	if err != nil {
+		log.Error("Refresh error: %v", err)
+		co.OpenOverlay(c.Scope(), co.New(widget.NotificationModal, func() {
+			co.WithData(widget.NotificationModalData{
+				Icon: co.OpenImage(c.Scope(), "icons/error.png"),
+				Text: "Error during refresh.\n\nCheck logs for more info.",
+			})
+		}))
+	}
 }
 
 func (c *toolbarComponent) handleBack() {
