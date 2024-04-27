@@ -1,6 +1,9 @@
 package viewport
 
 import (
+	"github.com/mokiat/gblob"
+	"github.com/mokiat/gomath/dprec"
+	"github.com/mokiat/gomath/dtos"
 	"github.com/mokiat/gomath/sprec"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/render"
@@ -16,6 +19,7 @@ func NewCommonData(gfxEngine *graphics.Engine) *CommonData {
 type CommonData struct {
 	gfxEngine *graphics.Engine
 
+	skyTexture    render.Texture
 	skyDefinition *graphics.SkyDefinition
 
 	redMaterial        *graphics.Material
@@ -75,6 +79,14 @@ func (d *CommonData) Delete() {
 	defer d.deleteDirectionalLightMesh()
 }
 
+func (d *CommonData) SkyColor() dprec.Vec4 {
+	return dprec.NewVec4(0.50, 0.61, 0.76, 1.0)
+}
+
+func (d *CommonData) SkyTexture() render.Texture {
+	return d.skyTexture
+}
+
 func (d *CommonData) SkyDefinition() *graphics.SkyDefinition {
 	return d.skyDefinition
 }
@@ -107,7 +119,37 @@ func (d *CommonData) DirectionalLightMeshDefinition() *graphics.MeshDefinition {
 	return d.directionalLightMeshDef
 }
 
+func colorToRGBA32FData(color sprec.Vec3) []byte {
+	colorData := make(gblob.LittleEndianBlock, 4*4)
+	colorData.SetFloat32(0, color.X)
+	colorData.SetFloat32(4, color.Y)
+	colorData.SetFloat32(8, color.Z)
+	colorData.SetFloat32(12, 1.0)
+	return colorData
+}
+
 func (d *CommonData) createSky() {
+	frontColor := sprec.NewVec3(0.12, 0.15, 0.12)
+	backColor := sprec.NewVec3(1.66, 1.81, 1.86)
+	leftColor := sprec.NewVec3(1.66, 1.81, 1.86)
+	rightColor := sprec.NewVec3(0.23, 0.25, 0.15)
+	topColor := sprec.NewVec3(0.47, 0.59, 0.73)
+	bottomColor := sprec.NewVec3(0.19, 0.19, 0.17)
+
+	renderAPI := d.gfxEngine.API()
+	d.skyTexture = renderAPI.CreateColorTextureCube(render.ColorTextureCubeInfo{
+		Dimension:       1,
+		GenerateMipmaps: false,
+		GammaCorrection: false,
+		Format:          render.DataFormatRGBA32F,
+		FrontSideData:   colorToRGBA32FData(frontColor),
+		BackSideData:    colorToRGBA32FData(backColor),
+		LeftSideData:    colorToRGBA32FData(leftColor),
+		RightSideData:   colorToRGBA32FData(rightColor),
+		TopSideData:     colorToRGBA32FData(topColor),
+		BottomSideData:  colorToRGBA32FData(bottomColor),
+	})
+
 	skyShader := d.gfxEngine.CreateSkyShader(graphics.ShaderInfo{
 		SourceCode: `
 			uniforms {
@@ -127,10 +169,11 @@ func (d *CommonData) createSky() {
 			},
 		},
 	})
-	d.skyDefinition.SetProperty("color", sprec.NewVec4(0.01, 0.01, 0.02, 1.0))
+	d.skyDefinition.SetProperty("color", dtos.Vec4(d.SkyColor()))
 }
 
 func (d *CommonData) deleteSky() {
+	defer d.skyTexture.Release()
 	defer d.skyDefinition.Delete()
 }
 

@@ -1,7 +1,6 @@
 package view
 
 import (
-	"github.com/mokiat/gblob"
 	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/gomath/dprec"
 	"github.com/mokiat/gomath/sprec"
@@ -34,8 +33,6 @@ type viewportComponent struct {
 
 	renderAPI render.API
 
-	ambientTexture render.Texture
-
 	gameEngine *game.Engine
 	gameScene  *game.Scene
 
@@ -58,24 +55,6 @@ func (c *viewportComponent) OnCreate() {
 
 	window := co.Window(c.Scope())
 	c.renderAPI = window.RenderAPI()
-
-	ambientData := make(gblob.LittleEndianBlock, 4*4)
-	ambientData.SetFloat32(0, 1.0)
-	ambientData.SetFloat32(4, 1.0)
-	ambientData.SetFloat32(8, 1.5)
-	ambientData.SetFloat32(12, 1.0)
-	c.ambientTexture = c.renderAPI.CreateColorTextureCube(render.ColorTextureCubeInfo{
-		Dimension:       1,
-		GenerateMipmaps: false,
-		GammaCorrection: false,
-		Format:          render.DataFormatRGBA32F,
-		FrontSideData:   ambientData,
-		BackSideData:    ambientData,
-		LeftSideData:    ambientData,
-		RightSideData:   ambientData,
-		TopSideData:     ambientData,
-		BottomSideData:  ambientData,
-	})
 
 	ctx := co.TypedValue[*global.Context](c.Scope())
 	c.commonData = ctx.CommonData
@@ -101,14 +80,14 @@ func (c *viewportComponent) OnCreate() {
 		Position:          dprec.ZeroVec3(),
 		InnerRadius:       20000.0,
 		OuterRadius:       20000.0,
-		ReflectionTexture: c.ambientTexture,
-		RefractionTexture: c.ambientTexture,
+		ReflectionTexture: c.commonData.SkyTexture(),
+		RefractionTexture: c.commonData.SkyTexture(),
 		CastShadow:        false,
 	})
 	c.refreshShowAmbientLight()
 
 	c.gfxDirectionalLight = gfxScene.CreateDirectionalLight(graphics.DirectionalLightInfo{
-		Position:   dprec.NewVec3(0.0, 20.0, 20.0),
+		Position:   c.commonData.SkyColor().VecXYZ(),
 		Rotation:   dprec.RotationQuat(dprec.Degrees(-45), dprec.BasisXVec3()),
 		EmitColor:  dprec.NewVec3(1.0, 1.0, 1.0),
 		EmitRange:  20000.0,
@@ -138,7 +117,6 @@ func (c *viewportComponent) OnCreate() {
 }
 
 func (c *viewportComponent) OnDelete() {
-	c.ambientTexture.Release()
 	c.currentResourceSet.Delete()
 	c.gameScene.Delete()
 }
