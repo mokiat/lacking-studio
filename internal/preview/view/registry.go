@@ -37,54 +37,92 @@ func (c *registryComponent) Render() co.Instance {
 		co.WithLayoutData(c.Properties().LayoutData())
 		co.WithData(std.ContainerData{
 			BackgroundColor: opt.V(std.SurfaceColor),
-			Layout: layout.Vertical(layout.VerticalSettings{
-				ContentAlignment: layout.HorizontalAlignmentCenter,
-				ContentSpacing:   20,
-			}),
-			Padding: ui.SymmetricSpacing(100, 20),
+			Layout:          layout.Anchor(),
+			Padding:         ui.SymmetricSpacing(100, 20),
 		})
 
-		co.WithChild("search", co.New(std.EditBox, func() {
+		co.WithChild("container", co.New(std.Element, func() {
 			co.WithLayoutData(layout.Data{
-				Width: opt.V(600),
+				Top:              opt.V(0),
+				Bottom:           opt.V(0),
+				HorizontalCenter: opt.V(0),
+				Width:            opt.V(600),
 			})
-			co.WithData(std.EditBoxData{
-				Text: c.searchText,
-			})
-			co.WithCallbackData(std.EditBoxCallbackData{
-				OnChange: c.handleSearchChange,
-				OnReject: c.handleSearchCancel,
-			})
-		}))
-
-		co.WithChild("separator", co.New(std.Container, func() {
-			co.WithLayoutData(layout.Data{
-				Width:  opt.V(600),
-				Height: opt.V(1),
-			})
-			co.WithData(std.ContainerData{
-				BackgroundColor: opt.V(std.OutlineColor),
-			})
-		}))
-
-		co.WithChild("list", co.New(RegistryList, func() {
-			co.WithLayoutData(layout.Data{
-				Width: opt.V(600),
+			co.WithData(std.ElementData{
+				Layout: layout.Frame(layout.FrameSettings{
+					ContentSpacing: ui.Spacing{
+						Top: 20,
+					},
+				}),
 			})
 
-			c.eachResource(func(resource *asset.Resource) {
-				co.WithChild(resource.ID(), co.New(RegistryItem, func() {
+			co.WithChild("search-area", co.New(std.Element, func() {
+				co.WithLayoutData(layout.Data{
+					HorizontalAlignment: layout.HorizontalAlignmentCenter,
+					VerticalAlignment:   layout.VerticalAlignmentTop,
+				})
+				co.WithData(std.ElementData{
+					Layout: layout.Vertical(layout.VerticalSettings{
+						ContentAlignment: layout.HorizontalAlignmentCenter,
+						ContentSpacing:   20,
+					}),
+				})
+
+				co.WithChild("search", co.New(std.EditBox, func() {
 					co.WithLayoutData(layout.Data{
-						GrowHorizontally: true,
+						Width: opt.V(600),
 					})
-					co.WithData(RegistryItemData{
-						Resource: resource,
+					co.WithData(std.EditBoxData{
+						Text: c.searchText,
 					})
-					co.WithCallbackData(RegistryItemCallbackData{
-						OnSelected: c.handleResourceSelected,
+					co.WithCallbackData(std.EditBoxCallbackData{
+						OnChange: c.handleSearchChange,
+						OnReject: c.handleSearchCancel,
 					})
 				}))
-			})
+
+				co.WithChild("separator", co.New(std.Container, func() {
+					co.WithLayoutData(layout.Data{
+						Width:  opt.V(600),
+						Height: opt.V(1),
+					})
+					co.WithData(std.ContainerData{
+						BackgroundColor: opt.V(std.OutlineColor),
+					})
+				}))
+			}))
+
+			co.WithChild("scroll-pane", co.New(std.ScrollPane, func() {
+				co.WithLayoutData(layout.Data{
+					Width:               opt.V(600),
+					HorizontalAlignment: layout.HorizontalAlignmentCenter,
+					VerticalAlignment:   layout.VerticalAlignmentCenter,
+				})
+				co.WithData(std.ScrollPaneData{
+					Focused:           true,
+					DisableHorizontal: true,
+				})
+
+				co.WithChild("list", co.New(RegistryList, func() {
+					co.WithLayoutData(layout.Data{
+						Width: opt.V(600),
+					})
+
+					c.eachResource(func(resource *asset.Resource) {
+						co.WithChild(resource.ID(), co.New(RegistryItem, func() {
+							co.WithLayoutData(layout.Data{
+								GrowHorizontally: true,
+							})
+							co.WithData(RegistryItemData{
+								Resource: resource,
+							})
+							co.WithCallbackData(RegistryItemCallbackData{
+								OnSelected: c.handleResourceSelected,
+							})
+						}))
+					})
+				}))
+			}))
 		}))
 	})
 }
