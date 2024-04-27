@@ -1,9 +1,8 @@
-package main
+package studio
 
 import (
 	"cmp"
 	"fmt"
-	"path/filepath"
 
 	nativeapp "github.com/mokiat/lacking-native/app"
 	nativegame "github.com/mokiat/lacking-native/game"
@@ -14,7 +13,6 @@ import (
 	"github.com/mokiat/lacking-studio/resources"
 	"github.com/mokiat/lacking/app"
 	"github.com/mokiat/lacking/game"
-	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/util/resource"
 	"github.com/urfave/cli/v2"
@@ -23,12 +21,7 @@ import (
 func runPreviewApplication(ctx *cli.Context) error {
 	projectDir := cmp.Or(ctx.Args().First(), ".")
 
-	storage, err := asset.NewFSStorage(filepath.Join(projectDir, "assets"))
-	if err != nil {
-		return fmt.Errorf("error creating registry storage: %w", err)
-	}
-	formatter := asset.NewBlobFormatter() // TODO: Make this configurable
-	registry, err := asset.NewRegistry(storage, formatter)
+	registry, err := createRegistry(projectDir)
 	if err != nil {
 		return fmt.Errorf("error creating registry: %w", err)
 	}

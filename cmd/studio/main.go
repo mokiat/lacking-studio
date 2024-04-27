@@ -3,25 +3,16 @@ package main
 import (
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/mokiat/lacking-studio/studio"
+	"github.com/mokiat/lacking/debug/log"
 )
 
+// TODO: Get rid of this. Apps are expected to package the studio
+// in their own cmd folder.
+
 func main() {
-	app := &cli.App{
-		Name:        "studio",
-		Usage:       "run the studio application",
-		Description: "Runs the Studio application for the Lacking game engine.",
-		Commands: []*cli.Command{
-			{
-				Name:      "preview",
-				Usage:     "Runs the studio in preview mode",
-				Args:      true,
-				ArgsUsage: "[project dir]",
-				Action:    runPreviewApplication,
-			},
-		},
-	}
-	if err := app.Run(os.Args); err != nil {
+	if err := studio.Run(); err != nil {
+		log.Error("Error: %v", err)
 		os.Exit(1)
 	}
 }
