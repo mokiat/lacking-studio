@@ -150,7 +150,8 @@ func (d *CommonData) createSky() {
 		BottomSideData:  colorToRGBA32FData(bottomColor),
 	})
 
-	skyShader := d.gfxEngine.CreateSkyShader(graphics.ShaderInfo{
+	skyShader := d.gfxEngine.CreateShader(graphics.ShaderInfo{
+		ShaderType: graphics.ShaderTypeSky,
 		SourceCode: `
 			uniforms {
 				color vec4,
@@ -162,14 +163,18 @@ func (d *CommonData) createSky() {
 		`,
 	})
 
-	d.skyDefinition = d.gfxEngine.CreateSkyDefinition(graphics.SkyDefinitionInfo{
-		Layers: []graphics.SkyLayerDefinitionInfo{
+	skyMaterial := d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
+		SkyPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: skyShader,
 			},
 		},
 	})
-	d.skyDefinition.SetProperty("color", dtos.Vec4(d.SkyColor()))
+	skyMaterial.SetProperty("color", dtos.Vec4(d.SkyColor()))
+
+	d.skyDefinition = d.gfxEngine.CreateSkyDefinition(graphics.SkyDefinitionInfo{
+		Material: skyMaterial,
+	})
 }
 
 func (d *CommonData) deleteSky() {
@@ -181,7 +186,8 @@ func (d *CommonData) createMaterials() {
 	// TODO: Use the same shading for all materials that follow
 	// and just adjust the material data for each.
 
-	colorShader := d.gfxEngine.CreateForwardShader(graphics.ShaderInfo{
+	colorShader := d.gfxEngine.CreateShader(graphics.ShaderInfo{
+		ShaderType: graphics.ShaderTypeForward,
 		SourceCode: `
 			uniforms {
 				color vec4,
@@ -195,7 +201,7 @@ func (d *CommonData) createMaterials() {
 
 	d.redMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
 		Name: "ColorRed",
-		ForwardPasses: []graphics.ForwardRenderPassInfo{
+		ForwardPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: colorShader,
 			},
@@ -205,7 +211,7 @@ func (d *CommonData) createMaterials() {
 
 	d.darkRedMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
 		Name: "ColorDarkRed",
-		ForwardPasses: []graphics.ForwardRenderPassInfo{
+		ForwardPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: colorShader,
 			},
@@ -215,7 +221,7 @@ func (d *CommonData) createMaterials() {
 
 	d.greenMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
 		Name: "ColorGreen",
-		ForwardPasses: []graphics.ForwardRenderPassInfo{
+		ForwardPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: colorShader,
 			},
@@ -225,7 +231,7 @@ func (d *CommonData) createMaterials() {
 
 	d.darkGreenMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
 		Name: "ColorDarkGreen",
-		ForwardPasses: []graphics.ForwardRenderPassInfo{
+		ForwardPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: colorShader,
 			},
@@ -235,7 +241,7 @@ func (d *CommonData) createMaterials() {
 
 	d.blueMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
 		Name: "ColorBlue",
-		ForwardPasses: []graphics.ForwardRenderPassInfo{
+		ForwardPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: colorShader,
 			},
@@ -245,7 +251,7 @@ func (d *CommonData) createMaterials() {
 
 	d.darkBlueMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
 		Name: "ColorDarkBlue",
-		ForwardPasses: []graphics.ForwardRenderPassInfo{
+		ForwardPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: colorShader,
 			},
@@ -255,7 +261,7 @@ func (d *CommonData) createMaterials() {
 
 	d.grayMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
 		Name: "ColorGray",
-		ForwardPasses: []graphics.ForwardRenderPassInfo{
+		ForwardPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: colorShader,
 			},
@@ -265,7 +271,7 @@ func (d *CommonData) createMaterials() {
 
 	d.yellowMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
 		Name: "ColorYellow",
-		ForwardPasses: []graphics.ForwardRenderPassInfo{
+		ForwardPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: colorShader,
 			},
@@ -275,7 +281,7 @@ func (d *CommonData) createMaterials() {
 
 	d.darkYellowMaterial = d.gfxEngine.CreateMaterial(graphics.MaterialInfo{
 		Name: "ColorDarkYellow",
-		ForwardPasses: []graphics.ForwardRenderPassInfo{
+		ForwardPasses: []graphics.MaterialPassInfo{
 			{
 				Shader: colorShader,
 			},
