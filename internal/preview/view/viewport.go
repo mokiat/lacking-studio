@@ -1,6 +1,8 @@
 package view
 
 import (
+	"time"
+
 	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/gomath/dprec"
 	"github.com/mokiat/gomath/sprec"
@@ -360,11 +362,11 @@ func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelDefinit
 		c.modelNode = nil
 	}
 	if c.currentResourceSet != nil {
-		// FIXME: This panics! WHY?!?!?!
-		// resourceSet := c.currentResourceSet
-		// co.Schedule(c.Scope(), func() {
-		// 	resourceSet.Delete()
-		// })
+		resourceSet := c.currentResourceSet
+		// TODO: Figure out a more elegant approach to this.
+		co.After(c.Scope(), time.Second, func() {
+			resourceSet.Delete()
+		})
 	}
 	c.currentResourceSet = c.newResourceSet
 
@@ -374,7 +376,7 @@ func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelDefinit
 		Position:   dprec.ZeroVec3(),
 		Rotation:   dprec.IdentityQuat(),
 		Scale:      dprec.NewVec3(1.0, 1.0, 1.0),
-		IsDynamic:  false, // FIXME: Setting this to true kills large scenes
+		IsDynamic:  false, // NOTE: Setting this to true kills large scenes
 	})
 	c.modelNode = model.Root()
 	if len(model.Animations()) > 0 {
