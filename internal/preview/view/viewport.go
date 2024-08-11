@@ -10,6 +10,7 @@ import (
 	"github.com/mokiat/lacking/game"
 	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
+	"github.com/mokiat/lacking/game/hierarchy"
 	"github.com/mokiat/lacking/render"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
@@ -40,12 +41,16 @@ type viewportComponent struct {
 	cameraGizmo *viewport.CameraGizmo
 
 	currentResourceSet *game.ResourceSet
+	newResourceSet     *game.ResourceSet
 
 	gfxCamera           *graphics.Camera
 	gfxGrid             *graphics.Mesh
 	gfxAmbientLight     *graphics.AmbientLight
 	gfxDirectionalLight *graphics.DirectionalLight
 	gfxSky              *graphics.Sky
+
+	modelNode     *hierarchy.Node
+	modelPlayback *game.Playback
 }
 
 func (c *viewportComponent) OnCreate() {
@@ -102,23 +107,15 @@ func (c *viewportComponent) OnCreate() {
 
 	c.cameraGizmo = viewport.NewCameraGizmo(c.gfxCamera)
 
-	c.currentResourceSet = c.gameEngine.CreateResourceSet()
-	promise := c.currentResourceSet.OpenModelByID(c.resource.ID())
-	promise.OnSuccess(func(modelDefinition *game.ModelDefinition) {
-		co.Schedule(c.Scope(), func() {
-			c.handleModelLoaded(modelDefinition)
-		})
-	})
-	promise.OnError(func(err error) {
-		co.Schedule(c.Scope(), func() {
-			c.handleModelLoadError(err)
-		})
-	})
+	c.loadResource()
+
 }
 
 func (c *viewportComponent) OnDelete() {
-	c.currentResourceSet.Delete()
 	c.gameScene.Delete()
+	if c.currentResourceSet != nil {
+		c.currentResourceSet.Delete()
+	}
 }
 
 func (c *viewportComponent) Render() co.Instance {
@@ -296,7 +293,7 @@ func (c *viewportComponent) Render() co.Instance {
 func (c *viewportComponent) OnEvent(event mvc.Event) {
 	switch event.(type) {
 	case model.RefreshEvent:
-		// TODO: Reload the resource
+		c.loadResource()
 		c.Invalidate()
 	case model.CameraSectionExpandedChangedEvent:
 		c.Invalidate()
@@ -320,6 +317,21 @@ func (c *viewportComponent) OnEvent(event mvc.Event) {
 	}
 }
 
+func (c *viewportComponent) loadResource() {
+	c.newResourceSet = c.gameEngine.CreateResourceSet()
+	promise := c.newResourceSet.OpenModelByID(c.resource.ID())
+	promise.OnSuccess(func(modelDefinition *game.ModelDefinition) {
+		co.Schedule(c.Scope(), func() {
+			c.handleModelLoaded(modelDefinition)
+		})
+	})
+	promise.OnError(func(err error) {
+		co.Schedule(c.Scope(), func() {
+			c.handleModelLoadError(err)
+		})
+	})
+}
+
 func (c *viewportComponent) handleViewportKeyboardEvent(element *ui.Element, event ui.KeyboardEvent) bool {
 	return c.cameraGizmo.OnKeyboardEvent(element, event)
 }
@@ -339,10 +351,23 @@ func (c *viewportComponent) handleViewportRender(framebuffer render.Framebuffer,
 }
 
 func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelDefinition) {
-	// TODO: Remove existing model, if there is one.
-	// TODO: Relese old resources.
+	if c.modelPlayback != nil {
+		c.modelPlayback.Stop()
+		c.modelPlayback = nil
+	}
+	if c.modelNode != nil {
+		c.modelNode.Delete()
+		c.modelNode = nil
+	}
+	if c.currentResourceSet != nil {
+		// FIXME: This panics! WHY?!?!?!
+		// resourceSet := c.currentResourceSet
+		// co.Schedule(c.Scope(), func() {
+		// 	resourceSet.Delete()
+		// })
+	}
+	c.currentResourceSet = c.newResourceSet
 
-	// TODO: Track model
 	model := c.gameScene.CreateModel(game.ModelInfo{
 		Name:       "Model",
 		Definition: modelDefinition,
@@ -351,9 +376,10 @@ func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelDefinit
 		Scale:      dprec.NewVec3(1.0, 1.0, 1.0),
 		IsDynamic:  false, // FIXME: Setting this to true kills large scenes
 	})
+	c.modelNode = model.Root()
 	if len(model.Animations()) > 0 {
 		animation := model.Animations()[0]
-		c.gameScene.PlayAnimation(animation)
+		c.modelPlayback = c.gameScene.PlayAnimation(animation)
 	}
 	// TODO: Find camera and light nodes and attach indicator gizmos to them
 	// from the common data.
