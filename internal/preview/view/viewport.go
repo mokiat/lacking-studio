@@ -52,7 +52,7 @@ type viewportComponent struct {
 	gfxSky              *graphics.Sky
 
 	modelNode     *hierarchy.Node
-	modelPlayback *game.Playback
+	modelPlayback *game.AnimationPlayback
 }
 
 func (c *viewportComponent) OnCreate() {
@@ -94,10 +94,9 @@ func (c *viewportComponent) OnCreate() {
 	c.refreshShowAmbientLight()
 
 	c.gfxDirectionalLight = gfxScene.CreateDirectionalLight(graphics.DirectionalLightInfo{
-		Position:   c.commonData.SkyColor().VecXYZ(),
+		Position:   dprec.ZeroVec3(),
 		Rotation:   dprec.RotationQuat(dprec.Degrees(-45), dprec.BasisXVec3()),
-		EmitColor:  dprec.NewVec3(1.0, 1.0, 1.0),
-		EmitRange:  20000.0,
+		EmitColor:  dprec.NewVec3(1.5, 1.5, 1.5),
 		CastShadow: true,
 	})
 	c.refreshShowDirectionalLight()
@@ -110,7 +109,6 @@ func (c *viewportComponent) OnCreate() {
 	c.cameraGizmo = viewport.NewCameraGizmo(c.gfxCamera)
 
 	c.loadResource()
-
 }
 
 func (c *viewportComponent) OnDelete() {
@@ -354,7 +352,7 @@ func (c *viewportComponent) handleViewportRender(framebuffer render.Framebuffer,
 
 func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelDefinition) {
 	if c.modelPlayback != nil {
-		c.modelPlayback.Stop()
+		c.gameScene.StopAnimationTree(c.modelPlayback)
 		c.modelPlayback = nil
 	}
 	if c.modelNode != nil {
@@ -381,7 +379,8 @@ func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelDefinit
 	c.modelNode = model.Root()
 	if len(model.Animations()) > 0 {
 		animation := model.Animations()[0]
-		c.modelPlayback = c.gameScene.PlayAnimation(animation)
+		c.modelPlayback = animation.Playback().SetLoop(true)
+		c.gameScene.PlayAnimationTree(c.modelPlayback)
 	}
 	// TODO: Find camera and light nodes and attach indicator gizmos to them
 	// from the common data.
