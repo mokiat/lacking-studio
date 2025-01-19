@@ -21,6 +21,8 @@ import (
 	"github.com/mokiat/lacking/ui/std"
 )
 
+const defaultExposure = 1.0
+
 var Viewport = mvc.EventListener(co.Define(&viewportComponent{}))
 
 type ViewportData struct {
@@ -71,10 +73,11 @@ func (c *viewportComponent) OnCreate() {
 	gfxScene := c.gameScene.Graphics()
 
 	c.gfxCamera = gfxScene.CreateCamera()
-	c.gfxCamera.SetExposure(1.0)
+	c.gfxCamera.SetExposure(defaultExposure)
 	c.gfxCamera.SetAutoExposure(false)
 	c.gfxCamera.SetFoV(sprec.Degrees(60))
 	c.gfxCamera.SetFoVMode(graphics.FoVModeHorizontalPlus)
+	c.gfxCamera.SetCascadeDistances([]float32{16.0, 64.0, 256.0, 1024.0})
 	c.refreshAutoExposure()
 
 	c.gfxGrid = gfxScene.CreateMesh(graphics.MeshInfo{
@@ -371,9 +374,6 @@ func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelDefinit
 	model := c.gameScene.CreateModel(game.ModelInfo{
 		Name:       "Model",
 		Definition: modelDefinition,
-		Position:   dprec.ZeroVec3(),
-		Rotation:   dprec.IdentityQuat(),
-		Scale:      dprec.NewVec3(1.0, 1.0, 1.0),
 		IsDynamic:  false, // NOTE: Setting this to true kills large scenes
 	})
 	c.modelNode = model.Root()
@@ -401,7 +401,7 @@ func (c *viewportComponent) refreshAutoExposure() {
 	if c.appModel.AutoExposure() {
 		c.gfxCamera.SetAutoExposure(true)
 	} else {
-		c.gfxCamera.SetExposure(1.0)
+		c.gfxCamera.SetExposure(defaultExposure)
 		c.gfxCamera.SetAutoExposure(false)
 	}
 }

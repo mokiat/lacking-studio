@@ -120,6 +120,7 @@ func (d *CommonData) DirectionalLightMeshDefinition() *graphics.MeshDefinition {
 }
 
 func colorToRGBA32FData(color sprec.Vec3) []byte {
+	color = sprec.Vec3Prod(sprec.NewVec3(1.66, 1.81, 1.86), 0.4)
 	colorData := make(gblob.LittleEndianBlock, 4*4)
 	colorData.SetFloat32(0, color.X)
 	colorData.SetFloat32(4, color.Y)
@@ -138,16 +139,20 @@ func (d *CommonData) createSky() {
 
 	renderAPI := d.gfxEngine.API()
 	d.skyTexture = renderAPI.CreateColorTextureCube(render.ColorTextureCubeInfo{
-		Dimension:       1,
 		GenerateMipmaps: false,
 		GammaCorrection: false,
 		Format:          render.DataFormatRGBA32F,
-		FrontSideData:   colorToRGBA32FData(frontColor),
-		BackSideData:    colorToRGBA32FData(backColor),
-		LeftSideData:    colorToRGBA32FData(leftColor),
-		RightSideData:   colorToRGBA32FData(rightColor),
-		TopSideData:     colorToRGBA32FData(topColor),
-		BottomSideData:  colorToRGBA32FData(bottomColor),
+		MipmapLayers: []render.MipmapCubeLayer{
+			{
+				Dimension:      1,
+				FrontSideData:  colorToRGBA32FData(frontColor),
+				BackSideData:   colorToRGBA32FData(backColor),
+				LeftSideData:   colorToRGBA32FData(leftColor),
+				RightSideData:  colorToRGBA32FData(rightColor),
+				TopSideData:    colorToRGBA32FData(topColor),
+				BottomSideData: colorToRGBA32FData(bottomColor),
+			},
+		},
 	})
 
 	skyShader := d.gfxEngine.CreateShader(graphics.ShaderInfo{
