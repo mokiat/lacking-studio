@@ -18,7 +18,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func runPreviewApplication(ctx *cli.Context) error {
+func runEditorApplication(ctx *cli.Context) error {
 	projectDir := cmp.Or(ctx.Args().First(), ".")
 
 	registry, err := createRegistry(projectDir)
@@ -39,7 +39,7 @@ func runPreviewApplication(ctx *cli.Context) error {
 		internal.BootstrapApplication(window, globalController, view.Root)
 	})
 
-	cfg := nativeapp.NewConfig("Lacking Studio [Preview Mode]", 1280, 800)
+	cfg := nativeapp.NewConfig("Lacking Studio [Editor Mode]", 1280, 800)
 	cfg.SetMaximized(true)
 	cfg.SetMinSize(1024, 768)
 	cfg.SetVSync(true)
