@@ -4,17 +4,17 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/mokiat/lacking/game/asset"
+	"github.com/mokiat/lacking/game/chunked"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/util/async"
 )
 
-func NewAppModel(window *ui.Window, eventBus *mvc.EventBus, registry *asset.Registry) *AppModel {
+func NewAppModel(window *ui.Window, eventBus *mvc.EventBus, storage chunked.Storage) *AppModel {
 	return &AppModel{
 		window:   window,
 		eventBus: eventBus,
-		registry: registry,
+		storage:  storage,
 
 		cameraSectionExpanded: true,
 		autoExposure:          false,
@@ -32,9 +32,9 @@ func NewAppModel(window *ui.Window, eventBus *mvc.EventBus, registry *asset.Regi
 type AppModel struct {
 	window   *ui.Window
 	eventBus *mvc.EventBus
-	registry *asset.Registry
+	storage  chunked.Storage
 
-	selectedResource *asset.Resource
+	selectedResource string
 
 	cameraSectionExpanded bool
 	autoExposure          bool
@@ -46,13 +46,14 @@ type AppModel struct {
 	showSky              bool
 
 	refreshEnabled bool
+	resources      []string
 }
 
-func (m *AppModel) SelectedResource() *asset.Resource {
+func (m *AppModel) SelectedResource() string {
 	return m.selectedResource
 }
 
-func (m *AppModel) SetSelectedResource(resource *asset.Resource) {
+func (m *AppModel) SetSelectedResource(resource string) {
 	m.selectedResource = resource
 	m.eventBus.Notify(SelectedResourceChangedEvent{})
 }
@@ -64,58 +65,69 @@ func (m *AppModel) RefreshEnabled() bool {
 func (m *AppModel) Refresh() {
 	if m.refreshEnabled {
 		m.refreshEnabled = false
-		var promise async.Promise[struct{}]
-		if m.selectedResource == nil {
-			promise = m.refreshRegistry()
-		} else {
-			promise = m.refreshResource(m.selectedResource)
-		}
-		promise.OnSuccess(func(struct{}) {
-			m.window.Schedule(func() {
-				m.refreshEnabled = true
-				m.eventBus.Notify(RefreshEvent{})
-			})
-		})
-		promise.OnError(func(err error) {
-			m.window.Schedule(func() {
-				m.refreshEnabled = true
-				m.eventBus.Notify(RefreshErrorEvent{
-					Err: err,
+
+		if m.selectedResource == "" {
+			promise := m.refreshRegistry()
+			promise.OnSuccess(func(result []string) {
+				m.window.Schedule(func() {
+					m.resources = result
+					m.refreshEnabled = true
+					m.eventBus.Notify(RefreshEvent{})
 				})
 			})
-		})
+			promise.OnError(func(err error) {
+				m.window.Schedule(func() {
+					m.refreshEnabled = true
+					m.eventBus.Notify(RefreshErrorEvent{
+						Err: err,
+					})
+				})
+			})
+		} else {
+			operation := m.refreshResource(m.selectedResource)
+			operation.OnSuccess(func() {
+				m.window.Schedule(func() {
+					m.refreshEnabled = true
+					m.eventBus.Notify(RefreshEvent{})
+				})
+			})
+			operation.OnError(func(err error) {
+				m.window.Schedule(func() {
+					m.refreshEnabled = true
+					m.eventBus.Notify(RefreshErrorEvent{
+						Err: err,
+					})
+				})
+			})
+		}
 	}
 }
 
-func (m *AppModel) refreshRegistry() async.Promise[struct{}] {
-	promise := async.NewPromise[struct{}]()
+func (m *AppModel) refreshRegistry() async.Promise[[]string] {
+	promise := async.NewPromise[[]string]()
 	go func() {
 		if err := m.packAssets(""); err != nil {
 			promise.Fail(err)
 		}
-
-		reloadErr := make(chan error)
-		m.window.Schedule(func() {
-			reloadErr <- m.registry.Reload()
-		})
-		if err := <-reloadErr; err != nil {
+		result, err := m.storage.List()
+		if err != nil {
 			promise.Fail(err)
+		} else {
+			promise.Deliver(result)
 		}
-
-		promise.Deliver(struct{}{})
 	}()
 	return promise
 }
 
-func (m *AppModel) refreshResource(resource *asset.Resource) async.Promise[struct{}] {
-	promise := async.NewPromise[struct{}]()
+func (m *AppModel) refreshResource(resource string) async.Operation {
+	operation := async.NewOperation()
 	go func() {
-		if err := m.packAssets(resource.Name()); err != nil {
-			promise.Fail(err)
+		if err := m.packAssets(resource); err != nil {
+			operation.Fail(err)
 		}
-		promise.Deliver(struct{}{})
+		operation.Pass()
 	}()
-	return promise
+	return operation
 }
 
 func (m *AppModel) packAssets(model string) error {
@@ -132,8 +144,8 @@ func (m *AppModel) packAssets(model string) error {
 	return nil
 }
 
-func (m *AppModel) Resources() []*asset.Resource {
-	return m.registry.Resources()
+func (m *AppModel) Resources() []string {
+	return m.resources
 }
 
 func (m *AppModel) CameraSectionExpanded() bool {

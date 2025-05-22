@@ -36,6 +36,10 @@ func (c *Controller) OnDestroy(window app.Window) {
 	c.Controller.OnDestroy(window)
 }
 
+func (c *Controller) OnRender(window app.Window) {
+	// prevent the default background rendering as we are using a viewport on top
+}
+
 func (c *Controller) CommonData() *viewport.CommonData {
 	return c.commonData
 }

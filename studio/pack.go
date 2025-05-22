@@ -3,8 +3,10 @@ package studio
 import (
 	"cmp"
 	"fmt"
+	"path/filepath"
 
 	"github.com/mokiat/lacking/game/asset/dsl"
+	"github.com/mokiat/lacking/game/chunked"
 	"github.com/urfave/cli/v2"
 )
 
@@ -16,11 +18,11 @@ func runPackApplication(ctx *cli.Context) error {
 		modelNames = append(modelNames, modelName)
 	}
 
-	registry, err := createRegistry(projectDir)
+	storage, err := chunked.NewFileStorage(filepath.Join(projectDir, "assets"))
 	if err != nil {
-		return fmt.Errorf("error creating registry: %w", err)
+		return fmt.Errorf("error creating storage: %w", err)
 	}
-	if err := dsl.Run(registry, modelNames); err != nil {
+	if err := dsl.Run(storage, modelNames); err != nil {
 		return fmt.Errorf("error running DSL: %w", err)
 	}
 

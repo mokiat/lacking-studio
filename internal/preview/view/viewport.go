@@ -10,7 +10,6 @@ import (
 	"github.com/mokiat/lacking-studio/internal/preview/model"
 	"github.com/mokiat/lacking-studio/internal/viewport"
 	"github.com/mokiat/lacking/game"
-	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/game/hierarchy"
 	"github.com/mokiat/lacking/render"
@@ -27,14 +26,14 @@ var Viewport = mvc.EventListener(co.Define(&viewportComponent{}))
 
 type ViewportData struct {
 	AppModel *model.AppModel
-	Resource *asset.Resource
+	Resource string
 }
 
 type viewportComponent struct {
 	co.BaseComponent
 
 	appModel *model.AppModel
-	resource *asset.Resource
+	resource string
 
 	renderAPI render.API
 
@@ -322,7 +321,7 @@ func (c *viewportComponent) OnEvent(event mvc.Event) {
 
 func (c *viewportComponent) loadResource() {
 	c.newResourceSet = c.gameEngine.CreateResourceSet()
-	promise := c.newResourceSet.OpenModelByID(c.resource.ID())
+	promise := c.newResourceSet.OpenModelByID(c.resource)
 	promise.OnSuccess(func(modelDefinition *game.ModelDefinition) {
 		co.Schedule(c.Scope(), func() {
 			c.handleModelLoaded(modelDefinition)
