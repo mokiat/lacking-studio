@@ -12,7 +12,7 @@ import (
 	"github.com/mokiat/lacking/ui/std"
 )
 
-var Registry = mvc.EventListener(co.Define(&registryComponent{}))
+var Registry = mvc.EventListener(co.Define[*registryComponent]())
 
 type RegistryData struct {
 	AppModel *model.AppModel
@@ -98,7 +98,7 @@ func (c *registryComponent) Render() co.Instance {
 					VerticalAlignment:   layout.VerticalAlignmentCenter,
 				})
 				co.WithData(std.ScrollPaneData{
-					Focused:           true,
+					CreateFocused:     true,
 					DisableHorizontal: true,
 				})
 

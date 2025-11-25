@@ -6,7 +6,7 @@ import (
 	"github.com/mokiat/lacking/ui/std"
 )
 
-var RegistryList = co.Define(&registryListComponent{})
+var RegistryList = co.Define[*registryListComponent]()
 
 type registryListComponent struct {
 	co.BaseComponent

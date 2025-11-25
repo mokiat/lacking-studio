@@ -7,7 +7,7 @@ import (
 	"github.com/mokiat/lacking-studio/internal/global"
 	"github.com/mokiat/lacking-studio/internal/preview/model"
 	"github.com/mokiat/lacking-studio/internal/viewport"
-	"github.com/mokiat/lacking/game/chunked"
+	"github.com/mokiat/lacking/storage/chunked"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
@@ -16,7 +16,7 @@ import (
 
 // TODO: Get dark theme working
 
-var Root = mvc.EventListener(co.Define(&rootComponent{}))
+var Root = mvc.EventListener(co.Define[*rootComponent]())
 
 type rootComponent struct {
 	co.BaseComponent

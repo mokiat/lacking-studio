@@ -8,7 +8,7 @@ import (
 	"github.com/mokiat/lacking/ui/std"
 )
 
-var RegistryItem = co.Define(&itemComponent{})
+var RegistryItem = co.Define[*itemComponent]()
 
 type RegistryItemData struct {
 	Resource string

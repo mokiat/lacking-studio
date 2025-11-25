@@ -14,7 +14,7 @@ import (
 	"github.com/mokiat/lacking-studio/resources"
 	"github.com/mokiat/lacking/app"
 	"github.com/mokiat/lacking/game"
-	"github.com/mokiat/lacking/game/chunked"
+	"github.com/mokiat/lacking/storage/chunked"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/util/resource"
 	"github.com/urfave/cli/v2"

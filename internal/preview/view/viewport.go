@@ -10,6 +10,7 @@ import (
 	"github.com/mokiat/lacking-studio/internal/preview/model"
 	"github.com/mokiat/lacking-studio/internal/viewport"
 	"github.com/mokiat/lacking/game"
+	"github.com/mokiat/lacking/game/animation"
 	"github.com/mokiat/lacking/game/graphics"
 	"github.com/mokiat/lacking/game/hierarchy"
 	"github.com/mokiat/lacking/render"
@@ -18,11 +19,12 @@ import (
 	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/ui/std"
+	"github.com/mokiat/lacking/util/async"
 )
 
 const defaultExposure = 1.0
 
-var Viewport = mvc.EventListener(co.Define(&viewportComponent{}))
+var Viewport = mvc.EventListener(co.Define[*viewportComponent]())
 
 type ViewportData struct {
 	AppModel *model.AppModel
@@ -52,8 +54,8 @@ type viewportComponent struct {
 	gfxDirectionalLight *graphics.DirectionalLight
 	gfxSky              *graphics.Sky
 
-	modelNode     *hierarchy.Node
-	modelPlayback *game.AnimationPlayback
+	modelNode   hierarchy.NodeID
+	modelPlayer *animation.Player
 }
 
 func (c *viewportComponent) OnCreate() {
@@ -68,7 +70,7 @@ func (c *viewportComponent) OnCreate() {
 	c.commonData = ctx.CommonData
 	c.gameEngine = ctx.GameEngine
 
-	c.gameScene = c.gameEngine.CreateScene()
+	c.gameScene = c.gameEngine.CreateScene(game.SceneInfo{})
 	gfxScene := c.gameScene.Graphics()
 
 	c.gfxCamera = gfxScene.CreateCamera()
@@ -133,7 +135,8 @@ func (c *viewportComponent) Render() co.Instance {
 				VerticalAlignment:   layout.VerticalAlignmentCenter,
 			})
 			co.WithData(std.ViewportData{
-				API: c.renderAPI,
+				API:         c.renderAPI,
+				ForceRedraw: true,
 			})
 			co.WithCallbackData(std.ViewportCallbackData{
 				OnKeyboardEvent: c.handleViewportKeyboardEvent,
@@ -321,10 +324,11 @@ func (c *viewportComponent) OnEvent(event mvc.Event) {
 
 func (c *viewportComponent) loadResource() {
 	c.newResourceSet = c.gameEngine.CreateResourceSet()
-	promise := c.newResourceSet.OpenModelByID(c.resource)
-	promise.OnSuccess(func(modelDefinition *game.ModelDefinition) {
+	var template *game.ModelTemplate
+	promise := async.InjectionPromise(c.newResourceSet.FetchResource(c.resource, &template), &template)
+	promise.OnSuccess(func(modelDefinition **game.ModelTemplate) {
 		co.Schedule(c.Scope(), func() {
-			c.handleModelLoaded(modelDefinition)
+			c.handleModelLoaded(*modelDefinition)
 		})
 	})
 	promise.OnError(func(err error) {
@@ -352,14 +356,14 @@ func (c *viewportComponent) handleViewportRender(framebuffer render.Framebuffer,
 	})
 }
 
-func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelDefinition) {
-	if c.modelPlayback != nil {
-		c.gameScene.StopAnimationTree(c.modelPlayback)
-		c.modelPlayback = nil
+func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelTemplate) {
+	if c.modelPlayer != nil {
+		c.gameScene.StopAnimation(c.modelPlayer)
+		c.modelPlayer = nil
 	}
-	if c.modelNode != nil {
-		c.modelNode.Delete()
-		c.modelNode = nil
+	if !c.modelNode.IsNil() {
+		c.gameScene.Hierarchy().DeleteNode(c.modelNode)
+		c.modelNode = hierarchy.NilNodeID
 	}
 	if c.currentResourceSet != nil {
 		resourceSet := c.currentResourceSet
@@ -370,22 +374,23 @@ func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelDefinit
 	}
 	c.currentResourceSet = c.newResourceSet
 
-	model := c.gameScene.CreateModel(game.ModelInfo{
-		Name:       "Model",
-		Definition: modelDefinition,
-		IsDynamic:  false, // NOTE: Setting this to true kills large scenes
+	model := c.gameScene.InstantiateModel(game.ModelInfo{
+		Template:  modelDefinition,
+		Name:      opt.V("Model"),
+		IsDynamic: false, // NOTE: Setting this to true kills large scenes
 	})
 	c.modelNode = model.Root()
-	if len(model.Animations()) > 0 {
-		animation := model.Animations()[0]
-		c.modelPlayback = animation.Playback().SetLoop(true)
-		c.gameScene.PlayAnimationTree(c.modelPlayback)
+	if len(model.Recordings()) > 0 {
+		recording := model.Recordings()[0]
+		c.modelPlayer = model.BindAnimation(recording.Playback(true))
+		c.gameScene.PlayAnimation(c.modelPlayer)
 	}
 	// TODO: Find camera and light nodes and attach indicator gizmos to them
 	// from the common data.
 }
 
 func (c *viewportComponent) handleModelLoadError(err error) {
+	panic(err) // TODO: Open error dialog.
 }
 
 func (c *viewportComponent) handleCameraSectionExpandedToggle(expanded bool) {

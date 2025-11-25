@@ -8,7 +8,7 @@ import (
 	"github.com/mokiat/lacking/ui/std"
 )
 
-var LoadingModal = co.Define(&loadingModalComponent{})
+var LoadingModal = co.Define[*loadingModalComponent]()
 
 type loadingModalComponent struct {
 	co.BaseComponent

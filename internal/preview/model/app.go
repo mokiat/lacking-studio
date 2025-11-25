@@ -4,7 +4,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/mokiat/lacking/game/chunked"
+	"github.com/mokiat/lacking/storage/chunked"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/util/async"
