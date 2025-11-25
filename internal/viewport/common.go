@@ -158,9 +158,9 @@ func (d *CommonData) createSky() {
 	skyShader := d.gfxEngine.CreateShader(graphics.ShaderInfo{
 		ShaderType: graphics.ShaderTypeSky,
 		SourceCode: `
-			uniforms {
-				color vec4,
-			}
+			uniform (
+				color vec4
+			)
 
 			func #fragment() {
 				#color = color
@@ -194,9 +194,9 @@ func (d *CommonData) createMaterials() {
 	colorShader := d.gfxEngine.CreateShader(graphics.ShaderInfo{
 		ShaderType: graphics.ShaderTypeForward,
 		SourceCode: `
-			uniforms {
-				color vec4,
-			}
+			uniform(
+				color vec4
+			)
 
 			func #fragment() {
 				#color = color

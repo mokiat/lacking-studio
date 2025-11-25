@@ -1,17 +1,18 @@
 package view
 
 import (
+	"log/slog"
+
 	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/preview/model"
 	"github.com/mokiat/lacking-studio/internal/widget"
-	"github.com/mokiat/lacking/debug/log"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/ui/std"
 )
 
-var Toolbar = mvc.EventListener(co.Define(&toolbarComponent{}))
+var Toolbar = mvc.EventListener(co.Define[*toolbarComponent]())
 
 type ToolbarData struct {
 	AppModel *model.AppModel
@@ -25,9 +26,10 @@ type toolbarComponent struct {
 	loadingModal co.Overlay
 }
 
-func (c *toolbarComponent) OnUpsert() {
+func (c *toolbarComponent) OnCreate() {
 	data := co.GetData[ToolbarData](c.Properties())
 	c.appModel = data.AppModel
+	c.handleRefresh()
 }
 
 func (c *toolbarComponent) Render() co.Instance {
@@ -73,7 +75,7 @@ func (c *toolbarComponent) Render() co.Instance {
 			co.WithData(std.ToolbarButtonData{
 				Icon:    co.OpenImage(c.Scope(), "icons/back.png"),
 				Text:    "Back",
-				Enabled: opt.V(c.appModel.SelectedResource() != nil),
+				Enabled: opt.V(c.appModel.SelectedResource() != ""),
 			})
 			co.WithCallbackData(std.ToolbarButtonCallbackData{
 				OnClick: c.handleBack,
@@ -104,7 +106,9 @@ func (c *toolbarComponent) handleRefresh() {
 func (c *toolbarComponent) handleRefreshComplete(err error) {
 	c.loadingModal.Close()
 	if err != nil {
-		log.Error("Refresh error: %v", err)
+		slog.Error("Refresh error",
+			slog.String("error", err.Error()),
+		)
 		co.OpenOverlay(c.Scope(), co.New(widget.NotificationModal, func() {
 			co.WithData(widget.NotificationModalData{
 				Icon: co.OpenImage(c.Scope(), "icons/error.png"),
@@ -115,7 +119,7 @@ func (c *toolbarComponent) handleRefreshComplete(err error) {
 }
 
 func (c *toolbarComponent) handleBack() {
-	c.appModel.SetSelectedResource(nil)
+	c.appModel.SetSelectedResource("")
 	c.Invalidate()
 }
 

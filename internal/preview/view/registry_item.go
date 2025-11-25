@@ -2,29 +2,28 @@ package view
 
 import (
 	"github.com/mokiat/gog/opt"
-	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/std"
 )
 
-var RegistryItem = co.Define(&itemComponent{})
+var RegistryItem = co.Define[*itemComponent]()
 
 type RegistryItemData struct {
-	Resource *asset.Resource
+	Resource string
 }
 
 type RegistryItemCallbackData struct {
-	OnSelected func(resource *asset.Resource)
+	OnSelected func(resource string)
 }
 
 type itemComponent struct {
 	co.BaseComponent
 
-	resource *asset.Resource
+	resource string
 
-	onSelected func(resource *asset.Resource)
+	onSelected func(resource string)
 }
 
 func (c *itemComponent) OnUpsert() {
@@ -54,32 +53,15 @@ func (c *itemComponent) Render() co.Instance {
 				}),
 			})
 
-			co.WithChild("info", co.New(std.Element, func() {
-				co.WithData(std.ElementData{
-					Layout: layout.Vertical(layout.VerticalSettings{
-						ContentAlignment: layout.HorizontalAlignmentLeft,
-						ContentSpacing:   5,
-					}),
+			co.WithChild("path", co.New(std.Label, func() {
+				co.WithData(std.LabelData{
+					Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
+					FontSize:  opt.V(float32(16)),
+					FontColor: opt.V(ui.Black()),
+					Text:      c.resource,
 				})
-
-				co.WithChild("name", co.New(std.Label, func() {
-					co.WithData(std.LabelData{
-						Font:      co.OpenFont(c.Scope(), "ui:///roboto-bold.ttf"),
-						FontSize:  opt.V(float32(16)),
-						FontColor: opt.V(ui.Black()),
-						Text:      c.resource.Name(),
-					})
-				}))
-
-				co.WithChild("id", co.New(std.Label, func() {
-					co.WithData(std.LabelData{
-						Font:      co.OpenFont(c.Scope(), "ui:///roboto-regular.ttf"),
-						FontSize:  opt.V(float32(16)),
-						FontColor: opt.V(ui.Black()),
-						Text:      c.resource.ID(),
-					})
-				}))
 			}))
+
 		}))
 	})
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/mokiat/gog/opt"
 	"github.com/mokiat/lacking-studio/internal/preview/model"
-	"github.com/mokiat/lacking/game/asset"
 	"github.com/mokiat/lacking/ui"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
@@ -13,7 +12,7 @@ import (
 	"github.com/mokiat/lacking/ui/std"
 )
 
-var Registry = mvc.EventListener(co.Define(&registryComponent{}))
+var Registry = mvc.EventListener(co.Define[*registryComponent]())
 
 type RegistryData struct {
 	AppModel *model.AppModel
@@ -99,7 +98,7 @@ func (c *registryComponent) Render() co.Instance {
 					VerticalAlignment:   layout.VerticalAlignmentCenter,
 				})
 				co.WithData(std.ScrollPaneData{
-					Focused:           true,
+					CreateFocused:     true,
 					DisableHorizontal: true,
 				})
 
@@ -108,8 +107,8 @@ func (c *registryComponent) Render() co.Instance {
 						Width: opt.V(600),
 					})
 
-					c.eachResource(func(resource *asset.Resource) {
-						co.WithChild(resource.ID(), co.New(RegistryItem, func() {
+					c.eachResource(func(resource string) {
+						co.WithChild(resource, co.New(RegistryItem, func() {
 							co.WithLayoutData(layout.Data{
 								GrowHorizontally: true,
 							})
@@ -144,11 +143,11 @@ func (c *registryComponent) handleSearchCancel() {
 	c.Invalidate()
 }
 
-func (c *registryComponent) handleResourceSelected(resource *asset.Resource) {
+func (c *registryComponent) handleResourceSelected(resource string) {
 	c.appModel.SetSelectedResource(resource)
 }
 
-func (c *registryComponent) eachResource(callback func(resource *asset.Resource)) {
+func (c *registryComponent) eachResource(callback func(resource string)) {
 	resources := c.appModel.Resources()
 	for _, resource := range resources {
 		if c.showResource(resource) {
@@ -157,9 +156,9 @@ func (c *registryComponent) eachResource(callback func(resource *asset.Resource)
 	}
 }
 
-func (c *registryComponent) showResource(resource *asset.Resource) bool {
+func (c *registryComponent) showResource(resource string) bool {
 	if c.searchText == "" {
 		return true
 	}
-	return strings.Contains(resource.ID(), c.searchText) || strings.Contains(resource.Name(), c.searchText)
+	return strings.Contains(resource, c.searchText)
 }

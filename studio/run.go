@@ -26,13 +26,6 @@ func Run() error {
 				ArgsUsage: "[project dir]",
 				Action:    runPreviewApplication,
 			},
-			{
-				Name:      "editor",
-				Usage:     "Runs the studio in editing mode",
-				Args:      true,
-				ArgsUsage: "[project dir]",
-				Action:    runEditorApplication,
-			},
 		},
 	}
 	return app.Run(os.Args)
