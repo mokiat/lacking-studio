@@ -6,14 +6,17 @@ require (
 	github.com/mokiat/gblob v0.6.0
 	github.com/mokiat/gog v0.22.0
 	github.com/mokiat/gomath v0.17.0
-	github.com/mokiat/lacking v0.23.1-0.20260705171748-35b6d9b6812a
-	github.com/mokiat/lacking-native v0.23.1-0.20260706190153-5e6e4f328f3b
+	github.com/mokiat/lacking v0.23.1-0.20260706205948-6dd4f23e3523
+	github.com/mokiat/lacking-native v0.23.1-0.20260706211100-8aaf05404be9
 	github.com/urfave/cli/v2 v2.27.7
 )
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/gen2brain/malgo v0.11.25 // indirect
+	github.com/go-audio/audio v1.0.0 // indirect
+	github.com/go-audio/riff v1.0.0 // indirect
+	github.com/go-audio/wav v1.1.0 // indirect
 	github.com/go-gl/gl v0.0.0-20260331235117-4566fea9a276 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20260628091122-0bd588dc30cf // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.4 // indirect
