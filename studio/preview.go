@@ -13,17 +13,18 @@ import (
 	"github.com/mokiat/lacking-studio/internal/preview/view"
 	"github.com/mokiat/lacking-studio/resources"
 	"github.com/mokiat/lacking/app"
+	"github.com/mokiat/lacking/core/resource"
 	"github.com/mokiat/lacking/game"
-	"github.com/mokiat/lacking/storage/chunked"
 	"github.com/mokiat/lacking/ui"
-	"github.com/mokiat/lacking/util/resource"
+	"github.com/mokiat/lacking/ui/resources/fonts"
+	"github.com/mokiat/lacking/ui/resources/icons"
 	"github.com/urfave/cli/v2"
 )
 
 func runPreviewApplication(ctx *cli.Context) error {
 	projectDir := cmp.Or(ctx.Args().First(), ".")
 
-	storage, err := chunked.NewFileStorage(filepath.Join(projectDir, "assets"))
+	storage, err := resource.NewFileStore(filepath.Join(projectDir, "assets"))
 	if err != nil {
 		return fmt.Errorf("error creating storage: %w", err)
 	}
@@ -36,7 +37,12 @@ func runPreviewApplication(ctx *cli.Context) error {
 		),
 	)
 
-	locator := ui.WrappedLocator(resource.NewFSLocator(resources.FS))
+	locator := resource.OneOfLocator(
+		resource.SchemaLocator("ui", resource.NewFSStore(icons.FS)),
+		resource.SchemaLocator("ui", resource.NewFSStore(fonts.FS)),
+		resource.NewFSStore(resources.FS),
+	)
+
 	uiController := ui.NewController(locator, nativeui.NewShaderCollection(), func(window *ui.Window) {
 		internal.BootstrapApplication(window, globalController, view.Root)
 	})

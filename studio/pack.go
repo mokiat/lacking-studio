@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/mokiat/gog/filter"
+	"github.com/mokiat/lacking/core/resource"
 	"github.com/mokiat/lacking/game/asset/dsl"
-	"github.com/mokiat/lacking/storage/chunked"
 	"github.com/urfave/cli/v2"
 )
 
@@ -19,11 +19,11 @@ func runPackApplication(ctx *cli.Context) error {
 		pathFilter = filter.Equal(modelName)
 	}
 
-	storage, err := chunked.NewFileStorage(filepath.Join(projectDir, "assets"))
+	store, err := resource.NewFileStore(filepath.Join(projectDir, "assets"))
 	if err != nil {
 		return fmt.Errorf("error creating storage: %w", err)
 	}
-	if err := dsl.Run(storage, pathFilter); err != nil {
+	if err := dsl.Run(store, pathFilter); err != nil {
 		return fmt.Errorf("error running DSL: %w", err)
 	}
 

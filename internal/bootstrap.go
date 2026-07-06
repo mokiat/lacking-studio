@@ -14,7 +14,7 @@ func BootstrapApplication(window *ui.Window, globalController *global.Controller
 	scope = co.TypedValueScope(scope, eventBus)
 	scope = co.TypedValueScope(scope, &global.Context{
 		EventBus:   eventBus,
-		Storage:    globalController.Storage(),
+		Store:      globalController.Store(),
 		GameEngine: globalController.Engine(),
 		CommonData: globalController.CommonData(),
 	})
