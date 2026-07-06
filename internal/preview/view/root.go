@@ -7,7 +7,7 @@ import (
 	"github.com/mokiat/lacking-studio/internal/global"
 	"github.com/mokiat/lacking-studio/internal/preview/model"
 	"github.com/mokiat/lacking-studio/internal/viewport"
-	"github.com/mokiat/lacking/storage/chunked"
+	"github.com/mokiat/lacking/core/resource"
 	co "github.com/mokiat/lacking/ui/component"
 	"github.com/mokiat/lacking/ui/layout"
 	"github.com/mokiat/lacking/ui/mvc"
@@ -22,7 +22,7 @@ type rootComponent struct {
 	co.BaseComponent
 
 	commonData *viewport.CommonData
-	storage    chunked.Storage
+	store      resource.Store
 
 	appModel *model.AppModel
 }
@@ -30,10 +30,10 @@ type rootComponent struct {
 func (c *rootComponent) OnCreate() {
 	ctx := co.TypedValue[*global.Context](c.Scope())
 	c.commonData = ctx.CommonData
-	c.storage = ctx.Storage
+	c.store = ctx.Store
 
 	eventBus := co.TypedValue[*mvc.EventBus](c.Scope())
-	c.appModel = model.NewAppModel(co.Window(c.Scope()), eventBus, c.storage)
+	c.appModel = model.NewAppModel(co.Window(c.Scope()), eventBus, c.store)
 }
 
 func (c *rootComponent) OnDelete() {

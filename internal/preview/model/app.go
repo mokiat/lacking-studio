@@ -3,18 +3,20 @@ package model
 import (
 	"os"
 	"os/exec"
+	"strings"
 
-	"github.com/mokiat/lacking/storage/chunked"
+	"github.com/mokiat/gog"
+	"github.com/mokiat/lacking/core/resource"
 	"github.com/mokiat/lacking/ui"
 	"github.com/mokiat/lacking/ui/mvc"
 	"github.com/mokiat/lacking/util/async"
 )
 
-func NewAppModel(window *ui.Window, eventBus *mvc.EventBus, storage chunked.Storage) *AppModel {
+func NewAppModel(window *ui.Window, eventBus *mvc.EventBus, store resource.Store) *AppModel {
 	return &AppModel{
 		window:   window,
 		eventBus: eventBus,
-		storage:  storage,
+		store:    store,
 
 		cameraSectionExpanded: true,
 		autoExposure:          false,
@@ -32,7 +34,7 @@ func NewAppModel(window *ui.Window, eventBus *mvc.EventBus, storage chunked.Stor
 type AppModel struct {
 	window   *ui.Window
 	eventBus *mvc.EventBus
-	storage  chunked.Storage
+	store    resource.Store
 
 	selectedResource string
 
@@ -109,10 +111,13 @@ func (m *AppModel) refreshRegistry() async.Promise[[]string] {
 		if err := m.packAssets(""); err != nil {
 			promise.Fail(err)
 		}
-		result, err := m.storage.List()
+		result, err := m.store.List()
 		if err != nil {
 			promise.Fail(err)
 		} else {
+			result = gog.Select(result, func(path string) bool {
+				return !strings.HasSuffix(path, ".srcsha")
+			})
 			promise.Deliver(result)
 		}
 	}()
