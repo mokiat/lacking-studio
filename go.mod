@@ -6,8 +6,8 @@ require (
 	github.com/mokiat/gblob v0.6.0
 	github.com/mokiat/gog v0.22.0
 	github.com/mokiat/gomath v0.17.0
-	github.com/mokiat/lacking v0.23.1-0.20260706205948-6dd4f23e3523
-	github.com/mokiat/lacking-native v0.23.1-0.20260706211100-8aaf05404be9
+	github.com/mokiat/lacking v0.24.0
+	github.com/mokiat/lacking-native v0.24.0
 	github.com/urfave/cli/v2 v2.27.7
 )
 
@@ -18,7 +18,7 @@ require (
 	github.com/go-audio/riff v1.0.0 // indirect
 	github.com/go-audio/wav v1.1.0 // indirect
 	github.com/go-gl/gl v0.0.0-20260331235117-4566fea9a276 // indirect
-	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20260628091122-0bd588dc30cf // indirect
+	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20260707082822-2a407d02d01a // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.4 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mdouchement/hdr v0.2.4 // indirect
@@ -27,7 +27,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342 // indirect
-	golang.org/x/image v0.43.0 // indirect
-	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/text v0.39.0 // indirect
+	golang.org/x/image v0.44.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 )
