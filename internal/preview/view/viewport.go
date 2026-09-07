@@ -361,8 +361,8 @@ func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelTemplat
 		c.gameScene.StopAnimation(c.modelPlayer)
 		c.modelPlayer = nil
 	}
-	if !c.modelNode.IsNil() {
-		c.gameScene.Hierarchy().DeleteNode(c.modelNode)
+	if c.modelNode != hierarchy.NilNodeID {
+		c.gameScene.Hierarchy().Nodes().Delete(c.modelNode)
 		c.modelNode = hierarchy.NilNodeID
 	}
 	if c.currentResourceSet != nil {
