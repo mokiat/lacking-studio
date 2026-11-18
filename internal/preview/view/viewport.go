@@ -55,7 +55,7 @@ type viewportComponent struct {
 	gfxSky              *graphics.Sky
 
 	modelNode   hierarchy.NodeID
-	modelPlayer *animation.Player
+	modelPlayer animation.Node
 }
 
 func (c *viewportComponent) OnCreate() {
@@ -382,7 +382,8 @@ func (c *viewportComponent) handleModelLoaded(modelDefinition *game.ModelTemplat
 	c.modelNode = model.Root()
 	if len(model.Recordings()) > 0 {
 		recording := model.Recordings()[0]
-		c.modelPlayer = model.BindAnimation(recording.Playback(true))
+		c.modelPlayer = animation.NewClipNode(model.Skeleton(), recording, true)
+		model.BindAnimation(c.modelPlayer)
 		c.gameScene.PlayAnimation(c.modelPlayer)
 	}
 	// TODO: Find camera and light nodes and attach indicator gizmos to them
